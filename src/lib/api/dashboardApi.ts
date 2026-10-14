@@ -49,19 +49,36 @@ function computeSummary(): DashboardSummary {
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 6);
 
-  return {
-    cashOnHandPaise,
-    receivablesPaise,
-    payablesPaise,
-    overdueReceivablesPaise,
-    lowStockCount,
-    openInvoiceCount: openInvoices.length,
-    forecast,
-    alerts: db.riskAlerts,
-    recommendations: db.recommendations,
-    upcomingEvents,
-  };
-}
+    const notifs = db.notifications;
+    let filteredAlerts = db.riskAlerts;
+    if (notifs) {
+      filteredAlerts = db.riskAlerts.filter((alert) => {
+        if (!notifs.lowCash && (alert.id === "risk_1" || alert.title.toLowerCase().includes("cash shortfall") || alert.title.toLowerCase().includes("low cash"))) {
+          return false;
+        }
+        if (!notifs.overdueInvoices && (alert.id === "risk_2" || alert.title.toLowerCase().includes("overdue"))) {
+          return false;
+        }
+        if (!notifs.delayedDeliveries && (alert.id === "risk_3" || alert.title.toLowerCase().includes("delivery") || alert.title.toLowerCase().includes("reorder"))) {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    return {
+      cashOnHandPaise,
+      receivablesPaise,
+      payablesPaise,
+      overdueReceivablesPaise,
+      lowStockCount,
+      openInvoiceCount: openInvoices.length,
+      forecast,
+      alerts: filteredAlerts,
+      recommendations: db.recommendations,
+      upcomingEvents,
+    };
+  }
 
 export const dashboardApi = {
   async getSummary(): Promise<DashboardSummary> {

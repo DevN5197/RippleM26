@@ -1,13 +1,29 @@
+import { useEffect } from "react";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { settingsApi } from "@/lib/api/settingsApi";
+import { applyTheme, applyCompactTables } from "@/lib/theme";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
 function AppLayout() {
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => settingsApi.getSettings(),
+  });
+
+  useEffect(() => {
+    if (settings?.app) {
+      applyTheme(settings.app.theme);
+      applyCompactTables(settings.app.compactTables);
+    }
+  }, [settings?.app]);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">

@@ -5,10 +5,14 @@ import { buildDetailedForecast } from "@/mocks/data";
 import type { ForecastResponse, GetForecastParams, SimulationScenario } from "@/types";
 
 export const forecastApi = {
-  async getForecast(paramsOrDays: number | GetForecastParams = 30): Promise<ForecastResponse> {
+  async getForecast(
+    paramsOrDays?: number | GetForecastParams,
+  ): Promise<ForecastResponse> {
     const params: GetForecastParams =
-      typeof paramsOrDays === "number" ? { days: paramsOrDays } : (paramsOrDays ?? {});
-    const days = params.days ?? 30;
+      typeof paramsOrDays === "number"
+        ? { days: paramsOrDays }
+        : (paramsOrDays ?? {});
+    const days = params.days ?? db.business.defaultForecastHorizonDays ?? 30;
     const scenarioId = params.scenarioId;
     const safetyThresholdPaise =
       params.safetyThresholdPaise ?? db.business.safetyThresholdPaise ?? 500_000;

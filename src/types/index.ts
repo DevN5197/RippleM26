@@ -18,7 +18,43 @@ export interface Business {
   openingCashPaise: number;
   safetyThresholdPaise?: number;
   industry?: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  phone?: string;
+  address?: string;
+  taxRatePercent?: number; // default tax rate e.g. 18 for GST
+  defaultSupplierPaymentTermsDays?: number;
+  defaultCustomerPaymentTermsDays?: number;
+  defaultForecastHorizonDays?: 7 | 14 | 30;
 }
+
+export interface NotificationPreferences {
+  overduePayments: boolean;
+  upcomingSupplierPayments: boolean;
+  overdueInvoices: boolean;
+  lowCash: boolean;
+  delayedDeliveries: boolean;
+  highRippleImpact: boolean;
+}
+
+export interface AppPreferences {
+  theme: "light" | "dark" | "system";
+  compactTables: boolean;
+  version?: string;
+}
+
+export interface AppSettings {
+  business: Business;
+  notifications: NotificationPreferences;
+  app: AppPreferences;
+  dataMode: "mock" | "api";
+}
+
+export type UpdateSettingsInput = {
+  business?: Partial<Business>;
+  notifications?: Partial<NotificationPreferences>;
+  app?: Partial<AppPreferences>;
+};
 
 export type SupplierStatus = "active" | "archived";
 

@@ -38,6 +38,29 @@ export const business: Business = {
   openingCashPaise: 1_000_000, // ₹10,000
   safetyThresholdPaise: 500_000, // ₹5,000 safety threshold
   industry: "Apparel retail",
+  ownerName: "Demo Owner",
+  ownerEmail: "owner@rupiclothing.in",
+  phone: "+91 98200 54321",
+  address: "Shop 14, Linking Road, Bandra West, Mumbai, Maharashtra 400050",
+  taxRatePercent: 18,
+  defaultSupplierPaymentTermsDays: 30,
+  defaultCustomerPaymentTermsDays: 15,
+  defaultForecastHorizonDays: 30,
+};
+
+export const notificationPreferences: NotificationPreferences = {
+  overduePayments: true,
+  upcomingSupplierPayments: true,
+  overdueInvoices: true,
+  lowCash: true,
+  delayedDeliveries: true,
+  highRippleImpact: true,
+};
+
+export const appPreferences: AppPreferences = {
+  theme: "system",
+  compactTables: false,
+  version: "1.0.0",
 };
 
 export const suppliers: Supplier[] = [
