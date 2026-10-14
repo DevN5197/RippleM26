@@ -11,10 +11,18 @@ const toneByStatus: Record<string, StatusTone> = {
   overdue: "danger",
   draft: "neutral",
   void: "neutral",
-  // orders
+  // inventory
+  healthy: "success",
+  low_stock: "warning",
+  stockout_risk: "danger",
+  out_of_stock: "danger",
+  incoming_stock: "info",
+  // orders & shipments
   confirmed: "info",
+  partially_received: "warning",
   received: "success",
   fulfilled: "success",
+  delayed: "danger",
   cancelled: "neutral",
   quote: "neutral",
   // payments
@@ -37,6 +45,11 @@ const toneClasses: Record<StatusTone, string> = {
 
 const labelByStatus: Record<string, string> = {
   partially_paid: "Partially paid",
+  partially_received: "Partially received",
+  low_stock: "Low stock",
+  stockout_risk: "Stockout risk",
+  out_of_stock: "Out of stock",
+  incoming_stock: "Incoming stock",
 };
 
 export function StatusBadge({ status }: { status: string }) {

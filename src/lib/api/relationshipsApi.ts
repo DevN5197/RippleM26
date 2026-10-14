@@ -603,6 +603,99 @@ export function buildRelationshipGraph(): RelationshipGraphData {
     },
   ];
 
+  // Dynamically attach any additional purchase orders from db.purchaseOrders (e.g. po_3 or newly created POs)
+  for (const po of db.purchaseOrders) {
+    const existingNode = nodes.find((n) => n.entityId === po.id || n.id === `node_${po.id}`);
+    if (!existingNode) {
+      const supplier = db.suppliers.find((s) => s.id === po.supplierId);
+      const supplierNode = nodes.find((n) => n.entityId === po.supplierId);
+      const primaryLineItem = po.lineItems?.[0];
+      const prodId = po.productId || primaryLineItem?.productId;
+      const product = db.products.find((p) => p.id === prodId);
+      const productNode = nodes.find((n) => n.entityId === prodId);
+
+      const poNodeId = `node_${po.id}`;
+      const delivNodeId = `node_deliv_${po.id}`;
+
+      nodes.push({
+        id: poNodeId,
+        type: "purchase_order",
+        label: `${po.poNumber || po.id}: ${po.quantity || 1}x ${product?.name || "Goods"}`,
+        status: po.status === "received" ? "completed" : "active",
+        date: po.orderDate,
+        amountPaise: po.totalPaise,
+        currency: "INR",
+        entityId: po.id,
+        metadata: {
+          entityType: "purchase_order",
+          referenceNumber: po.poNumber || po.id,
+          partnerName: supplier?.name || "Supplier",
+          quantity: po.quantity || 1,
+          productName: product?.name,
+          sku: product?.sku,
+          expectedDate: po.expectedDeliveryDate,
+          actualDate: po.orderDate,
+          workflowSignificance: `Procurement order for ${product?.name || "goods"} placed with ${supplier?.name || "supplier"}.`,
+          nextMilestone: `Expected delivery on ${po.expectedDeliveryDate}`,
+        },
+      });
+
+      nodes.push({
+        id: delivNodeId,
+        type: "inventory_delivery",
+        label: `Delivery: ${po.poNumber || po.id}`,
+        status: po.status === "received" ? "completed" : "upcoming",
+        date: po.expectedDeliveryDate,
+        currency: "INR",
+        entityId: po.id,
+        metadata: {
+          entityType: "inventory_item",
+          referenceNumber: `DELIV-${po.id}`,
+          productName: product?.name,
+          sku: product?.sku,
+          quantity: po.quantity,
+          expectedDate: po.expectedDeliveryDate,
+          workflowSignificance: `Arrival of ${po.quantity || 0} units from ${supplier?.name || "supplier"}.`,
+          nextMilestone: "Stock added to available warehouse inventory",
+        },
+      });
+
+      if (supplierNode) {
+        edges.push({
+          id: `edge_${supplierNode.id}_to_${poNodeId}`,
+          source: supplierNode.id,
+          target: poNodeId,
+          relationship: "triggers",
+          status: "active",
+          description: "Procurement purchase order",
+          lagDays: 0,
+        });
+      }
+
+      edges.push({
+        id: `edge_${poNodeId}_to_${delivNodeId}`,
+        source: poNodeId,
+        target: delivNodeId,
+        relationship: "delivers_to",
+        status: "active",
+        description: `Dispatched to warehouse (${po.expectedDeliveryDate})`,
+        lagDays: 5,
+      });
+
+      if (productNode) {
+        edges.push({
+          id: `edge_${delivNodeId}_to_${productNode.id}`,
+          source: delivNodeId,
+          target: productNode.id,
+          relationship: "supplies_stock",
+          status: "active",
+          description: "Replenishes on-hand inventory",
+          lagDays: 1,
+        });
+      }
+    }
+  }
+
   const atRiskCount = nodes.filter((n) => n.status === "at_risk" || n.status === "delayed").length;
   const upcomingCount = nodes.filter((n) => n.status === "upcoming").length;
   const totalCashAtRiskPaise = nodes

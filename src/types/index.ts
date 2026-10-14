@@ -51,29 +51,212 @@ export interface Product {
   unitCostPaise: number;
   unitPricePaise: number;
   reorderPoint: number;
+  category?: string | undefined;
+  description?: string | undefined;
+  unitOfMeasure?: string | undefined;
+  preferredSupplierId?: string | undefined;
+  currency?: CurrencyCode | undefined;
 }
 
 export interface InventoryItem {
   id: string;
   productId: string;
   quantityOnHand: number;
+  quantityReserved?: number | undefined;
   quantityOnOrder: number;
-  expectedRestockDate?: string;
+  expectedRestockDate?: string | undefined;
   updatedAt: string;
 }
 
-export type PurchaseOrderStatus = "draft" | "sent" | "confirmed" | "received" | "cancelled";
+export type PurchaseOrderStatus =
+  | "draft"
+  | "sent"
+  | "confirmed"
+  | "partially_received"
+  | "received"
+  | "delayed"
+  | "cancelled";
+
+export interface PurchaseOrderLineItem {
+  id: string;
+  purchaseOrderId: string;
+  productId: string;
+  quantity: number;
+  unitPricePaise: number;
+  totalPaise: number;
+  receivedQuantity?: number | undefined;
+}
 
 export interface PurchaseOrder {
   id: string;
+  poNumber?: string | undefined;
   supplierId: string;
-  productId: string;
-  quantity: number;
+  productId?: string | undefined;
+  quantity?: number | undefined;
+  lineItems?: PurchaseOrderLineItem[] | undefined;
   totalPaise: number;
   advancePaidPaise: number;
   status: PurchaseOrderStatus;
   orderDate: string;
   expectedDeliveryDate: string;
+  paymentTermsDays?: number | undefined;
+  paymentDueDate?: string | undefined;
+  notes?: string | undefined;
+  receivedQuantity?: number | undefined;
+}
+
+export type InventoryMovementType =
+  | "receipt"
+  | "sale"
+  | "reservation"
+  | "reservation_release"
+  | "adjustment"
+  | "return";
+
+export interface InventoryMovement {
+  id: string;
+  businessId: string;
+  productId: string;
+  type: InventoryMovementType;
+  quantity: number;
+  resultingBalance: number;
+  date: string;
+  referenceType?: "purchase_order" | "customer_order" | "adjustment" | "manual" | "return" | undefined;
+  referenceId?: string | undefined;
+  note?: string | undefined;
+  createdAt: string;
+}
+
+export type StockStatus =
+  | "healthy"
+  | "low_stock"
+  | "stockout_risk"
+  | "out_of_stock"
+  | "incoming_stock";
+
+export interface InventoryItemWithDetails {
+  product: Product;
+  inventory: InventoryItem;
+  stockOnHand: number;
+  reservedStock: number;
+  availableStock: number;
+  incomingStock: number;
+  reorderThreshold: number;
+  nextExpectedDelivery?: string | undefined;
+  nextDeliveryPoId?: string | undefined;
+  unitCostPaise: number;
+  inventoryValuationPaise?: number | undefined;
+  status: StockStatus;
+  statusLabel: string;
+  preferredSupplier?: Supplier | undefined;
+}
+
+export interface InventorySummaryMetrics {
+  totalProducts: number;
+  totalAvailableUnits: number;
+  lowStockCount: number;
+  stockoutRiskCount: number;
+  incomingUnits: number;
+  estimatedValuationPaise?: number | undefined;
+}
+
+export interface ReorderRecommendation {
+  productId: string;
+  productName: string;
+  sku: string;
+  category?: string | undefined;
+  currentAvailableStock: number;
+  reorderPoint: number;
+  incomingQuantity: number;
+  forecastDemand: number;
+  estimatedStockoutDate?: string | undefined;
+  suggestedReorderQuantity: number;
+  preferredSupplierId?: string | undefined;
+  preferredSupplierName?: string | undefined;
+  preferredSupplierLeadDays?: number | undefined;
+  estimatedDeliveryDate?: string | undefined;
+  proposedPurchaseAmountPaise?: number | undefined;
+  requiredAdvancePaise?: number | undefined;
+  relatedCustomerOrderCount: number;
+  customerCommitmentsAtRisk: string[];
+  reason: string;
+  hasSufficientData: boolean;
+  missingDataReason?: string | undefined;
+}
+
+export type InventoryRiskSeverity = "info" | "warning" | "critical";
+
+export interface InventoryRiskAlert {
+  id: string;
+  severity: InventoryRiskSeverity;
+  category:
+    | "projected_stockout"
+    | "delayed_supplier_delivery"
+    | "insufficient_stock_for_customer_order"
+    | "lead_time_expiring"
+    | "advance_before_customer_receipt"
+    | "incoming_insufficient";
+  title: string;
+  explanation: string;
+  productId?: string | undefined;
+  productName?: string | undefined;
+  sku?: string | undefined;
+  purchaseOrderId?: string | undefined;
+  supplierId?: string | undefined;
+  supplierName?: string | undefined;
+  customerOrderId?: string | undefined;
+  customerName?: string | undefined;
+  relevantDate?: string | undefined;
+  financialImpactPaise?: number | undefined;
+  actionType: "view_product" | "view_po" | "view_supplier" | "inspect_cash_flow" | "simulate";
+}
+
+export interface CreateProductInput {
+  name: string;
+  sku: string;
+  category: string;
+  description?: string | undefined;
+  unitOfMeasure?: string | undefined;
+  initialStockQuantity?: number | undefined;
+  reorderPoint: number;
+  preferredSupplierId?: string | undefined;
+  unitCostPaise?: number | undefined;
+  currency?: CurrencyCode | undefined;
+}
+
+export interface UpdateProductInput {
+  name?: string | undefined;
+  sku?: string | undefined;
+  category?: string | undefined;
+  description?: string | undefined;
+  unitOfMeasure?: string | undefined;
+  reorderPoint?: number | undefined;
+  preferredSupplierId?: string | undefined;
+  unitCostPaise?: number | undefined;
+}
+
+export interface RecordMovementInput {
+  productId: string;
+  type: InventoryMovementType;
+  quantity: number;
+  date?: string | undefined;
+  referenceType?: "purchase_order" | "customer_order" | "adjustment" | "manual" | "return" | undefined;
+  referenceId?: string | undefined;
+  note?: string | undefined;
+}
+
+export interface CreatePurchaseOrderInput {
+  supplierId: string;
+  orderDate: string;
+  expectedDeliveryDate: string;
+  paymentTermsDays?: number | undefined;
+  advanceAmountPaise?: number | undefined;
+  notes?: string | undefined;
+  lineItems: {
+    productId: string;
+    quantity: number;
+    unitPricePaise: number;
+  }[];
 }
 
 export type CustomerOrderStatus = "quote" | "confirmed" | "fulfilled" | "cancelled";

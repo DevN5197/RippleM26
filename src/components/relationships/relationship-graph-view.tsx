@@ -41,9 +41,20 @@ const initialFilters: FilterState = {
 
 function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps) {
   const reactFlowInstance = useReactFlow();
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
-    initialSelectedId || "node_delivery_1",
-  );
+  const resolvedInitialId = useMemo(() => {
+    if (!initialSelectedId) return "node_delivery_1";
+    const found = data.nodes.find((n) => n.id === initialSelectedId || n.entityId === initialSelectedId);
+    return found ? found.id : initialSelectedId;
+  }, [data.nodes, initialSelectedId]);
+
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(resolvedInitialId);
+
+  useEffect(() => {
+    if (initialSelectedId) {
+      const found = data.nodes.find((n) => n.id === initialSelectedId || n.entityId === initialSelectedId);
+      setSelectedNodeId(found ? found.id : initialSelectedId);
+    }
+  }, [initialSelectedId, data.nodes]);
   const [filters, setFilters] = useState<FilterState>(initialFilters);
 
   // Filter nodes according to active filters

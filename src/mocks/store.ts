@@ -15,6 +15,7 @@ export const db = {
   customers: clone(seed.customers),
   products: clone(seed.products),
   inventory: clone(seed.inventory),
+  inventoryMovements: clone(seed.inventoryMovements),
   purchaseOrders: clone(seed.purchaseOrders),
   customerOrders: clone(seed.customerOrders),
   invoices: clone(seed.invoices),

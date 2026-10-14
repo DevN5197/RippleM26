@@ -24,3 +24,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
     </div>
   );
 }
+
+export function LoadingSkeleton({ count = 5 }: { count?: number }) {
+  return <TableSkeleton rows={count} />;
+}
