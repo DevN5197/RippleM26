@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, ArrowRight, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, Calendar } from "lucide-react";
 import type {
   Product,
   InventoryItemWithDetails,
@@ -42,7 +42,7 @@ import type {
 const movementSchema = z.object({
   productId: z.string().min(1, "Please select a product"),
   type: z.enum(["receipt", "sale", "reservation", "reservation_release", "adjustment", "return"]),
-  quantity: z
+  quantity: z.coerce
     .number({ invalid_type_error: "Must be a valid number" })
     .int("Must be an integer")
     .min(1, "Quantity must be greater than zero"),
@@ -188,14 +188,21 @@ export function StockMovementDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {isReviewStep ? "Review Material Stock Adjustment" : "Record Stock Movement"}
-          </DialogTitle>
-          <DialogDescription>
-            {isReviewStep
-              ? "Please confirm this high-impact stock adjustment before applying."
-              : "Record stock receipts, sales fulfillments, reservations, or inventory adjustments."}
-          </DialogDescription>
+          <div className="flex items-start gap-3 text-left">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary mt-0.5">
+              <ArrowRight className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle>
+                {isReviewStep ? "Review Material Stock Adjustment" : "Record Stock Movement"}
+              </DialogTitle>
+              <DialogDescription className="mt-1 text-xs">
+                {isReviewStep
+                  ? "Please confirm this high-impact stock adjustment before applying."
+                  : "Record stock receipts, sales fulfillments, reservations, or inventory adjustments."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         {form.formState.errors.root && (
@@ -261,7 +268,9 @@ export function StockMovementDialog({
                 name="productId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product *</FormLabel>
+                    <FormLabel>
+                      Product <span className="text-destructive font-bold ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
@@ -294,7 +303,9 @@ export function StockMovementDialog({
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Movement type *</FormLabel>
+                    <FormLabel>
+                      Movement type <span className="text-destructive font-bold ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Select
                         value={field.value}
@@ -327,13 +338,20 @@ export function StockMovementDialog({
                   name="quantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Quantity *</FormLabel>
+                      <FormLabel>
+                        Quantity <span className="text-destructive font-bold ml-0.5">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           min={1}
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          placeholder="Enter quantity"
+                          value={field.value === 0 || field.value === undefined || field.value === null ? "" : field.value}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            field.onChange(val === "" ? 0 : Number(val));
+                          }}
+                          className="tabular-nums"
                         />
                       </FormControl>
                       <FormMessage />
@@ -341,15 +359,37 @@ export function StockMovementDialog({
                   )}
                 />
 
-                {/* Date */}
+                {/* Date & Time */}
                 <FormField
                   control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date & Time *</FormLabel>
+                      <FormLabel>
+                        Date &amp; Time <span className="text-destructive font-bold ml-0.5">*</span>
+                      </FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <div className="relative">
+                          <Input
+                            type="text"
+                            placeholder="YYYY-MM-DD"
+                            className="pr-10 font-mono text-xs cursor-text"
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          />
+                          <input
+                            type="date"
+                            aria-label="Pick date from calendar"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 cursor-pointer z-10"
+                            value={field.value?.slice(0, 10) || ""}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                field.onChange(e.target.value);
+                              }
+                            }}
+                          />
+                          <Calendar className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -442,7 +482,14 @@ export function StockMovementDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      {selectedType === "adjustment" ? "Reason for adjustment *" : "Optional note"}
+                      {selectedType === "adjustment" ? (
+                        <>
+                          Reason for adjustment{" "}
+                          <span className="text-destructive font-bold ml-0.5">*</span>
+                        </>
+                      ) : (
+                        "Optional note"
+                      )}
                     </FormLabel>
                     <FormControl>
                       <Textarea

@@ -286,7 +286,7 @@ export function PurchaseOrderWizard({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -407,17 +407,17 @@ export function PurchaseOrderWizard({
 
                 return (
                   <Card key={item.id} className="p-3 shadow-none border bg-card/60">
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
                       {/* Product Selector */}
-                      <div className="sm:col-span-5">
-                        <Label className="text-[11px] text-muted-foreground">
-                          Product #{index + 1}
+                      <div className="flex-1 min-w-[200px]">
+                        <Label className="text-[11px] text-muted-foreground font-medium">
+                          Product #{index + 1} <span className="text-destructive font-bold">*</span>
                         </Label>
                         <Select
                           value={item.productId}
                           onValueChange={(val) => handleUpdateLineItem(item.id, "productId", val)}
                         >
-                          <SelectTrigger className="h-8 text-xs mt-1">
+                          <SelectTrigger className="h-8 text-xs mt-1 w-full">
                             <SelectValue placeholder="Select product" />
                           </SelectTrigger>
                           <SelectContent>
@@ -435,46 +435,52 @@ export function PurchaseOrderWizard({
                       </div>
 
                       {/* Quantity */}
-                      <div className="sm:col-span-2">
-                        <Label className="text-[11px] text-muted-foreground">Qty</Label>
+                      <div className="w-full sm:w-24 shrink-0">
+                        <Label className="text-[11px] text-muted-foreground font-medium">
+                          Qty <span className="text-destructive font-bold">*</span>
+                        </Label>
                         <Input
                           type="number"
                           min={1}
-                          value={item.quantity}
-                          onChange={(e) =>
-                            handleUpdateLineItem(item.id, "quantity", Number(e.target.value))
-                          }
-                          className="h-8 text-xs mt-1"
+                          placeholder="Qty"
+                          value={item.quantity === 0 || item.quantity === undefined || item.quantity === null ? "" : item.quantity}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            handleUpdateLineItem(item.id, "quantity", val === "" ? 0 : Number(val));
+                          }}
+                          className="h-8 text-xs mt-1 tabular-nums font-mono"
                         />
                       </div>
 
                       {/* Unit Price (₹) */}
-                      <div className="sm:col-span-2">
-                        <Label className="text-[11px] text-muted-foreground">Price (₹)</Label>
+                      <div className="w-full sm:w-28 shrink-0">
+                        <Label className="text-[11px] text-muted-foreground font-medium">Price (₹)</Label>
                         <Input
                           type="number"
                           min={0}
                           step="any"
-                          value={item.unitPriceRupees}
-                          onChange={(e) =>
-                            handleUpdateLineItem(item.id, "unitPriceRupees", Number(e.target.value))
-                          }
-                          className="h-8 text-xs mt-1 font-mono"
+                          placeholder="Price"
+                          value={item.unitPriceRupees === 0 || item.unitPriceRupees === undefined ? "" : item.unitPriceRupees}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            handleUpdateLineItem(item.id, "unitPriceRupees", val === "" ? 0 : Number(val));
+                          }}
+                          className="h-8 text-xs mt-1 font-mono tabular-nums"
                         />
                       </div>
 
                       {/* Line Total */}
-                      <div className="sm:col-span-2 text-right">
-                        <Label className="text-[11px] text-muted-foreground block">
+                      <div className="w-full sm:w-28 shrink-0 text-left sm:text-right">
+                        <Label className="text-[11px] text-muted-foreground block font-medium">
                           Line Total
                         </Label>
-                        <span className="text-xs font-semibold text-foreground leading-8">
+                        <span className="text-xs font-semibold text-foreground leading-8 block tabular-nums">
                           {formatMoney(Math.round(lineTotal * 100))}
                         </span>
                       </div>
 
                       {/* Remove */}
-                      <div className="sm:col-span-1 text-right">
+                      <div className="shrink-0 self-end">
                         <Button
                           type="button"
                           variant="ghost"
@@ -513,23 +519,53 @@ export function PurchaseOrderWizard({
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs">Purchase Order Date *</Label>
-                <Input
-                  type="date"
-                  value={orderDate}
-                  onChange={(e) => setOrderDate(e.target.value)}
-                  className="mt-1 h-9 text-xs"
-                />
+                <Label className="text-xs">
+                  Purchase Order Date <span className="text-destructive font-bold">*</span>
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    type="text"
+                    placeholder="YYYY-MM-DD"
+                    value={orderDate}
+                    onChange={(e) => setOrderDate(e.target.value)}
+                    className="h-9 text-xs font-mono pr-9 cursor-text"
+                  />
+                  <input
+                    type="date"
+                    aria-label="Pick order date"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 cursor-pointer z-10"
+                    value={orderDate?.slice(0, 10) || ""}
+                    onChange={(e) => {
+                      if (e.target.value) setOrderDate(e.target.value);
+                    }}
+                  />
+                  <Calendar className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
 
               <div>
-                <Label className="text-xs">Expected Delivery Date *</Label>
-                <Input
-                  type="date"
-                  value={expectedDeliveryDate}
-                  onChange={(e) => setExpectedDeliveryDate(e.target.value)}
-                  className="mt-1 h-9 text-xs"
-                />
+                <Label className="text-xs">
+                  Expected Delivery Date <span className="text-destructive font-bold">*</span>
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    type="text"
+                    placeholder="YYYY-MM-DD"
+                    value={expectedDeliveryDate}
+                    onChange={(e) => setExpectedDeliveryDate(e.target.value)}
+                    className="h-9 text-xs font-mono pr-9 cursor-text"
+                  />
+                  <input
+                    type="date"
+                    aria-label="Pick delivery date"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 cursor-pointer z-10"
+                    value={expectedDeliveryDate?.slice(0, 10) || ""}
+                    onChange={(e) => {
+                      if (e.target.value) setExpectedDeliveryDate(e.target.value);
+                    }}
+                  />
+                  <Calendar className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
             </div>
 
@@ -557,7 +593,12 @@ export function PurchaseOrderWizard({
               </div>
 
               <div>
-                <Label className="text-xs">Supplier Advance Payment</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Supplier Advance Payment</Label>
+                  <span className="text-[11px] font-mono font-semibold text-primary">
+                    Exact: {subtotalPaise > 0 ? ((advancePaise / subtotalPaise) * 100).toFixed(1).replace(/\.0$/, "") : "0"}%
+                  </span>
+                </div>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="w-24">
                     <Select
@@ -581,14 +622,18 @@ export function PurchaseOrderWizard({
                     type="number"
                     min={0}
                     placeholder="₹ advance"
-                    value={advanceAmountRupees || ""}
-                    onChange={(e) => handleAdvanceAmountChange(Number(e.target.value))}
-                    className="h-9 text-xs font-mono"
+                    value={advanceAmountRupees === 0 ? "" : advanceAmountRupees}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      handleAdvanceAmountChange(val === "" ? 0 : Number(val));
+                    }}
+                    className="h-9 text-xs font-mono tabular-nums"
                   />
                 </div>
-                <span className="text-[11px] text-muted-foreground mt-0.5 block">
-                  Remaining on delivery: {formatMoney(balancePaise)}
-                </span>
+                <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span>Advance: {formatMoney(advancePaise)}</span>
+                  <span>Balance on delivery: {formatMoney(balancePaise)}</span>
+                </div>
               </div>
             </div>
 
@@ -667,12 +712,16 @@ export function PurchaseOrderWizard({
               <div className="flex items-center gap-3 pt-1">
                 <Link
                   to="/cash-flow"
+                  target="_blank"
+                  rel="noreferrer"
                   className="inline-flex items-center text-primary font-medium hover:underline text-[11px]"
                 >
                   Inspect Cash Flow <ExternalLink className="ml-1 h-3 w-3" />
                 </Link>
                 <Link
                   to="/simulator"
+                  target="_blank"
+                  rel="noreferrer"
                   className="inline-flex items-center text-primary font-medium hover:underline text-[11px]"
                 >
                   Test in Ripple Simulator <ExternalLink className="ml-1 h-3 w-3" />

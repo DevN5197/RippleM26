@@ -78,7 +78,12 @@ export function SupplierDetailHeader({ data, onEdit, onArchiveToggle }: Supplier
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link to="/relationships" search={{ selectedId: `node_${supplier.id}` }}>
+            <Link
+              to="/relationships"
+              target="_blank"
+              rel="noreferrer"
+              search={{ selectedId: `node_${supplier.id}` }}
+            >
               <Network className="mr-1.5 h-3.5 w-3.5" />
               View Dependency
             </Link>

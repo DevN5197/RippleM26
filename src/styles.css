@@ -147,6 +147,22 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  button,
+  a,
+  select,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="option"],
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
   .compact-tables td,
   .compact-tables th {
     padding-top: 0.375rem !important;
@@ -185,4 +201,18 @@
   border-radius: var(--radius-md) !important;
   background-color: var(--color-card) !important;
   box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.06);
+}
+
+/* Ensure edge labels sit permanently above node boxes */
+.react-flow__edgelabel-renderer {
+  z-index: 1000 !important;
+  pointer-events: none;
+}
+
+.react-flow__edge-textwrapper {
+  z-index: 1000 !important;
+}
+
+.react-flow__edge-text {
+  z-index: 1000 !important;
 }

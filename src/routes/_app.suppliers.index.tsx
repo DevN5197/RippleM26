@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery, useQueryClient, useQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supplierApi, type SupplierListFilterParams } from "@/lib/api/supplierApi";
 import { SupplierHeader } from "@/components/suppliers/supplier-header";
@@ -88,7 +88,10 @@ function SuppliersPage() {
   const queryClient = useQueryClient();
 
   const { data: metrics } = useSuspenseQuery(supplierSummaryQuery);
-  const { data: suppliersResponse } = useSuspenseQuery(suppliersListQuery(searchParams));
+  const { data: suppliersResponse = { data: [], total: 0, page: 1, limit: 50 } } = useQuery({
+    ...suppliersListQuery(searchParams),
+    placeholderData: keepPreviousData,
+  });
 
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);

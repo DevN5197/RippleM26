@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery, useQueryClient, useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
 import { CustomerSummaryCards } from "@/components/customers/customer-summary-cards";
@@ -84,7 +84,10 @@ function CustomersIndexPage() {
   const navigate = Route.useNavigate();
 
   const { data: metrics } = useSuspenseQuery(customerSummaryQuery);
-  const { data: listResponse } = useSuspenseQuery(customersListQuery(searchParams));
+  const { data: listResponse = { data: [], total: 0, page: 1, limit: 50 } } = useQuery({
+    ...customersListQuery(searchParams),
+    placeholderData: keepPreviousData,
+  });
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);

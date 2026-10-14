@@ -2,17 +2,19 @@ import { format, parseISO, formatDistanceToNow } from "date-fns";
 import type { CurrencyCode } from "@/types";
 
 /** Format an integer amount in minor units (paise) as INR with Indian grouping. */
-export function formatMoney(paise: number, currency: CurrencyCode = "INR"): string {
+export function formatMoney(paise?: number | null, currency: CurrencyCode = "INR"): string {
+  const safePaise = typeof paise === "number" && !Number.isNaN(paise) ? paise : 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
-  }).format(paise / 100);
+  }).format(safePaise / 100);
 }
 
 /** Compact money for tight spaces: ₹12.4k, ₹1.2L */
-export function formatMoneyCompact(paise: number): string {
-  const rupees = paise / 100;
+export function formatMoneyCompact(paise?: number | null): string {
+  const safePaise = typeof paise === "number" && !Number.isNaN(paise) ? paise : 0;
+  const rupees = safePaise / 100;
   const sign = rupees < 0 ? "−" : "";
   const abs = Math.abs(rupees);
   if (abs >= 100000) return `${sign}₹${(abs / 100000).toFixed(1)}L`;

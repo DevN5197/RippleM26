@@ -122,7 +122,7 @@ function DashboardPage() {
               <CardDescription>Next 30 days, including scheduled payments</CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/cash-flow">
+              <Link to="/cash-flow" target="_blank" rel="noreferrer">
                 Details <ArrowRight className="ml-1 h-3.5 w-3.5" aria-hidden />
               </Link>
             </Button>

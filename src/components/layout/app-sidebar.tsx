@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Network,
@@ -60,8 +61,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="gap-3 px-3 pt-4">
-        <Link to="/dashboard" className="flex items-center gap-2.5" aria-label="Ripple home">
+      <SidebarHeader className={cn("gap-3 pt-4", collapsed ? "px-2 items-center" : "px-3")}>
+        <Link
+          to="/dashboard"
+          preload="intent"
+          className={cn("flex items-center", collapsed ? "w-8 justify-center" : "gap-2.5")}
+          aria-label="Ripple home"
+        >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary">
             <Waves className="h-4.5 w-4.5 text-primary-foreground" aria-hidden />
           </span>
@@ -122,7 +128,7 @@ export function AppSidebar() {
                     tooltip={item.title}
                     onClick={() => setOpenMobile(false)}
                   >
-                    <Link to={item.url}>
+                    <Link to={item.url} preload="intent">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </Link>
@@ -138,7 +144,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive("/settings")} tooltip="Settings">
-                  <Link to="/settings">
+                  <Link to="/settings" preload="intent">
                     <Settings className="h-4 w-4" />
                     <span>Settings</span>
                   </Link>
@@ -149,7 +155,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-3 pb-4">
+      <SidebarFooter className={cn("pb-4", collapsed ? "px-2 items-center" : "px-3")}>
         {IS_DEMO && !collapsed && (
           <div className="mb-2 rounded-md border border-warning/40 bg-warning/10 px-2.5 py-2">
             <p className="text-[11px] font-medium text-warning-foreground">Demo workspace</p>
@@ -162,7 +168,10 @@ export function AppSidebar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="flex w-full items-center gap-2.5 rounded-md px-1 py-1.5 text-left hover:bg-sidebar-accent"
+              className={cn(
+                "flex items-center gap-2.5 rounded-md py-1.5 text-left hover:bg-sidebar-accent",
+                collapsed ? "justify-center w-8 px-0" : "w-full px-1",
+              )}
               aria-label="User menu"
             >
               <CircleUserRound className="h-7 w-7 shrink-0 text-muted-foreground" aria-hidden />

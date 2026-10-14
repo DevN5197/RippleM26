@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery, useQueryClient, useQuery, keepPreviousData } from "@tanstack/react-query";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { InvoiceSummaryCards } from "@/components/invoices/invoice-summary-cards";
@@ -123,7 +123,10 @@ function InvoicesIndexPage() {
   const navigate = Route.useNavigate();
 
   const { data: metrics } = useSuspenseQuery(invoiceSummaryQuery);
-  const { data: listResponse } = useSuspenseQuery(invoicesListQuery(searchParams));
+  const { data: listResponse = { data: [], total: 0, page: 1, limit: 50 } } = useQuery({
+    ...invoicesListQuery(searchParams),
+    placeholderData: keepPreviousData,
+  });
 
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

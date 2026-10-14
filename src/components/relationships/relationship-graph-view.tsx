@@ -12,9 +12,14 @@ import {
   type NodeMouseHandler,
   type Node,
 } from "@xyflow/react";
-import { Network, Sparkles, FilterX } from "lucide-react";
+import { Network, Sparkles, FilterX, Maximize2, Minimize2 } from "lucide-react";
 import { adaptToReactFlow } from "./graph-adapter";
-import { RelationshipCustomNode, type CustomNodeData } from "./relationship-node";
+import {
+  RelationshipCustomNode,
+  LaneHeaderNode,
+  type CustomNodeData,
+} from "./relationship-node";
+import { RelationshipCustomEdge } from "./relationship-edge";
 import { RelationshipToolbar, type FilterState } from "./relationship-toolbar";
 import { RelationshipDetailsPanel } from "./relationship-details-panel";
 import { RelationshipLegend } from "./relationship-legend";
@@ -29,6 +34,11 @@ interface RelationshipGraphViewProps {
 
 const nodeTypes = {
   custom: RelationshipCustomNode,
+  lane_header: LaneHeaderNode,
+};
+
+const edgeTypes = {
+  custom: RelationshipCustomEdge,
 };
 
 const initialFilters: FilterState = {
@@ -41,6 +51,7 @@ const initialFilters: FilterState = {
 
 function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps) {
   const reactFlowInstance = useReactFlow();
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const resolvedInitialId = useMemo(() => {
     if (!initialSelectedId) return "node_delivery_1";
     const found = data.nodes.find(
@@ -60,6 +71,18 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
     }
   }, [initialSelectedId, data.nodes]);
   const [filters, setFilters] = useState<FilterState>(initialFilters);
+
+  // Escape key handler for fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+        setTimeout(() => reactFlowInstance?.fitView({ padding: 0.15, duration: 300 }), 100);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen, reactFlowInstance]);
 
   // Filter nodes according to active filters
   const filteredNodeIds = useMemo(() => {
@@ -165,11 +188,12 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
   );
 
   const handleNodeClick: NodeMouseHandler = useCallback((_event, node) => {
+    if (node.type === "lane_header") return;
     setSelectedNodeId(node.id);
   }, []);
 
   const handlePaneClick = useCallback(() => {
-    // Keep selection or allow inspecting background
+    setSelectedNodeId(null);
   }, []);
 
   const handleResetFilters = useCallback(() => {
@@ -194,7 +218,13 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
       {/* Main Workspace: Graph Canvas + Details Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Graph Canvas Container */}
-        <div className="lg:col-span-8 xl:col-span-8 flex flex-col rounded-xl border bg-card shadow-xs overflow-hidden h-[620px] sm:h-[680px] relative">
+        <div
+          className={
+            isFullscreen
+              ? "fixed inset-0 z-50 h-screen w-screen bg-background p-4 flex flex-col overflow-hidden"
+              : "lg:col-span-8 xl:col-span-8 flex flex-col rounded-xl border bg-card shadow-xs overflow-hidden h-[620px] sm:h-[680px] relative"
+          }
+        >
           {filteredNodeIds.size === 0 ? (
             <div className="flex-1 flex items-center justify-center p-8">
               <EmptyState
@@ -207,54 +237,146 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
             </div>
           ) : (
             <>
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onNodeClick={handleNodeClick}
-                onPaneClick={handlePaneClick}
-                nodeTypes={nodeTypes}
-                minZoom={0.25}
-                maxZoom={2.0}
-                defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-                fitView
-                fitViewOptions={{ padding: 0.15 }}
-                className="select-none"
-              >
-                <Background
-                  variant={BackgroundVariant.Dots}
-                  gap={22}
-                  size={1.2}
-                  color="var(--color-border)"
-                />
-                <Controls
-                  showInteractive={false}
-                  position="bottom-left"
-                  className="m-3 shadow-xs"
-                />
-                <MiniMap
-                  nodeStrokeWidth={2}
-                  zoomable
-                  pannable
-                  position="bottom-right"
-                  className="hidden md:block m-3"
-                  nodeColor={(n) => {
-                    if (n.id === selectedNodeId) return "var(--color-primary)";
-                    return "var(--color-muted-foreground)";
-                  }}
-                />
-              </ReactFlow>
+              {isFullscreen && (
+                <div className="flex items-center justify-between pb-3 border-b mb-3">
+                  <div className="flex items-center gap-2">
+                    <Network className="h-5 w-5 text-primary" />
+                    <span className="font-bold text-foreground text-sm">
+                      Business Relationship Graph — Fullscreen View
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleResetView} className="h-8 text-xs">
+                      Reset View
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => {
+                        setIsFullscreen(false);
+                        setTimeout(() => reactFlowInstance?.fitView({ padding: 0.15, duration: 300 }), 100);
+                      }}
+                      className="h-8 gap-1.5 text-xs"
+                    >
+                      <Minimize2 className="h-3.5 w-3.5" />
+                      <span>Exit Fullscreen</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
 
-              {/* Collapsible Legend mounted at top-right inside canvas */}
-              <div className="absolute top-3 right-3 z-10 max-w-sm">
-                <RelationshipLegend />
-              </div>
+              <div className="relative flex-1 w-full h-full">
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onNodeClick={handleNodeClick}
+                  onPaneClick={handlePaneClick}
+                  nodeTypes={nodeTypes}
+                  edgeTypes={edgeTypes}
+                  nodesDraggable={false}
+                  nodesConnectable={false}
+                  elementsSelectable={true}
+                  minZoom={0.25}
+                  maxZoom={2.0}
+                  defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+                  fitView
+                  fitViewOptions={{ padding: 0.15 }}
+                  className="select-none"
+                >
+                  <Background
+                    variant={BackgroundVariant.Lines}
+                    gap={28}
+                    size={1}
+                    color="color-mix(in srgb, var(--color-border) 70%, transparent)"
+                  />
+                  <Controls
+                    showInteractive={false}
+                    position="bottom-left"
+                    className="m-3 shadow-xs"
+                  />
+                  <MiniMap
+                    nodeStrokeWidth={2}
+                    zoomable
+                    pannable
+                    position="bottom-right"
+                    className="hidden md:block m-3"
+                    nodeColor={(n) => {
+                      if (n.id === selectedNodeId) return "var(--color-primary)";
+                      return "var(--color-muted-foreground)";
+                    }}
+                  />
+                </ReactFlow>
 
-              {/* Canvas status hint bar */}
-              <div className="absolute bottom-3 left-16 z-10 hidden sm:flex items-center gap-2 rounded-full border bg-card/90 px-3 py-1 text-[11px] text-muted-foreground shadow-xs backdrop-blur-xs">
-                <Network className="h-3 w-3 text-primary" />
-                <span>Scroll to zoom · Drag to pan · Click any node to trace impact</span>
+                {/* Fullscreen & Quick Jump buttons on top-left of canvas */}
+                <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const next = !isFullscreen;
+                      setIsFullscreen(next);
+                      setTimeout(() => reactFlowInstance?.fitView({ padding: 0.15, duration: 300 }), 150);
+                    }}
+                    className="h-8 gap-1.5 text-xs bg-card/90 shadow-xs backdrop-blur-xs cursor-pointer font-medium"
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 className="h-3.5 w-3.5" />
+                    ) : (
+                      <Maximize2 className="h-3.5 w-3.5" />
+                    )}
+                    <span>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
+                  </Button>
+
+                  <div className="hidden sm:flex items-center rounded-lg border bg-card/90 p-0.5 shadow-xs backdrop-blur-xs text-xs">
+                    <button
+                      onClick={() => reactFlowInstance?.fitView({ padding: 0.15, duration: 400 })}
+                      className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      title="Fit all workflows"
+                    >
+                      Fit All
+                    </button>
+                    <button
+                      onClick={() =>
+                        reactFlowInstance?.setCenter(1840, 160, { zoom: 0.50, duration: 450 })
+                      }
+                      className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      title="Focus on Primary Operating Cycle"
+                    >
+                      Chain 1
+                    </button>
+                    <button
+                      onClick={() =>
+                        reactFlowInstance?.setCenter(665, 850, { zoom: 0.80, duration: 450 })
+                      }
+                      className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      title="Focus on Mehta Fabrics cycle"
+                    >
+                      Chain 2
+                    </button>
+                    <button
+                      onClick={() =>
+                        reactFlowInstance?.setCenter(900, 1450, { zoom: 0.75, duration: 450 })
+                      }
+                      className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      title="Focus on Style Mart receivables"
+                    >
+                      Chain 3
+                    </button>
+                  </div>
+                </div>
+
+                {/* Collapsible Legend mounted at top-right inside canvas */}
+                <div className="absolute top-3 right-3 z-10 max-w-sm">
+                  <RelationshipLegend />
+                </div>
+
+                {/* Canvas status hint bar */}
+                <div className="absolute bottom-3 left-16 z-10 hidden sm:flex items-center gap-2 rounded-full border bg-card/90 px-3 py-1 text-[11px] text-muted-foreground shadow-xs backdrop-blur-xs">
+                  <Network className="h-3 w-3 text-primary" />
+                  <span>Scroll to zoom · Drag to pan · Click any node to trace impact</span>
+                </div>
               </div>
             </>
           )}

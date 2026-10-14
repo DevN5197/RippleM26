@@ -228,24 +228,24 @@ export function CashFlowLedgerView({ ledger, safetyThresholdPaise }: CashFlowLed
               <TableHeader>
                 <TableRow className="bg-muted/40 text-xs">
                   <TableHead className="w-10 px-2"></TableHead>
-                  <TableHead className="min-w-[120px]">Date</TableHead>
-                  <TableHead className="text-right min-w-[110px]">Opening Cash</TableHead>
-                  <TableHead className="text-right min-w-[120px] text-success">
+                  <TableHead className="min-w-[130px]">Date</TableHead>
+                  <TableHead className="text-right min-w-[125px]">Opening Cash</TableHead>
+                  <TableHead className="text-right min-w-[135px] text-success">
                     Expected Inflows
                   </TableHead>
-                  <TableHead className="text-right min-w-[100px] text-success">
+                  <TableHead className="text-right min-w-[115px] text-success">
                     Other Inflows
                   </TableHead>
-                  <TableHead className="text-right min-w-[120px] text-destructive">
+                  <TableHead className="text-right min-w-[140px] text-destructive">
                     Supplier Payments
                   </TableHead>
-                  <TableHead className="text-right min-w-[110px] text-destructive">
+                  <TableHead className="text-right min-w-[125px] text-destructive">
                     Operating Exp.
                   </TableHead>
-                  <TableHead className="text-right min-w-[110px] text-destructive">
+                  <TableHead className="text-right min-w-[120px] text-destructive">
                     Other Outflows
                   </TableHead>
-                  <TableHead className="text-right min-w-[120px] font-bold">Closing Cash</TableHead>
+                  <TableHead className="text-right min-w-[135px] font-bold">Closing Cash</TableHead>
                   <TableHead className="text-center min-w-[110px]">Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -348,12 +348,12 @@ function DailyLedgerRow({
         </TableCell>
 
         {/* Opening cash */}
-        <TableCell className="text-right tabular-nums text-muted-foreground py-2.5">
+        <TableCell className="text-right whitespace-nowrap tabular-nums text-muted-foreground py-2.5">
           {formatMoney(entry.openingBalancePaise)}
         </TableCell>
 
         {/* Expected incoming payments */}
-        <TableCell className="text-right tabular-nums py-2.5">
+        <TableCell className="text-right whitespace-nowrap tabular-nums py-2.5">
           {entry.expectedIncomingPaise > 0 ? (
             <span className="text-success font-medium">
               +{formatMoney(entry.expectedIncomingPaise)}
@@ -364,7 +364,7 @@ function DailyLedgerRow({
         </TableCell>
 
         {/* Other cash inflows */}
-        <TableCell className="text-right tabular-nums py-2.5">
+        <TableCell className="text-right whitespace-nowrap tabular-nums py-2.5">
           {entry.otherInflowsPaise > 0 ? (
             <span className="text-success">+{formatMoney(entry.otherInflowsPaise)}</span>
           ) : (
@@ -373,7 +373,7 @@ function DailyLedgerRow({
         </TableCell>
 
         {/* Supplier payments */}
-        <TableCell className="text-right tabular-nums py-2.5">
+        <TableCell className="text-right whitespace-nowrap tabular-nums py-2.5">
           {entry.supplierPaymentsPaise > 0 ? (
             <span className="text-destructive font-medium">
               −{formatMoney(entry.supplierPaymentsPaise)}
@@ -384,7 +384,7 @@ function DailyLedgerRow({
         </TableCell>
 
         {/* Operating expenses */}
-        <TableCell className="text-right tabular-nums py-2.5">
+        <TableCell className="text-right whitespace-nowrap tabular-nums py-2.5">
           {entry.operatingExpensesPaise > 0 ? (
             <span className="text-destructive">−{formatMoney(entry.operatingExpensesPaise)}</span>
           ) : (
@@ -393,7 +393,7 @@ function DailyLedgerRow({
         </TableCell>
 
         {/* Other outgoing payments */}
-        <TableCell className="text-right tabular-nums py-2.5">
+        <TableCell className="text-right whitespace-nowrap tabular-nums py-2.5">
           {entry.otherOutflowsPaise > 0 ? (
             <span className="text-destructive">−{formatMoney(entry.otherOutflowsPaise)}</span>
           ) : (
@@ -402,7 +402,7 @@ function DailyLedgerRow({
         </TableCell>
 
         {/* Closing cash */}
-        <TableCell className="text-right tabular-nums py-2.5 font-bold">
+        <TableCell className="text-right whitespace-nowrap tabular-nums py-2.5 font-bold">
           <span
             className={
               isShortfall
@@ -549,7 +549,7 @@ function DailyEventItem({ event }: { event: CashFlowEvent }) {
         <div className="flex items-center gap-1">
           {event.relatedInvoiceId && (
             <Button variant="outline" size="sm" asChild className="h-6 text-[10px] px-2 gap-1">
-              <Link to="/invoices">
+              <Link to="/invoices" target="_blank" rel="noreferrer">
                 <FileText className="h-3 w-3 text-primary" />
                 <span>{event.relatedInvoiceId.toUpperCase()}</span>
                 <ExternalLink className="h-2.5 w-2.5" />
@@ -559,7 +559,7 @@ function DailyEventItem({ event }: { event: CashFlowEvent }) {
 
           {event.relatedPurchaseOrderId && (
             <Button variant="outline" size="sm" asChild className="h-6 text-[10px] px-2 gap-1">
-              <Link to="/suppliers">
+              <Link to="/suppliers" target="_blank" rel="noreferrer">
                 <Truck className="h-3 w-3 text-primary" />
                 <span>{event.relatedPurchaseOrderId.toUpperCase()}</span>
                 <ExternalLink className="h-2.5 w-2.5" />
@@ -571,6 +571,8 @@ function DailyEventItem({ event }: { event: CashFlowEvent }) {
           <Button variant="ghost" size="sm" asChild className="h-6 text-[10px] px-1.5 text-primary">
             <Link
               to="/simulator"
+              target="_blank"
+              rel="noreferrer"
               search={{
                 eventId: event.id,
                 eventName: event.label,

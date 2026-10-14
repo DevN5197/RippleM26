@@ -76,6 +76,21 @@ export function InvoiceTable({
   onSendReminder,
   onCancelInvoice,
 }: InvoiceTableProps) {
+  const [localSearch, setLocalSearch] = React.useState(search);
+
+  React.useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localSearch !== search) {
+        onSearchChange(localSearch);
+      }
+    }, 200);
+    return () => clearTimeout(handler);
+  }, [localSearch, search, onSearchChange]);
+
   const getAgingBadge = (bucket: AgingBucket, days: number) => {
     switch (bucket) {
       case "1_7":
@@ -127,8 +142,8 @@ export function InvoiceTable({
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by invoice #, counterparty..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="pl-8"
           />
         </div>
@@ -390,6 +405,8 @@ export function InvoiceTable({
                               <Link
                                 to="/invoices/$invoiceId"
                                 params={{ invoiceId: inv.id }}
+                                target="_blank"
+                                rel="noreferrer"
                                 className="cursor-pointer"
                               >
                                 <Eye className="mr-2 h-4 w-4" />

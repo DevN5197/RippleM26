@@ -47,6 +47,7 @@ import { MoneyAmount } from "@/components/shared/money-amount";
 import { DateLabel } from "@/components/shared/date-label";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { formatMoney } from "@/lib/formatters";
 import type { EnrichedSupplier } from "@/types";
 
 interface SupplierTableProps {
@@ -87,7 +88,21 @@ export function SupplierTable({
   onAddSupplier,
 }: SupplierTableProps) {
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [localSearch, setLocalSearch] = React.useState(searchQuery);
   const pageSize = 10;
+
+  React.useEffect(() => {
+    setLocalSearch(searchQuery);
+  }, [searchQuery]);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localSearch !== searchQuery) {
+        onSearchChange(localSearch);
+      }
+    }, 200);
+    return () => clearTimeout(handler);
+  }, [localSearch, searchQuery, onSearchChange]);
 
   // Reset pagination on search/filter changes
   React.useEffect(() => {
@@ -105,8 +120,8 @@ export function SupplierTable({
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden />
           <Input
             placeholder="Search suppliers, contacts, GSTIN..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="pl-8 text-sm"
           />
         </div>
@@ -274,15 +289,15 @@ export function SupplierTable({
                     </TableCell>
 
                     {/* Outstanding Balance */}
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-right tabular-nums whitespace-nowrap">
                       <div className="flex flex-col items-end">
                         <MoneyAmount
-                          amountPaise={supplier.outstandingPaise}
+                          paise={supplier.outstandingPaise}
                           className="font-medium"
                         />
                         {supplier.overdueAmountPaise > 0 && (
                           <span className="text-[11px] font-medium text-destructive">
-                            ₹{(supplier.overdueAmountPaise / 100).toLocaleString("en-IN")} overdue
+                            {formatMoney(supplier.overdueAmountPaise)} overdue
                           </span>
                         )}
                       </div>
@@ -306,7 +321,7 @@ export function SupplierTable({
                           <DateLabel iso={supplier.nextPaymentDate} />
                           {supplier.nextPaymentAmountPaise !== undefined && (
                             <span className="text-[11px] text-muted-foreground tabular-nums">
-                              ₹{(supplier.nextPaymentAmountPaise / 100).toLocaleString("en-IN")}
+                              {formatMoney(supplier.nextPaymentAmountPaise)}
                             </span>
                           )}
                         </div>
@@ -367,7 +382,7 @@ export function SupplierTable({
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuLabel>Supplier Actions</DropdownMenuLabel>
                           <DropdownMenuItem asChild>
-                            <Link to="/suppliers/$supplierId" params={{ supplierId: supplier.id }}>
+                            <Link to="/suppliers/$supplierId" params={{ supplierId: supplier.id }} target="_blank" rel="noreferrer">
                               <ExternalLink className="mr-2 h-4 w-4" />
                               View Details
                             </Link>

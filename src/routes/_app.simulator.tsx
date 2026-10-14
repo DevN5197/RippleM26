@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { FlaskConical, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -74,6 +74,11 @@ const DEFAULT_CONTROLS: SimulatorControls = {
 
 function SimulatorPage() {
   const queryClient = useQueryClient();
+  const searchParams = Route.useSearch();
+
+  const [isBaselineDialogOpen, setIsBaselineDialogOpen] = useState(false);
+  const [initCustomerRupees, setInitCustomerRupees] = useState("8000");
+  const [initSupplierRupees, setInitSupplierRupees] = useState("5000");
 
   const [controls, setControls] = useState<SimulatorControls>(DEFAULT_CONTROLS);
   const [result, setResult] = useState<SimulatorResult | null>(null);
@@ -88,9 +93,6 @@ function SimulatorPage() {
     onSuccess: (data) => {
       setResult(data);
       setError(null);
-      toast.success("Simulation complete", {
-        description: `Ripple Impact Score: ${data.rippleScore.totalScore}/100`,
-      });
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -98,6 +100,14 @@ function SimulatorPage() {
       toast.error("Simulation failed", { description: err.message });
     },
   });
+
+  // ── Dynamic simulation trigger on mount & whenever controls change ──
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      runMutation.mutate(controls);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [controls]);
 
   // ── Save scenario mutation ──
   const saveMutation = useMutation({
@@ -121,7 +131,6 @@ function SimulatorPage() {
 
   const handleReset = useCallback(() => {
     setControls(DEFAULT_CONTROLS);
-    setResult(null);
     setError(null);
     setChartView("both");
   }, []);
@@ -152,10 +161,21 @@ function SimulatorPage() {
         title="Ripple Simulator"
         description="Change a business event and instantly see how it ripples through suppliers, inventory, customer orders, and cash flow."
         actions={
-          <Badge variant="outline" className="gap-1.5 text-xs bg-primary/5 text-primary border-primary/20">
-            <FlaskConical className="h-3 w-3" aria-hidden />
-            What-if Engine
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsBaselineDialogOpen(true)}
+              className="text-xs gap-1.5 h-8 font-medium"
+            >
+              <FlaskConical className="h-3.5 w-3.5 text-primary" />
+              Custom Amounts
+            </Button>
+            <Badge variant="outline" className="gap-1.5 text-xs bg-primary/5 text-primary border-primary/20">
+              <FlaskConical className="h-3 w-3" aria-hidden />
+              What-if Engine
+            </Badge>
+          </div>
         }
       />
 
@@ -253,6 +273,81 @@ function SimulatorPage() {
           )}
         </div>
       </div>
+
+      {/* Baseline Configuration Dialog: Optional quick prompt to specify custom amounts */}
+      <Dialog open={isBaselineDialogOpen} onOpenChange={setIsBaselineDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <FlaskConical className="h-4 w-4" />
+              </div>
+              <DialogTitle className="text-base">Configure Simulation Amounts</DialogTitle>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Specify custom baseline customer and supplier payment amounts for this simulation:
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Customer Payment Amount (₹)</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="e.g. 8000"
+                value={initCustomerRupees}
+                onChange={(e) => setInitCustomerRupees(e.target.value)}
+                className="h-9 text-xs font-mono tabular-nums"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Inflow amount expected from customer (normally ₹8,000 for INV-2001)
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Supplier Payment Amount (₹)</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="e.g. 5000"
+                value={initSupplierRupees}
+                onChange={(e) => setInitSupplierRupees(e.target.value)}
+                className="h-9 text-xs font-mono tabular-nums"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Advance outlay commitment to supplier (normally ₹5,000 for PO-1)
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2 border-t flex flex-row items-center justify-between gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsBaselineDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              className="text-xs font-semibold shadow-xs"
+              onClick={() => {
+                const custRupees = parseFloat(initCustomerRupees);
+                const suppRupees = parseFloat(initSupplierRupees);
+                setControls((prev) => ({
+                  ...prev,
+                  customerPaymentAmountPaise: isNaN(custRupees) ? null : Math.round(custRupees * 100),
+                  supplierPaymentAmountPaise: isNaN(suppRupees) ? null : Math.round(suppRupees * 100),
+                }));
+                setIsBaselineDialogOpen(false);
+              }}
+            >
+              Apply Amounts
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Save scenario dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>

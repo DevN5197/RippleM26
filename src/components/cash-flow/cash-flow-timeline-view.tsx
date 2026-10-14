@@ -292,7 +292,7 @@ function TimelineEventCard({ event }: { event: CashFlowEvent }) {
                 asChild
                 className="h-6 text-[10px] px-2 gap-1 text-primary border-primary/30"
               >
-                <Link to="/invoices">
+                <Link to="/invoices" target="_blank" rel="noreferrer">
                   <FileText className="h-3 w-3" />
                   <span>{event.relatedInvoiceId.toUpperCase()}</span>
                   <ExternalLink className="h-2.5 w-2.5" />
@@ -307,7 +307,7 @@ function TimelineEventCard({ event }: { event: CashFlowEvent }) {
                 asChild
                 className="h-6 text-[10px] px-2 gap-1 text-primary border-primary/30"
               >
-                <Link to="/suppliers">
+                <Link to="/suppliers" target="_blank" rel="noreferrer">
                   <Truck className="h-3 w-3" />
                   <span>{event.relatedPurchaseOrderId.toUpperCase()}</span>
                   <ExternalLink className="h-2.5 w-2.5" />
@@ -332,6 +332,8 @@ function TimelineEventCard({ event }: { event: CashFlowEvent }) {
           >
             <Link
               to="/simulator"
+              target="_blank"
+              rel="noreferrer"
               search={{
                 eventId: event.id,
                 eventName: event.label,

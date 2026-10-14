@@ -106,6 +106,11 @@ export function CashFlowHeader({
           >
             <Shield className="h-3.5 w-3.5 text-warning" />
             <span>Buffer: {formatMoney(safetyThresholdPaise)}</span>
+            {safetyThresholdPaise === 500_000 && (
+              <Badge variant="secondary" className="px-1.5 py-0 text-[10px] bg-primary/10 text-primary border-primary/20">
+                Recommended
+              </Badge>
+            )}
             <SlidersHorizontal className="h-3 w-3 text-muted-foreground ml-0.5" />
           </Button>
 

@@ -67,6 +67,21 @@ export function CustomerTable({
   onEdit,
   onArchiveToggle,
 }: CustomerTableProps) {
+  const [localSearch, setLocalSearch] = React.useState(search);
+
+  React.useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localSearch !== search) {
+        onSearchChange(localSearch);
+      }
+    }, 200);
+    return () => clearTimeout(handler);
+  }, [localSearch, search, onSearchChange]);
+
   return (
     <div className="space-y-4">
       {/* Filters Bar */}
@@ -75,8 +90,8 @@ export function CustomerTable({
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search customers, contacts, tax ID..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="pl-8"
           />
         </div>
@@ -230,6 +245,8 @@ export function CustomerTable({
                           <Link
                             to="/customers/$customerId"
                             params={{ customerId: customer.id }}
+                            target="_blank"
+                            rel="noreferrer"
                             className="flex items-center cursor-pointer"
                           >
                             <Eye className="mr-2 h-4 w-4" />

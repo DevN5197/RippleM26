@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Building2 } from "lucide-react";
 import type { Supplier, CreateSupplierInput, UpdateSupplierInput } from "@/types";
 
 const supplierFormSchema = z.object({
@@ -160,12 +161,19 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSubmit }: Suppl
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Update vendor contact details, tax identification, and settlement terms."
-              : "Register a verified counterparty for purchase orders, payable invoices, and stock deliveries."}
-          </DialogDescription>
+          <div className="flex items-start gap-2.5 text-left">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary mt-0.5">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle>{isEditing ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
+              <DialogDescription className="text-xs mt-1">
+                {isEditing
+                  ? "Update vendor contact details, tax identification, and settlement terms."
+                  : "Register a verified counterparty for purchase orders, payable invoices, and stock deliveries."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
@@ -182,7 +190,9 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSubmit }: Suppl
                 name="name"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Supplier / Company Name *</FormLabel>
+                    <FormLabel>
+                      Supplier / Company Name <span className="text-destructive font-bold ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Shree Textiles Pvt Ltd" {...field} />
                     </FormControl>
@@ -252,14 +262,20 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSubmit }: Suppl
                 name="paymentTermsDays"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Terms (Days) *</FormLabel>
+                    <FormLabel>
+                      Payment Terms (Days) <span className="text-destructive font-bold ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min="0"
                         max="365"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                        placeholder="30"
+                        value={field.value === 0 || field.value === undefined ? "" : field.value}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? 0 : Number(e.target.value))
+                        }
+                        className="tabular-nums"
                       />
                     </FormControl>
                     <FormDescription className="text-xs">
@@ -281,8 +297,12 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSubmit }: Suppl
                         type="number"
                         min="0"
                         max="365"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                        placeholder="7"
+                        value={field.value === 0 || field.value === undefined ? "" : field.value}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? 0 : Number(e.target.value))
+                        }
+                        className="tabular-nums"
                       />
                     </FormControl>
                     <FormDescription className="text-xs">

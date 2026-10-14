@@ -33,19 +33,9 @@ export function SimulatorControlPanel({
   const setField = <K extends keyof SimulatorControls>(key: K, value: SimulatorControls[K]) =>
     onChange({ ...controls, [key]: value });
 
-  // Default amounts from seed data (paise)
+  // Default amounts from seed data (paise) for reference placeholders
   const defaultCustomerAmountPaise = 800_000; // ₹8,000 INV-2001
   const defaultSupplierAmountPaise = 500_000; // ₹5,000 advance
-
-  const customerAmountDisplay =
-    controls.customerPaymentAmountPaise !== null
-      ? controls.customerPaymentAmountPaise
-      : defaultCustomerAmountPaise;
-
-  const supplierAmountDisplay =
-    controls.supplierPaymentAmountPaise !== null
-      ? controls.supplierPaymentAmountPaise
-      : defaultSupplierAmountPaise;
 
   return (
     <Card className="shadow-xs h-fit">
@@ -113,19 +103,28 @@ export function SimulatorControlPanel({
               type="number"
               min={0}
               step={100}
-              value={customerAmountDisplay / 100}
+              placeholder="e.g. 8000"
+              value={
+                controls.customerPaymentAmountPaise === null
+                  ? ""
+                  : controls.customerPaymentAmountPaise / 100
+              }
               onChange={(e) => {
-                const rupees = parseFloat(e.target.value);
-                setField(
-                  "customerPaymentAmountPaise",
-                  isNaN(rupees) ? null : Math.round(rupees * 100),
-                );
+                const val = e.target.value.trim();
+                if (val === "") {
+                  setField("customerPaymentAmountPaise", null);
+                } else {
+                  const num = parseFloat(val);
+                  setField("customerPaymentAmountPaise", isNaN(num) ? null : Math.round(num * 100));
+                }
               }}
-              className="h-8 text-sm"
+              className="h-8 text-sm tabular-nums"
             />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Default: {formatMoney(defaultCustomerAmountPaise)} (INV-2001 from Urban Threads).
+            {controls.customerPaymentAmountPaise === null
+              ? `Cleared (default baseline ₹8,000 applies)`
+              : `Configured: ${formatMoney(controls.customerPaymentAmountPaise)}`}
           </p>
         </div>
 
@@ -140,19 +139,28 @@ export function SimulatorControlPanel({
               type="number"
               min={0}
               step={100}
-              value={supplierAmountDisplay / 100}
+              placeholder="e.g. 5000"
+              value={
+                controls.supplierPaymentAmountPaise === null
+                  ? ""
+                  : controls.supplierPaymentAmountPaise / 100
+              }
               onChange={(e) => {
-                const rupees = parseFloat(e.target.value);
-                setField(
-                  "supplierPaymentAmountPaise",
-                  isNaN(rupees) ? null : Math.round(rupees * 100),
-                );
+                const val = e.target.value.trim();
+                if (val === "") {
+                  setField("supplierPaymentAmountPaise", null);
+                } else {
+                  const num = parseFloat(val);
+                  setField("supplierPaymentAmountPaise", isNaN(num) ? null : Math.round(num * 100));
+                }
               }}
-              className="h-8 text-sm"
+              className="h-8 text-sm tabular-nums"
             />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Default: {formatMoney(defaultSupplierAmountPaise)} advance to Shree Textiles (PO-1).
+            {controls.supplierPaymentAmountPaise === null
+              ? `Cleared (default baseline ₹5,000 applies)`
+              : `Configured: ${formatMoney(controls.supplierPaymentAmountPaise)}`}
           </p>
         </div>
 

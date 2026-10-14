@@ -159,7 +159,9 @@ export function ProductDialog({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product name *</FormLabel>
+                    <FormLabel>
+                      Product name <span className="text-destructive font-bold ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Cotton Handloom Kurti" {...field} />
                     </FormControl>
@@ -174,7 +176,9 @@ export function ProductDialog({
                 name="sku"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>SKU *</FormLabel>
+                    <FormLabel>
+                      SKU <span className="text-destructive font-bold ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="e.g. KUR-COT-001"
@@ -196,10 +200,31 @@ export function ProductDialog({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category *</FormLabel>
+                    <FormLabel>
+                      Category <span className="text-destructive font-bold ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Kurtis & Tunics" {...field} />
+                      <Input placeholder="Type category or pick below..." {...field} />
                     </FormControl>
+                    {categories && categories.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span className="text-[10px] text-muted-foreground">Previous:</span>
+                        {categories.map((cat) => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => field.onChange(cat)}
+                            className={`rounded px-2 py-0.5 text-[11px] font-medium border transition-colors cursor-pointer ${
+                              field.value === cat
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground border-border"
+                            }`}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -211,7 +236,9 @@ export function ProductDialog({
                 name="unitOfMeasure"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit of measure *</FormLabel>
+                    <FormLabel>
+                      Unit of measure <span className="text-destructive font-bold ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
@@ -264,8 +291,12 @@ export function ProductDialog({
                         <Input
                           type="number"
                           min={0}
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          placeholder="0"
+                          value={field.value === 0 || field.value === undefined ? "" : field.value}
+                          onChange={(e) =>
+                            field.onChange(e.target.value === "" ? 0 : Number(e.target.value))
+                          }
+                          className="tabular-nums"
                         />
                       </FormControl>
                       <FormDescription className="text-[11px]">
@@ -283,13 +314,19 @@ export function ProductDialog({
                 name="reorderPoint"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reorder threshold *</FormLabel>
+                    <FormLabel>
+                      Reorder threshold <span className="text-destructive font-bold ml-0.5">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min={0}
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        placeholder="0"
+                        value={field.value === 0 || field.value === undefined ? "" : field.value}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? 0 : Number(e.target.value))
+                        }
+                        className="tabular-nums"
                       />
                     </FormControl>
                     <FormDescription className="text-[11px]">
@@ -313,8 +350,11 @@ export function ProductDialog({
                         min={0}
                         step="any"
                         placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value === 0 || field.value === undefined ? "" : field.value}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? 0 : Number(e.target.value))
+                        }
+                        className="tabular-nums font-mono"
                       />
                     </FormControl>
                     <FormDescription className="text-[11px]">Base purchase cost</FormDescription>

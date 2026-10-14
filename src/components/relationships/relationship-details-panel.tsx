@@ -75,13 +75,11 @@ export function RelationshipDetailsPanel({
   const ripplePreview: RippleImpactPreview = calculateRippleImpact(nodeId, graph);
 
   const handleSimulateDelay = () => {
-    navigate({
-      to: "/simulator",
-      search: {
-        eventId: node.id,
-        eventName: node.label,
-      },
-    });
+    window.open(
+      `/simulator?eventId=${encodeURIComponent(node.id)}&eventName=${encodeURIComponent(node.label)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   return (

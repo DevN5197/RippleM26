@@ -208,11 +208,15 @@ function CashFlowPage() {
     ];
 
     const rows = forecast.dailyLedger.map((entry) => {
-      const eventsSummary = entry.events
-        .map(
-          (e) => `${e.label} [${e.direction === "incoming" ? "+" : "-"}${e.amountPaise / 100} INR]`,
-        )
-        .join("; ");
+      const eventsSummary =
+        entry.events.length === 0
+          ? "No events scheduled"
+          : entry.events
+              .map(
+                (e) =>
+                  `${e.label.replace(/["\r\n,]+/g, " ")} (${e.direction === "incoming" ? "+INR " : "-INR "}${(e.amountPaise / 100).toFixed(2)})`,
+              )
+              .join("; ");
 
       return [
         entry.date,
@@ -266,9 +270,6 @@ function CashFlowPage() {
         onExportCsv={handleExportCsv}
       />
 
-      {/* Financial Summary Cards (7 key metrics + shortage banner) */}
-      <CashFlowSummaryCards forecast={forecast} />
-
       {/* Scenario comparison banner (when scenario active) */}
       {forecast.scenario && (
         <CashFlowScenarioBanner
@@ -277,7 +278,7 @@ function CashFlowPage() {
         />
       )}
 
-      {/* Active View: Chart, Ledger, or Timeline */}
+      {/* Attention Highlight: Chart, Ledger, or Timeline first directly after info/header controls */}
       {viewMode === "chart" && <CashFlowChartView forecast={forecast} />}
 
       {viewMode === "ledger" && (
@@ -293,6 +294,11 @@ function CashFlowPage() {
           safetyThresholdPaise={forecast.safetyThresholdPaise}
         />
       )}
+
+      {/* Financial Summary Metrics */}
+      <div className="pt-2">
+        <CashFlowSummaryCards forecast={forecast} />
+      </div>
 
       {/* Safety Threshold configuration modal */}
       <CashFlowSafetyDialog

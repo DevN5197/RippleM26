@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   PackagePlus,
   ArrowLeftRight,
@@ -53,6 +53,20 @@ export function InventoryHeader({
   onClearFilters,
   hasActiveFilters,
 }: InventoryHeaderProps) {
+  const [localSearch, setLocalSearch] = useState(search);
+
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== search) {
+        onSearchChange(localSearch);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [localSearch, search, onSearchChange]);
   return (
     <div className="space-y-4">
       {/* Top Header & Actions */}
@@ -105,14 +119,17 @@ export function InventoryHeader({
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden />
           <Input
             placeholder="Search by product name, SKU or category..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="pl-9 h-9 bg-card"
             aria-label="Search inventory"
           />
-          {search && (
+          {localSearch && (
             <button
-              onClick={() => onSearchChange("")}
+              onClick={() => {
+                setLocalSearch("");
+                onSearchChange("");
+              }}
               className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
               aria-label="Clear search"
             >

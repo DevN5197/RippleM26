@@ -227,12 +227,12 @@ export function CashFlowChartView({ forecast }: CashFlowChartViewProps) {
 
         <CardContent>
           <div
-            className="h-80 w-full"
+            className="h-[420px] w-full"
             role="img"
             aria-label={`Projected cash balance over ${forecast.periodDays} days`}
           >
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={chartData} margin={{ top: 12, right: 16, left: 4, bottom: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 20, right: 24, left: 16, bottom: 20 }}>
                 <defs>
                   <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.3} />
@@ -259,6 +259,13 @@ export function CashFlowChartView({ forecast }: CashFlowChartViewProps) {
                   tickLine={false}
                   axisLine={false}
                   minTickGap={28}
+                  label={{
+                    value: "Forecast Timeline (Date)",
+                    position: "insideBottom",
+                    offset: -10,
+                    fontSize: 11,
+                    fill: "var(--color-muted-foreground)",
+                  }}
                 />
 
                 <YAxis
@@ -268,9 +275,20 @@ export function CashFlowChartView({ forecast }: CashFlowChartViewProps) {
                   axisLine={false}
                   width={64}
                   domain={["auto", "auto"]}
+                  label={{
+                    value: "Projected Cash (INR)",
+                    angle: -90,
+                    position: "insideLeft",
+                    offset: 15,
+                    fontSize: 11,
+                    fill: "var(--color-muted-foreground)",
+                  }}
                 />
 
                 <Tooltip
+                  cursor={false}
+                  isAnimationActive={false}
+                  position={{ y: 0 }}
                   content={<CustomTooltip safetyThresholdRupees={safetyThresholdRupees} />}
                 />
 

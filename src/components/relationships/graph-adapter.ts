@@ -3,59 +3,89 @@ import type { RelationshipGraphData, RelationshipGraphNode, RelationshipGraphEdg
 import type { CustomNodeData } from "./relationship-node";
 
 // Deterministic stage positions (X-coordinates by process sequence)
-const STAGE_X: Record<string, number> = {
-  // Main cycle
+export const STAGE_X: Record<string, number> = {
+  // Chain 1: Primary Operating Cycle (Shree Textiles -> Urban Threads)
   node_sup_1: 60,
-  node_pay_1: 360,
-  node_po_1: 660,
-  node_delivery_1: 960,
-  node_pay_3: 960,
-  node_stock_1: 1260,
-  node_cus_1: 1260,
-  node_co_1: 1560,
-  node_inv_2001: 1860,
-  node_rec_2001: 2160,
-  node_risk_1: 1280,
+  node_pay_1: 530,
+  node_po_1: 1000,
+  node_delivery_1: 1470,
+  node_pay_3: 1470,
+  node_stock_1: 1940,
+  node_risk_1: 1940,
+  node_co_1: 2410,
+  node_cus_1: 2410,       // Directly above customer sale node_co_1
+  node_inv_2001: 2880,
+  node_rec_2001: 3350,
 
-  // Secondary cycle (Mehta Fabrics)
+  // Chain 2: Secondary cycle (Mehta Fabrics)
   node_sup_2: 60,
-  node_po_2: 360,
-  node_delivery_2: 660,
-  node_pay_po2: 660,
+  node_po_2: 530,
+  node_delivery_2: 1000,
+  node_pay_po2: 1000,
 
-  // Customer Receivables (Style Mart)
-  node_cus_2: 960,
-  node_inv_1999: 1260,
-  node_co_2: 1260,
-  node_inv_2002: 1560,
-  node_rec_2002: 1860,
+  // Chain 3: Customer Receivables & Overdue Risk (Style Mart)
+  node_cus_2: 60,
+  node_inv_1999: 530,
+  node_co_2: 530,
+  node_inv_2002: 1000,
+  node_rec_2002: 1470,
 };
 
 // Deterministic vertical positions (Y-coordinates)
-const STAGE_Y: Record<string, number> = {
-  // Main cycle (Upper half)
-  node_sup_1: 100,
-  node_pay_1: 100,
-  node_po_1: 100,
-  node_delivery_1: 60,
-  node_pay_3: 240,
-  node_stock_1: 60,
-  node_cus_1: 220,
-  node_co_1: 100,
-  node_inv_2001: 100,
-  node_rec_2001: 100,
-  node_risk_1: 360,
+export const STAGE_Y: Record<string, number> = {
+  // Chain 1: Primary Operating Cycle
+  node_cus_1: -180,      // Customer (Urban Threads) placed directly above node_co_1
+  node_sup_1: 70,        // Row 0: Supplier (Shree Textiles)
+  node_pay_1: 70,        // Row 0: Advance payment
+  node_po_1: 70,         // Row 0: Purchase order PO-1
+  node_delivery_1: 70,   // Row 0: Inventory delivery Day 4
+  node_stock_1: 70,      // Row 0: Inventory stock (12 units)
+  node_co_1: 70,         // Row 0: Customer sale #CO-1
+  node_inv_2001: 70,     // Row 0: Invoice INV-2001
+  node_rec_2001: 70,     // Row 0: Customer receipt REC-2001
 
-  // Secondary cycle & Style Mart (Lower half)
-  node_sup_2: 480,
-  node_po_2: 480,
-  node_delivery_2: 440,
-  node_pay_po2: 580,
-  node_cus_2: 700,
-  node_inv_1999: 780,
-  node_co_2: 640,
-  node_inv_2002: 640,
-  node_rec_2002: 640,
+  node_pay_3: 360,       // Row 1: PO balance payment
+  node_risk_1: 360,      // Row 1: Day 5 cash shortfall risk
+
+  // Chain 2: Secondary cycle (Middle workflow lane)
+  node_sup_2: 740,       // Row 2: Supplier (Mehta Fabrics)
+  node_po_2: 740,        // Row 2: Purchase order PO-2
+  node_delivery_2: 640,  // Row 2a: Upper delivery branch
+  node_pay_po2: 920,     // Row 2b: Lower net-45 payment branch
+
+  // Chain 3: Customer Receivables (Bottom workflow lane)
+  node_cus_2: 1380,      // Row 3: Customer (Style Mart)
+  node_inv_1999: 1240,   // Row 3a: Upper overdue invoice branch
+  node_co_2: 1520,       // Row 3b: Lower customer sale branch
+  node_inv_2002: 1520,   // Row 3b: Invoice INV-2002
+  node_rec_2002: 1520,   // Row 3b: Customer receipt REC-2002
+};
+
+// Exact ER Diagram Port / Handle Mappings to eliminate all edge overlaps
+export const EDGE_HANDLES: Record<string, { sourceHandle: string; targetHandle: string }> = {
+  // Chain 1: Primary Operating Cycle
+  edge_sup_to_adv: { sourceHandle: "right", targetHandle: "left" },
+  edge_adv_to_po: { sourceHandle: "right", targetHandle: "left" },
+  edge_po_to_deliv: { sourceHandle: "right-upper", targetHandle: "left" },
+  edge_po_to_balpay: { sourceHandle: "right-lower", targetHandle: "left" },
+  edge_deliv_to_stock: { sourceHandle: "right", targetHandle: "left" },
+  edge_deliv_to_risk: { sourceHandle: "bottom", targetHandle: "top" },
+  edge_pay3_to_risk: { sourceHandle: "right", targetHandle: "left" },
+  edge_stock_to_co: { sourceHandle: "right", targetHandle: "left" },
+  edge_cus_to_co: { sourceHandle: "bottom", targetHandle: "top" },
+  edge_co_to_inv: { sourceHandle: "right", targetHandle: "left" },
+  edge_inv_to_rec: { sourceHandle: "right", targetHandle: "left" },
+
+  // Chain 2: Secondary Cycle (Mehta Fabrics)
+  edge_sup2_to_po2: { sourceHandle: "right", targetHandle: "left" },
+  edge_po2_to_deliv2: { sourceHandle: "right-upper", targetHandle: "left" },
+  edge_po2_to_pay: { sourceHandle: "right-lower", targetHandle: "left" },
+
+  // Chain 3: Customer Receivables (Style Mart)
+  edge_cus2_to_inv1999: { sourceHandle: "right-upper", targetHandle: "left" },
+  edge_cus2_to_co2: { sourceHandle: "right-lower", targetHandle: "left" },
+  edge_co2_to_inv2002: { sourceHandle: "right", targetHandle: "left" },
+  edge_inv2002_to_rec2002: { sourceHandle: "right", targetHandle: "left" },
 };
 
 export interface GraphAdapterOptions {
@@ -133,7 +163,7 @@ export function adaptToReactFlow(
       const isDimmed = isSelectionActive && !isConnected;
 
       // Deterministic layout with fallback grid
-      const x = STAGE_X[node.id] ?? 80 + (index % 5) * 300;
+      const x = STAGE_X[node.id] ?? 80 + (index % 5) * 320;
       const y = STAGE_Y[node.id] ?? 100 + Math.floor(index / 5) * 160;
 
       return {
@@ -150,6 +180,54 @@ export function adaptToReactFlow(
       };
     });
 
+  // Lane Header Annotations for structured swimlanes
+  const laneNodes: Node<any>[] = [
+    {
+      id: "lane_1",
+      type: "lane_header",
+      position: { x: 60, y: -260 },
+      data: {
+        title: "Chain 1: Primary Operating Cycle",
+        subtitle: "Shree Textiles → Fabrication → Urban Threads Boutique · Risk Point Day 5",
+        badge: "Critical Path",
+        badgeVariant: "destructive",
+      },
+      selectable: false,
+      draggable: false,
+    },
+    {
+      id: "lane_2",
+      type: "lane_header",
+      position: { x: 60, y: 570 },
+      data: {
+        title: "Chain 2: Secondary Procurement",
+        subtitle: "Mehta Fabrics → Linen Shirt PO-2 & Day 11 Delivery · Net-45 Terms",
+        badge: "Active Restock",
+        badgeVariant: "secondary",
+      },
+      selectable: false,
+      draggable: false,
+    },
+    {
+      id: "lane_3",
+      type: "lane_header",
+      position: { x: 60, y: 1150 },
+      data: {
+        title: "Chain 3: Receivables & Collections",
+        subtitle: "Style Mart → Overdue INV-1999 Collection & Day 39 Settlement",
+        badge: "Overdue Attention",
+        badgeVariant: "warning",
+      },
+      selectable: false,
+      draggable: false,
+    },
+  ];
+
+  const allNodes =
+    filteredNodeIds && filteredNodeIds.size < data.nodes.length
+      ? nodes
+      : [...laneNodes, ...nodes];
+
   // Transform Edges
   const validNodeIds = new Set(nodes.map((n) => n.id));
 
@@ -159,43 +237,43 @@ export function adaptToReactFlow(
       const isHighlighted = highlightedEdgeIds.has(edge.id);
       const isDimmed = isSelectionActive && !isHighlighted;
       const isAtRisk = edge.status === "at_risk";
+      const isDelayed = edge.status === "delayed";
+      const shouldShowLabel = isHighlighted || isAtRisk || isDelayed;
+
+      const handles = EDGE_HANDLES[edge.id] || {
+        sourceHandle: "right",
+        targetHandle: "left",
+      };
 
       return {
         id: edge.id,
         source: edge.source,
         target: edge.target,
-        type: "smoothstep",
-        animated: isHighlighted || isAtRisk,
-        label: edge.description,
-        labelStyle: {
-          fontSize: 10,
-          fontWeight: isHighlighted ? 600 : 500,
-          fill: isHighlighted ? "var(--foreground)" : "var(--muted-foreground)",
+        sourceHandle: handles.sourceHandle,
+        targetHandle: handles.targetHandle,
+        type: "custom",
+        data: {
+          description: edge.description,
+          isHighlighted,
+          isAtRisk,
+          isDelayed,
+          isDimmed,
+          status: edge.status,
         },
-        labelBgStyle: {
-          fill: "var(--card)",
-          fillOpacity: 0.92,
-        },
-        labelBgPadding: [6, 3],
-        labelBgBorderRadius: 4,
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          width: 14,
-          height: 14,
+          width: 13,
+          height: 13,
           color: isHighlighted
             ? "var(--primary)"
             : isAtRisk
               ? "var(--warning)"
-              : "var(--muted-foreground)",
-        },
-        style: {
-          strokeWidth: isHighlighted ? 2.5 : 1.5,
-          stroke: isHighlighted ? "var(--primary)" : isAtRisk ? "var(--warning)" : "var(--border)",
-          opacity: isDimmed ? 0.3 : 0.95,
-          transition: "all 0.2s ease",
+              : isDelayed
+                ? "var(--destructive)"
+                : "var(--muted-foreground)",
         },
       };
     });
 
-  return { nodes, edges };
+  return { nodes: allNodes, edges };
 }
