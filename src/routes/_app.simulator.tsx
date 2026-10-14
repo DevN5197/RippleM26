@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/shared/page-header";
 import { SimulatorControlPanel } from "@/components/simulator/simulator-controls";
-import { SimulatorChart } from "@/components/simulator/simulator-chart";
+import { SimulatorChart, type ChartView } from "@/components/simulator/simulator-chart";
 import {
   SimulatorResults,
   SimulatorEmptyState,
@@ -78,6 +78,7 @@ function SimulatorPage() {
   const [controls, setControls] = useState<SimulatorControls>(DEFAULT_CONTROLS);
   const [result, setResult] = useState<SimulatorResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [chartView, setChartView] = useState<ChartView>("both");
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [scenarioName, setScenarioName] = useState("");
 
@@ -122,6 +123,7 @@ function SimulatorPage() {
     setControls(DEFAULT_CONTROLS);
     setResult(null);
     setError(null);
+    setChartView("both");
   }, []);
 
   const handleSaveClick = useCallback(() => {
@@ -178,7 +180,7 @@ function SimulatorPage() {
           {/* Chart card */}
           <Card className="shadow-xs">
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <CardTitle className="text-base">Cash Flow Comparison</CardTitle>
                   <CardDescription className="text-xs mt-0.5">
@@ -187,16 +189,34 @@ function SimulatorPage() {
                       : "Run a simulation to compare baseline and scenario forecasts"}
                   </CardDescription>
                 </div>
+
+                {/* Series toggle — only visible once there's a result */}
                 {result && (
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2 w-6 rounded bg-primary/70" />
-                      <span className="text-muted-foreground">Baseline</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-0.5 w-6 border-t-2 border-dashed border-warning" />
-                      <span className="text-muted-foreground">Simulated</span>
-                    </div>
+                  <div className="flex items-center rounded-md border bg-muted/40 p-0.5 gap-0.5">
+                    {(
+                      [
+                        { key: "baseline", label: "Baseline" },
+                        { key: "both",     label: "Both"     },
+                        { key: "scenario", label: "Simulated"},
+                      ] as { key: ChartView; label: string }[]
+                    ).map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => setChartView(key)}
+                        className={[
+                          "rounded px-3 py-1 text-xs font-medium transition-colors",
+                          chartView === key
+                            ? key === "baseline"
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : key === "scenario"
+                                ? "bg-warning text-warning-foreground shadow-sm"
+                                : "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
+                        ].join(" ")}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -214,6 +234,7 @@ function SimulatorPage() {
                   baselinePoints={result.baselinePoints}
                   scenarioPoints={result.scenarioPoints}
                   horizonDays={controls.horizonDays}
+                  view={chartView}
                 />
               ) : (
                 <SimulatorEmptyState />

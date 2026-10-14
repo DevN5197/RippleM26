@@ -7,16 +7,18 @@ import {
   Tooltip,
   ReferenceLine,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import { format, parseISO } from "date-fns";
 import { formatMoney, formatMoneyCompact } from "@/lib/formatters";
 import type { ForecastPoint } from "@/types";
 
+export type ChartView = "both" | "baseline" | "scenario";
+
 interface SimulatorChartProps {
   baselinePoints: ForecastPoint[];
   scenarioPoints: ForecastPoint[];
   horizonDays: number;
+  view: ChartView;
 }
 
 interface ChartDataPoint {
@@ -29,10 +31,12 @@ function SimulatorTooltip({
   active,
   payload,
   label,
+  view,
 }: {
   active?: boolean;
   payload?: Array<{ name: string; value: number; color: string }>;
   label?: string;
+  view: ChartView;
 }) {
   if (!active || !payload || payload.length === 0 || !label) return null;
 
@@ -49,7 +53,7 @@ function SimulatorTooltip({
                 className="h-2 w-2 rounded-full shrink-0"
                 style={{ backgroundColor: entry.color }}
               />
-              <span className="text-muted-foreground">{entry.name}</span>
+              <span className="text-muted-foreground capitalize">{entry.name}</span>
             </div>
             <span
               className={
@@ -69,8 +73,16 @@ function SimulatorTooltip({
   );
 }
 
-export function SimulatorChart({ baselinePoints, scenarioPoints, horizonDays }: SimulatorChartProps) {
-  // Merge baseline + scenario into a unified chart data array keyed by date
+export function SimulatorChart({
+  baselinePoints,
+  scenarioPoints,
+  horizonDays,
+  view,
+}: SimulatorChartProps) {
+  const showBaseline = view === "both" || view === "baseline";
+  const showScenario = view === "both" || view === "scenario";
+
+  // Merge both point arrays into a unified date-keyed series
   const dateSet = new Set<string>();
   baselinePoints.forEach((p) => dateSet.add(p.date));
   scenarioPoints.forEach((p) => dateSet.add(p.date));
@@ -86,26 +98,35 @@ export function SimulatorChart({ baselinePoints, scenarioPoints, horizonDays }: 
       scenario: (scenarioMap.get(date)?.projectedBalancePaise ?? 0) / 100,
     }));
 
-  const allValues = chartData.flatMap((d) => [d.baseline, d.scenario]);
-  const minValue = Math.min(...allValues, 0);
-  const maxValue = Math.max(...allValues, 0);
-  const padding = (maxValue - minValue) * 0.1;
+  // Compute Y-axis domain from visible series only
+  const visibleValues = chartData.flatMap((d) => {
+    const vals: number[] = [];
+    if (showBaseline) vals.push(d.baseline);
+    if (showScenario) vals.push(d.scenario);
+    return vals;
+  });
+  const minValue = Math.min(...visibleValues, 0);
+  const maxValue = Math.max(...visibleValues, 0);
+  const padding = Math.max((maxValue - minValue) * 0.1, 500);
+
+  const ariaLabel =
+    view === "both"
+      ? `Baseline vs simulated cash balance over ${horizonDays} days`
+      : view === "baseline"
+        ? `Baseline cash balance over ${horizonDays} days`
+        : `Simulated cash balance over ${horizonDays} days`;
 
   return (
-    <div
-      className="h-72 w-full"
-      role="img"
-      aria-label={`Baseline vs simulated cash balance over ${horizonDays} days`}
-    >
+    <div className="h-72 w-full" role="img" aria-label={ariaLabel}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="baselineFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.15} />
+            <linearGradient id="sim-baselineFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.18} />
               <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.02} />
             </linearGradient>
-            <linearGradient id="scenarioFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-warning)" stopOpacity={0.25} />
+            <linearGradient id="sim-scenarioFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--color-warning)" stopOpacity={0.28} />
               <stop offset="100%" stopColor="var(--color-warning)" stopOpacity={0.02} />
             </linearGradient>
           </defs>
@@ -130,42 +151,45 @@ export function SimulatorChart({ baselinePoints, scenarioPoints, horizonDays }: 
             domain={[minValue - padding, maxValue + padding]}
           />
 
-          <Tooltip content={<SimulatorTooltip />} />
-          <Legend
-            formatter={(value) =>
-              value === "baseline" ? "Baseline" : "Simulated"
-            }
-            wrapperStyle={{ fontSize: 12, paddingTop: 4 }}
-          />
+          <Tooltip content={(props) => <SimulatorTooltip {...props} view={view} />} />
 
+          {/* Zero line */}
           <ReferenceLine y={0} stroke="var(--color-destructive)" strokeDasharray="4 4" />
-          {/* Safety threshold at ₹5,000 */}
+          {/* Safety threshold ₹5,000 */}
           <ReferenceLine
             y={5000}
             stroke="var(--color-warning)"
             strokeDasharray="3 3"
-            strokeOpacity={0.6}
+            strokeOpacity={0.55}
+            label={{ value: "Safety", position: "insideTopRight", fontSize: 10, fill: "var(--color-warning)" }}
           />
 
-          <Area
-            type="monotone"
-            dataKey="baseline"
-            name="baseline"
-            stroke="var(--color-primary)"
-            strokeWidth={2}
-            fill="url(#baselineFill)"
-            dot={false}
-          />
-          <Area
-            type="monotone"
-            dataKey="scenario"
-            name="scenario"
-            stroke="var(--color-warning)"
-            strokeWidth={2}
-            strokeDasharray="5 3"
-            fill="url(#scenarioFill)"
-            dot={false}
-          />
+          {showBaseline && (
+            <Area
+              type="monotone"
+              dataKey="baseline"
+              name="baseline"
+              stroke="var(--color-primary)"
+              strokeWidth={2}
+              fill="url(#sim-baselineFill)"
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 0 }}
+            />
+          )}
+
+          {showScenario && (
+            <Area
+              type="monotone"
+              dataKey="scenario"
+              name="scenario"
+              stroke="var(--color-warning)"
+              strokeWidth={2}
+              strokeDasharray={view === "scenario" ? undefined : "5 3"}
+              fill="url(#sim-scenarioFill)"
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 0 }}
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </div>
