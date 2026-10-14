@@ -292,8 +292,7 @@ export function PurchaseOrderWizard({
             <div>
               <DialogTitle>Create Purchase Order</DialogTitle>
               <DialogDescription>
-                Step {step} of 5:{" "}
-                {step === 1 && "Select Supplier"}
+                Step {step} of 5: {step === 1 && "Select Supplier"}
                 {step === 2 && "Configure Products & Line Items"}
                 {step === 3 && "Timing & Payment Terms"}
                 {step === 4 && "Review Financial Impact"}
@@ -306,11 +305,7 @@ export function PurchaseOrderWizard({
                 <div
                   key={s}
                   className={`h-2 w-6 rounded-full transition-colors ${
-                    step === s
-                      ? "bg-primary"
-                      : step > s
-                        ? "bg-primary/40"
-                        : "bg-muted"
+                    step === s ? "bg-primary" : step > s ? "bg-primary/40" : "bg-muted"
                   }`}
                 />
               ))}
@@ -361,7 +356,10 @@ export function PurchaseOrderWizard({
                           {supplier.name}
                         </span>
                         {isSelected && (
-                          <Badge variant="outline" className="border-primary text-primary text-[10px]">
+                          <Badge
+                            variant="outline"
+                            className="border-primary text-primary text-[10px]"
+                          >
                             Selected
                           </Badge>
                         )}
@@ -374,9 +372,7 @@ export function PurchaseOrderWizard({
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[11px] text-muted-foreground block">
-                        Outstanding
-                      </span>
+                      <span className="text-[11px] text-muted-foreground block">Outstanding</span>
                       <span className="text-xs font-semibold text-foreground">
                         {formatMoney(supplier.outstandingPaise)}
                       </span>
@@ -414,7 +410,9 @@ export function PurchaseOrderWizard({
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
                       {/* Product Selector */}
                       <div className="sm:col-span-5">
-                        <Label className="text-[11px] text-muted-foreground">Product #{index + 1}</Label>
+                        <Label className="text-[11px] text-muted-foreground">
+                          Product #{index + 1}
+                        </Label>
                         <Select
                           value={item.productId}
                           onValueChange={(val) => handleUpdateLineItem(item.id, "productId", val)}
@@ -424,7 +422,11 @@ export function PurchaseOrderWizard({
                           </SelectTrigger>
                           <SelectContent>
                             {products.map((p) => (
-                              <SelectItem key={p.product.id} value={p.product.id} className="text-xs">
+                              <SelectItem
+                                key={p.product.id}
+                                value={p.product.id}
+                                className="text-xs"
+                              >
                                 {p.product.name} ({p.product.sku})
                               </SelectItem>
                             ))}
@@ -455,11 +457,7 @@ export function PurchaseOrderWizard({
                           step="any"
                           value={item.unitPriceRupees}
                           onChange={(e) =>
-                            handleUpdateLineItem(
-                              item.id,
-                              "unitPriceRupees",
-                              Number(e.target.value),
-                            )
+                            handleUpdateLineItem(item.id, "unitPriceRupees", Number(e.target.value))
                           }
                           className="h-8 text-xs mt-1 font-mono"
                         />
@@ -467,7 +465,9 @@ export function PurchaseOrderWizard({
 
                       {/* Line Total */}
                       <div className="sm:col-span-2 text-right">
-                        <Label className="text-[11px] text-muted-foreground block">Line Total</Label>
+                        <Label className="text-[11px] text-muted-foreground block">
+                          Line Total
+                        </Label>
                         <span className="text-xs font-semibold text-foreground leading-8">
                           {formatMoney(Math.round(lineTotal * 100))}
                         </span>
@@ -660,8 +660,8 @@ export function PurchaseOrderWizard({
               </div>
               <p className="text-muted-foreground leading-relaxed text-[11px]">
                 Placing this order commits{" "}
-                <span className="font-semibold text-foreground">{formatMoney(subtotalPaise)}</span> in
-                procurement outlays. You can review scheduled cash outflows on the cash flow
+                <span className="font-semibold text-foreground">{formatMoney(subtotalPaise)}</span>{" "}
+                in procurement outlays. You can review scheduled cash outflows on the cash flow
                 forecast or simulate delay scenarios.
               </p>
               <div className="flex items-center gap-3 pt-1">
@@ -681,7 +681,8 @@ export function PurchaseOrderWizard({
             </div>
 
             <p className="text-[11px] text-muted-foreground text-center">
-              * Note: Calculations are projected operational estimates until the purchase order is confirmed.
+              * Note: Calculations are projected operational estimates until the purchase order is
+              confirmed.
             </p>
           </div>
         )}
@@ -694,8 +695,8 @@ export function PurchaseOrderWizard({
             </div>
             <h3 className="text-lg font-bold text-foreground">Purchase Order Created</h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Your purchase order reference has been logged. Incoming inventory stock counts, supplier
-              commitments, and scheduled payments have been updated.
+              Your purchase order reference has been logged. Incoming inventory stock counts,
+              supplier commitments, and scheduled payments have been updated.
             </p>
 
             <div className="rounded-lg border bg-muted/30 p-3 max-w-sm mx-auto text-xs space-y-1">
@@ -718,11 +719,7 @@ export function PurchaseOrderWizard({
             </div>
 
             <div className="flex justify-center gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
               {createdPoRef && onSuccessNavigate && (
@@ -752,12 +749,7 @@ export function PurchaseOrderWizard({
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
 
@@ -766,12 +758,7 @@ export function PurchaseOrderWizard({
                   Next <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                >
+                <Button type="button" size="sm" onClick={handleSubmit} disabled={isSubmitting}>
                   {isSubmitting ? "Submitting Order..." : "Confirm & Place Purchase Order"}
                 </Button>
               )}

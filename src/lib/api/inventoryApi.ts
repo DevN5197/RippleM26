@@ -117,8 +117,7 @@ function enrichInventoryRow(product: Product): InventoryItemWithDetails {
   const relatedPo = db.purchaseOrders
     .filter(
       (po) =>
-        (po.productId === product.id ||
-          po.lineItems?.some((li) => li.productId === product.id)) &&
+        (po.productId === product.id || po.lineItems?.some((li) => li.productId === product.id)) &&
         (po.status === "confirmed" || po.status === "sent" || po.status === "partially_received"),
     )
     .sort((a, b) => a.expectedDeliveryDate.localeCompare(b.expectedDeliveryDate))[0];
@@ -275,8 +274,7 @@ export const inventoryApi = {
 
       const purchaseOrders = db.purchaseOrders.filter(
         (po) =>
-          po.productId === productId ||
-          po.lineItems?.some((li) => li.productId === productId),
+          po.productId === productId || po.lineItems?.some((li) => li.productId === productId),
       );
 
       const customerOrders = db.customerOrders
@@ -413,7 +411,8 @@ export const inventoryApi = {
       if (patch.description !== undefined) product.description = patch.description.trim();
       if (patch.unitOfMeasure !== undefined) product.unitOfMeasure = patch.unitOfMeasure.trim();
       if (patch.reorderPoint !== undefined) product.reorderPoint = patch.reorderPoint;
-      if (patch.preferredSupplierId !== undefined) product.preferredSupplierId = patch.preferredSupplierId;
+      if (patch.preferredSupplierId !== undefined)
+        product.preferredSupplierId = patch.preferredSupplierId;
       if (patch.unitCostPaise !== undefined) product.unitCostPaise = patch.unitCostPaise;
 
       return product;
@@ -461,7 +460,8 @@ export const inventoryApi = {
             if (po) {
               inv.quantityOnOrder = Math.max(0, inv.quantityOnOrder - input.quantity);
               po.receivedQuantity = (po.receivedQuantity ?? 0) + input.quantity;
-              const totalPoQty = po.quantity ?? po.lineItems?.reduce((s, li) => s + li.quantity, 0) ?? 0;
+              const totalPoQty =
+                po.quantity ?? po.lineItems?.reduce((s, li) => s + li.quantity, 0) ?? 0;
               if (po.receivedQuantity >= totalPoQty) {
                 po.status = "received";
               } else {
@@ -474,7 +474,9 @@ export const inventoryApi = {
 
         case "sale": {
           if (inv.quantityOnHand < input.quantity) {
-            throw new Error(`Insufficient stock on hand (${inv.quantityOnHand} units) to fulfill sale.`);
+            throw new Error(
+              `Insufficient stock on hand (${inv.quantityOnHand} units) to fulfill sale.`,
+            );
           }
           inv.quantityOnHand -= input.quantity;
           if ((inv.quantityReserved ?? 0) > 0) {
@@ -486,7 +488,9 @@ export const inventoryApi = {
         case "reservation": {
           const available = inv.quantityOnHand - (inv.quantityReserved ?? 0);
           if (available < input.quantity) {
-            throw new Error(`Insufficient available stock (${available} units) to reserve ${input.quantity} units.`);
+            throw new Error(
+              `Insufficient available stock (${available} units) to reserve ${input.quantity} units.`,
+            );
           }
           inv.quantityReserved = (inv.quantityReserved ?? 0) + input.quantity;
           break;
@@ -577,7 +581,10 @@ export const inventoryApi = {
             ? Math.round(proposedPurchaseAmountPaise * 0.15) // standard 15% advance for apparel mills
             : 0;
 
-          const forecastDemand = Math.max(5, customerOrders.reduce((s, o) => s + o.quantity, 0));
+          const forecastDemand = Math.max(
+            5,
+            customerOrders.reduce((s, o) => s + o.quantity, 0),
+          );
 
           let reason = "";
           if (enriched.stockOnHand === 0 && enriched.incomingStock === 0) {

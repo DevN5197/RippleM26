@@ -1,12 +1,6 @@
 import React from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -44,9 +38,7 @@ export function ReorderRecommendationsPanel({
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success">
           <CheckCircle2 className="h-6 w-6" />
         </div>
-        <h3 className="mt-4 text-base font-semibold text-foreground">
-          All Stock Levels Healthy
-        </h3>
+        <h3 className="mt-4 text-base font-semibold text-foreground">All Stock Levels Healthy</h3>
         <p className="mt-1 text-xs text-muted-foreground max-w-md mx-auto">
           No replenishment orders are currently required. Warehouse stock buffers and incoming
           deliveries comfortably exceed reorder thresholds and committed customer orders.
@@ -64,8 +56,8 @@ export function ReorderRecommendationsPanel({
           Algorithmic Procurement & Lead-Time Sizing
         </div>
         <p className="mt-1 text-muted-foreground leading-relaxed">
-          Recommendations synthesize current available stock, open customer reservations, supplier lead
-          times, and minimum reorder thresholds.{" "}
+          Recommendations synthesize current available stock, open customer reservations, supplier
+          lead times, and minimum reorder thresholds.{" "}
           <span className="font-medium text-foreground">
             Confirmed facts are clearly separated from proposed purchase suggestions.
           </span>
@@ -230,7 +222,12 @@ export function ReorderRecommendationsPanel({
                 <span className="text-[11px] text-muted-foreground">
                   Simulate procurement cash outlays against future receivable collections:
                 </span>
-                <Button variant="ghost" size="sm" asChild className="h-6 text-[11px] gap-1 text-primary">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="h-6 text-[11px] gap-1 text-primary"
+                >
                   <Link
                     to="/simulator"
                     search={{

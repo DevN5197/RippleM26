@@ -21,6 +21,8 @@ import { Route as AppRelationshipsRouteImport } from './routes/_app.relationship
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppSimulatorRouteImport } from './routes/_app.simulator'
 import { Route as AppSuppliersRouteImport } from './routes/_app.suppliers'
+import { Route as AppSuppliersIndexRouteImport } from './routes/_app.suppliers.index'
+import { Route as AppSuppliersSupplierIdRouteImport } from './routes/_app.suppliers.$supplierId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -81,6 +83,16 @@ const AppSuppliersRoute = AppSuppliersRouteImport.update({
   path: '/suppliers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSuppliersIndexRoute = AppSuppliersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppSuppliersRoute,
+} as any)
+const AppSuppliersSupplierIdRoute = AppSuppliersSupplierIdRouteImport.update({
+  id: '/$supplierId',
+  path: '/$supplierId',
+  getParentRoute: () => AppSuppliersRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -93,7 +105,9 @@ export interface FileRoutesByFullPath {
   '/relationships': typeof AppRelationshipsRoute
   '/settings': typeof AppSettingsRoute
   '/simulator': typeof AppSimulatorRoute
-  '/suppliers': typeof AppSuppliersRoute
+  '/suppliers': typeof AppSuppliersRouteWithChildren
+  '/suppliers/$supplierId': typeof AppSuppliersSupplierIdRoute
+  '/suppliers/': typeof AppSuppliersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -106,7 +120,8 @@ export interface FileRoutesByTo {
   '/relationships': typeof AppRelationshipsRoute
   '/settings': typeof AppSettingsRoute
   '/simulator': typeof AppSimulatorRoute
-  '/suppliers': typeof AppSuppliersRoute
+  '/suppliers/$supplierId': typeof AppSuppliersSupplierIdRoute
+  '/suppliers': typeof AppSuppliersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -121,7 +136,9 @@ export interface FileRoutesById {
   '/_app/relationships': typeof AppRelationshipsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/simulator': typeof AppSimulatorRoute
-  '/_app/suppliers': typeof AppSuppliersRoute
+  '/_app/suppliers': typeof AppSuppliersRouteWithChildren
+  '/_app/suppliers/$supplierId': typeof AppSuppliersSupplierIdRoute
+  '/_app/suppliers/': typeof AppSuppliersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,6 +154,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/simulator'
     | '/suppliers'
+    | '/suppliers/$supplierId'
+    | '/suppliers/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -149,6 +168,7 @@ export interface FileRouteTypes {
     | '/relationships'
     | '/settings'
     | '/simulator'
+    | '/suppliers/$supplierId'
     | '/suppliers'
   id:
     | '__root__'
@@ -164,6 +184,8 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/simulator'
     | '/_app/suppliers'
+    | '/_app/suppliers/$supplierId'
+    | '/_app/suppliers/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -257,8 +279,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSuppliersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/suppliers/': {
+      id: '/_app/suppliers/'
+      path: '/'
+      fullPath: '/suppliers/'
+      preLoaderRoute: typeof AppSuppliersIndexRouteImport
+      parentRoute: typeof AppSuppliersRoute
+    }
+    '/_app/suppliers/$supplierId': {
+      id: '/_app/suppliers/$supplierId'
+      path: '/$supplierId'
+      fullPath: '/suppliers/$supplierId'
+      preLoaderRoute: typeof AppSuppliersSupplierIdRouteImport
+      parentRoute: typeof AppSuppliersRoute
+    }
   }
 }
+
+interface AppSuppliersRouteChildren {
+  AppSuppliersSupplierIdRoute: typeof AppSuppliersSupplierIdRoute
+  AppSuppliersIndexRoute: typeof AppSuppliersIndexRoute
+}
+
+const AppSuppliersRouteChildren: AppSuppliersRouteChildren = {
+  AppSuppliersSupplierIdRoute: AppSuppliersSupplierIdRoute,
+  AppSuppliersIndexRoute: AppSuppliersIndexRoute,
+}
+
+const AppSuppliersRouteWithChildren = AppSuppliersRoute._addFileChildren(
+  AppSuppliersRouteChildren,
+)
 
 interface AppRouteChildren {
   AppCashFlowRoute: typeof AppCashFlowRoute
@@ -270,7 +320,7 @@ interface AppRouteChildren {
   AppRelationshipsRoute: typeof AppRelationshipsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSimulatorRoute: typeof AppSimulatorRoute
-  AppSuppliersRoute: typeof AppSuppliersRoute
+  AppSuppliersRoute: typeof AppSuppliersRouteWithChildren
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -283,7 +333,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRelationshipsRoute: AppRelationshipsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSimulatorRoute: AppSimulatorRoute,
-  AppSuppliersRoute: AppSuppliersRoute,
+  AppSuppliersRoute: AppSuppliersRouteWithChildren,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

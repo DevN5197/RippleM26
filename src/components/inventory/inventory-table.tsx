@@ -88,7 +88,8 @@ export function InventoryTable({
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-muted-foreground/60" />;
+    if (sortField !== field)
+      return <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-muted-foreground/60" />;
     return sortDirection === "asc" ? (
       <ArrowUp className="ml-1 h-3.5 w-3.5 text-foreground" />
     ) : (
@@ -178,10 +179,7 @@ export function InventoryTable({
   });
 
   const totalPages = Math.ceil(sortedItems.length / pageSize);
-  const paginatedItems = sortedItems.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const paginatedItems = sortedItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="rounded-lg border bg-card shadow-xs overflow-hidden">
@@ -239,7 +237,14 @@ export function InventoryTable({
           </TableHeader>
           <TableBody>
             {paginatedItems.map((row) => {
-              const { product, availableStock, stockOnHand, reservedStock, incomingStock, reorderThreshold } = row;
+              const {
+                product,
+                availableStock,
+                stockOnHand,
+                reservedStock,
+                incomingStock,
+                reorderThreshold,
+              } = row;
               const hasIncoming = incomingStock > 0;
               const isLow = availableStock < reorderThreshold;
 
@@ -301,8 +306,7 @@ export function InventoryTable({
                   <TableCell className="text-right text-xs">
                     {hasIncoming ? (
                       <span className="inline-flex items-center gap-1 font-medium text-primary">
-                        <Truck className="h-3 w-3" />
-                        +{incomingStock}
+                        <Truck className="h-3 w-3" />+{incomingStock}
                       </span>
                     ) : (
                       <span className="text-muted-foreground">—</span>
@@ -349,9 +353,7 @@ export function InventoryTable({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-52">
-                        <DropdownMenuLabel className="text-xs">
-                          {product.name}
-                        </DropdownMenuLabel>
+                        <DropdownMenuLabel className="text-xs">{product.name}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onSelectProduct(product.id)}>
                           <Eye className="mr-2 h-4 w-4" /> View product details
@@ -369,9 +371,7 @@ export function InventoryTable({
                         <DropdownMenuItem onClick={() => onViewInGraph(product.id)}>
                           <Network className="mr-2 h-4 w-4" /> View in relationship graph
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onSimulate(product.id, product.name)}
-                        >
+                        <DropdownMenuItem onClick={() => onSimulate(product.id, product.name)}>
                           <FlaskConical className="mr-2 h-4 w-4" /> Simulate in Ripple
                         </DropdownMenuItem>
                       </DropdownMenuContent>

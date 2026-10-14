@@ -268,7 +268,9 @@ export function ProductDialog({
                           onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
-                      <FormDescription className="text-[11px]">Units currently on hand</FormDescription>
+                      <FormDescription className="text-[11px]">
+                        Units currently on hand
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -290,7 +292,9 @@ export function ProductDialog({
                         onChange={(e) => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>
-                    <FormDescription className="text-[11px]">Triggers low-stock alert</FormDescription>
+                    <FormDescription className="text-[11px]">
+                      Triggers low-stock alert
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -380,11 +384,7 @@ export function ProductDialog({
             </div>
 
             <DialogFooter className="pt-4 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>

@@ -43,7 +43,9 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
   const reactFlowInstance = useReactFlow();
   const resolvedInitialId = useMemo(() => {
     if (!initialSelectedId) return "node_delivery_1";
-    const found = data.nodes.find((n) => n.id === initialSelectedId || n.entityId === initialSelectedId);
+    const found = data.nodes.find(
+      (n) => n.id === initialSelectedId || n.entityId === initialSelectedId,
+    );
     return found ? found.id : initialSelectedId;
   }, [data.nodes, initialSelectedId]);
 
@@ -51,7 +53,9 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
 
   useEffect(() => {
     if (initialSelectedId) {
-      const found = data.nodes.find((n) => n.id === initialSelectedId || n.entityId === initialSelectedId);
+      const found = data.nodes.find(
+        (n) => n.id === initialSelectedId || n.entityId === initialSelectedId,
+      );
       setSelectedNodeId(found ? found.id : initialSelectedId);
     }
   }, [initialSelectedId, data.nodes]);

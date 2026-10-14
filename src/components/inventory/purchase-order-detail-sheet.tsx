@@ -202,7 +202,9 @@ export function PurchaseOrderDetailSheet({
             {/* Simulation Link */}
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-center justify-between text-xs">
               <div>
-                <span className="font-semibold text-foreground block">Ripple What-If Simulation</span>
+                <span className="font-semibold text-foreground block">
+                  Ripple What-If Simulation
+                </span>
                 <span className="text-[11px] text-muted-foreground">
                   Simulate supplier delivery delay on this purchase order.
                 </span>

@@ -48,9 +48,17 @@ export const suppliers: Supplier[] = [
     contactName: "Anil Shree",
     email: "anil@shreetextiles.in",
     phone: "+91 98200 12345",
+    address: "Plot 42, GIDC Textile Park, Surat, Gujarat 395023",
+    taxId: "24AAACS1234F1Z8",
     paymentTermsDays: 30,
-    outstandingPaise: 500_000, // ₹5,000 advance paid
+    outstandingPaise: 3_000_000, // ₹30,000 balance owed on PO-1
     reliabilityScore: 86,
+    status: "active",
+    leadTimeDays: 4,
+    notes:
+      "Primary cotton yarn and greige fabric mill. High fabric consistency, requires advance before cutting.",
+    createdAt: dp(90),
+    updatedAt: dp(2),
   },
   {
     id: "sup_2",
@@ -59,9 +67,17 @@ export const suppliers: Supplier[] = [
     contactName: "Priya Mehta",
     email: "priya@mehtafabrics.in",
     phone: "+91 98200 67890",
+    address: "Survey No. 118, Bhiwandi Textile Hub, Thane, Maharashtra 421302",
+    taxId: "27AABCM5678G2ZC",
     paymentTermsDays: 45,
-    outstandingPaise: 1_250_000,
+    outstandingPaise: 2_250_000, // ₹22,500 on PO-2
     reliabilityScore: 92,
+    status: "active",
+    leadTimeDays: 11,
+    notes:
+      "Supplies premium European linen and rugged denim. Very dependable on-time delivery track record.",
+    createdAt: dp(120),
+    updatedAt: d(0),
   },
   {
     id: "sup_3",
@@ -70,9 +86,36 @@ export const suppliers: Supplier[] = [
     contactName: "Imran Khan",
     email: "imran@khandye.in",
     phone: "+91 98200 54321",
+    address: "Gala 14, Dharavi Dyeing Compound, Mumbai, Maharashtra 400017",
+    taxId: "27AAECK9012H1ZQ",
     paymentTermsDays: 15,
-    outstandingPaise: 320_000,
+    outstandingPaise: 720_000, // ₹6,000 on PO-3 + ₹1,200 overdue bill
     reliabilityScore: 71,
+    status: "active",
+    leadTimeDays: 7,
+    notes:
+      "Artisanal natural vat dyeing and silk embroidery. Delays occur frequently in peak monsoon season.",
+    createdAt: dp(60),
+    updatedAt: dp(3),
+  },
+  {
+    id: "sup_4",
+    businessId: "biz_1",
+    name: "Heritage Weaves",
+    contactName: "Kavita Rao",
+    email: "kavita@heritageweaves.in",
+    phone: "+91 98200 99887",
+    address: "Sector 5, Weavers Colony, Maheshwar, MP 451224",
+    taxId: "23AABCH8877J1ZV",
+    paymentTermsDays: 30,
+    outstandingPaise: 0,
+    reliabilityScore: 95,
+    status: "archived",
+    leadTimeDays: 14,
+    notes:
+      "Former handloom Maheshwari silk partner. Transitioned to local cooperative in late 2025.",
+    createdAt: dp(365),
+    updatedAt: dp(40),
   },
 ];
 
@@ -113,7 +156,8 @@ export const products: Product[] = [
     sku: "KUR-COT-001",
     name: "Cotton Kurti",
     category: "Kurtis & Tunics",
-    description: "Breathable 100% handspun cotton kurti with traditional block print and side slits.",
+    description:
+      "Breathable 100% handspun cotton kurti with traditional block print and side slits.",
     unitOfMeasure: "pieces",
     preferredSupplierId: "sup_1",
     currency: "INR",
@@ -127,7 +171,8 @@ export const products: Product[] = [
     sku: "JKT-DEN-002",
     name: "Denim Jacket",
     category: "Outerwear",
-    description: "Tailored rugged denim jacket with antiqued brass buttons and reinforced stitching.",
+    description:
+      "Tailored rugged denim jacket with antiqued brass buttons and reinforced stitching.",
     unitOfMeasure: "pieces",
     preferredSupplierId: "sup_2",
     currency: "INR",
@@ -427,9 +472,11 @@ export const customerOrders: CustomerOrder[] = [
 ];
 
 export const invoices: Invoice[] = [
+  // --- Accounts Receivable (Customer Invoices) ---
   {
     id: "inv_2001",
     invoiceNumber: "INV-2001",
+    type: "receivable",
     customerId: "cus_1",
     customerOrderId: "co_1",
     amountPaise: 800_000, // ₹8,000
@@ -441,6 +488,7 @@ export const invoices: Invoice[] = [
   {
     id: "inv_2002",
     invoiceNumber: "INV-2002",
+    type: "receivable",
     customerId: "cus_2",
     customerOrderId: "co_2",
     amountPaise: 1_320_000,
@@ -452,6 +500,7 @@ export const invoices: Invoice[] = [
   {
     id: "inv_1998",
     invoiceNumber: "INV-1998",
+    type: "receivable",
     customerId: "cus_3",
     amountPaise: 560_000,
     amountPaidPaise: 560_000,
@@ -462,6 +511,7 @@ export const invoices: Invoice[] = [
   {
     id: "inv_1999",
     invoiceNumber: "INV-1999",
+    type: "receivable",
     customerId: "cus_2",
     amountPaise: 130_000,
     amountPaidPaise: 0,
@@ -469,13 +519,79 @@ export const invoices: Invoice[] = [
     issueDate: dp(35),
     dueDate: dp(5),
   },
+  // --- Accounts Payable (Supplier Invoices / Bills) ---
+  {
+    id: "inv_bill_101",
+    invoiceNumber: "BILL-2026-001",
+    type: "payable",
+    supplierId: "sup_1",
+    purchaseOrderId: "po_1",
+    amountPaise: 3_500_000, // ₹35,000 for 100x Cotton Kurti
+    amountPaidPaise: 500_000, // ₹5,000 advance paid
+    status: "partially_paid",
+    issueDate: dp(2),
+    dueDate: d(34),
+    notes: "Cotton Kurti bulk fabric lot. Advance settled; balance net-30 upon delivery.",
+  },
+  {
+    id: "inv_bill_102",
+    invoiceNumber: "BILL-2026-002",
+    type: "payable",
+    supplierId: "sup_2",
+    purchaseOrderId: "po_2",
+    amountPaise: 2_250_000, // ₹22,500 for 50x Linen Shirt
+    amountPaidPaise: 0,
+    status: "sent",
+    issueDate: d(0),
+    dueDate: d(56),
+    notes: "Linen shirt lot. Net 45 payment terms.",
+  },
+  {
+    id: "inv_bill_103",
+    invoiceNumber: "BILL-2026-003",
+    type: "payable",
+    supplierId: "sup_3",
+    purchaseOrderId: "po_3",
+    amountPaise: 800_000, // ₹8,000 for 40x Silk Dupatta
+    amountPaidPaise: 200_000, // ₹2,000 advance paid
+    status: "partially_paid",
+    issueDate: dp(3),
+    dueDate: d(18),
+    notes: "Silk embroidered collection. Net 15 terms.",
+  },
+  {
+    id: "inv_bill_104",
+    invoiceNumber: "BILL-2026-099",
+    type: "payable",
+    supplierId: "sup_3",
+    amountPaise: 120_000, // ₹1,200 overdue dye chemicals bill
+    amountPaidPaise: 0,
+    status: "overdue",
+    issueDate: dp(25),
+    dueDate: dp(5),
+    notes: "Sample dyeing run for festival palette. Overdue by 5 days.",
+  },
+  {
+    id: "inv_bill_100",
+    invoiceNumber: "BILL-2026-000",
+    type: "payable",
+    supplierId: "sup_1",
+    amountPaise: 875_000, // ₹8,750 historical
+    amountPaidPaise: 875_000,
+    status: "paid",
+    issueDate: dp(30),
+    dueDate: dp(5),
+    notes: "Initial pre-season fabric sample batch. Fully settled.",
+  },
 ];
 
 export const payments: Payment[] = [
   {
     id: "pay_1",
     direction: "outgoing",
+    supplierId: "sup_1",
     purchaseOrderId: "po_1",
+    invoiceId: "inv_bill_101",
     amountPaise: 500_000,
     status: "completed",
     scheduledDate: dp(2),
@@ -485,6 +601,7 @@ export const payments: Payment[] = [
   {
     id: "pay_2",
     direction: "incoming",
+    customerId: "cus_1",
     invoiceId: "inv_2001",
     amountPaise: 800_000,
     status: "scheduled",
@@ -493,18 +610,67 @@ export const payments: Payment[] = [
   {
     id: "pay_3",
     direction: "outgoing",
+    supplierId: "sup_1",
     purchaseOrderId: "po_1",
+    invoiceId: "inv_bill_101",
     amountPaise: 3_000_000, // balance on delivery
     status: "scheduled",
     scheduledDate: d(4),
+    method: "Bank Transfer",
   },
   {
     id: "pay_4",
     direction: "incoming",
+    customerId: "cus_2",
     invoiceId: "inv_1999",
     amountPaise: 130_000,
     status: "scheduled",
     scheduledDate: dp(5),
+  },
+  {
+    id: "pay_5",
+    direction: "outgoing",
+    supplierId: "sup_3",
+    purchaseOrderId: "po_3",
+    invoiceId: "inv_bill_103",
+    amountPaise: 200_000,
+    status: "completed",
+    scheduledDate: dp(3),
+    completedDate: dp(3),
+    method: "NEFT",
+  },
+  {
+    id: "pay_6",
+    direction: "outgoing",
+    supplierId: "sup_3",
+    purchaseOrderId: "po_3",
+    invoiceId: "inv_bill_103",
+    amountPaise: 600_000,
+    status: "scheduled",
+    scheduledDate: d(18),
+    method: "NEFT",
+  },
+  {
+    id: "pay_7",
+    direction: "outgoing",
+    supplierId: "sup_1",
+    invoiceId: "inv_bill_100",
+    amountPaise: 875_000,
+    status: "completed",
+    scheduledDate: dp(5),
+    completedDate: dp(5),
+    method: "Bank Transfer",
+  },
+  {
+    id: "pay_8",
+    direction: "outgoing",
+    supplierId: "sup_2",
+    purchaseOrderId: "po_2",
+    invoiceId: "inv_bill_102",
+    amountPaise: 2_250_000,
+    status: "scheduled",
+    scheduledDate: d(56),
+    method: "Bank Transfer",
   },
 ];
 

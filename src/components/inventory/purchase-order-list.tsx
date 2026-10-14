@@ -20,15 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton";
 import { ErrorState } from "@/components/shared/error-state";
-import {
-  Search,
-  ShoppingCart,
-  Eye,
-  ArrowLeftRight,
-  Truck,
-  Plus,
-  ExternalLink,
-} from "lucide-react";
+import { Search, ShoppingCart, Eye, ArrowLeftRight, Truck, Plus, ExternalLink } from "lucide-react";
 import { formatMoney, formatDate } from "@/lib/formatters";
 import type { EnrichedPurchaseOrder, Supplier, PurchaseOrderStatus } from "@/types";
 
@@ -176,7 +168,10 @@ export function PurchaseOrderList({
             <TableBody>
               {filteredOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="py-8 text-center text-xs text-muted-foreground">
+                  <TableCell
+                    colSpan={11}
+                    className="py-8 text-center text-xs text-muted-foreground"
+                  >
                     No purchase orders found matching your search.
                   </TableCell>
                 </TableRow>

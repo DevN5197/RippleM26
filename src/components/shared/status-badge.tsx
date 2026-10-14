@@ -33,6 +33,12 @@ const toneByStatus: Record<string, StatusTone> = {
   critical: "danger",
   warning: "warning",
   info: "info",
+  high: "danger",
+  medium: "warning",
+  low: "success",
+  // counterparties
+  active: "success",
+  archived: "neutral",
 };
 
 const toneClasses: Record<StatusTone, string> = {

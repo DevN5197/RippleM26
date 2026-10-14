@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Package,
-  Boxes,
-  AlertTriangle,
-  AlertCircle,
-  Truck,
-  IndianRupee,
-} from "lucide-react";
+import { Package, Boxes, AlertTriangle, AlertCircle, Truck, IndianRupee } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatMoney } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -102,7 +95,9 @@ export function InventorySummaryCards({
       <Card
         className={cn(
           "transition-all cursor-pointer hover:border-destructive/70 shadow-xs",
-          isStockoutRiskActive ? "border-destructive ring-2 ring-destructive/30 bg-destructive/5" : "",
+          isStockoutRiskActive
+            ? "border-destructive ring-2 ring-destructive/30 bg-destructive/5"
+            : "",
         )}
         onClick={() => onSelectStatusFilter(isStockoutRiskActive ? "all" : "stockout_risk")}
       >

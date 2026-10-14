@@ -115,20 +115,23 @@ export function InventoryRiskAlertsPanel({
                   {alert.relevantDate && (
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      Critical Date: <span className="font-medium text-foreground">{alert.relevantDate}</span>
+                      Critical Date:{" "}
+                      <span className="font-medium text-foreground">{alert.relevantDate}</span>
                     </span>
                   )}
 
                   {alert.supplierName && (
                     <span className="flex items-center gap-1">
                       <Building2 className="h-3 w-3" />
-                      Supplier: <span className="font-medium text-foreground">{alert.supplierName}</span>
+                      Supplier:{" "}
+                      <span className="font-medium text-foreground">{alert.supplierName}</span>
                     </span>
                   )}
 
                   {alert.customerName && (
                     <span className="flex items-center gap-1">
-                      Customer: <span className="font-medium text-foreground">{alert.customerName}</span>
+                      Customer:{" "}
+                      <span className="font-medium text-foreground">{alert.customerName}</span>
                     </span>
                   )}
                 </div>

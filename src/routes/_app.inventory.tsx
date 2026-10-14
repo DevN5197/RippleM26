@@ -11,7 +11,10 @@ import { InventoryHeader } from "@/components/inventory/inventory-header";
 import { InventorySummaryCards } from "@/components/inventory/inventory-summary-cards";
 import { InventoryTable } from "@/components/inventory/inventory-table";
 import { ProductDialog, type ProductFormValues } from "@/components/inventory/product-dialog";
-import { StockMovementDialog, type MovementFormValues } from "@/components/inventory/stock-movement-dialog";
+import {
+  StockMovementDialog,
+  type MovementFormValues,
+} from "@/components/inventory/stock-movement-dialog";
 import { PurchaseOrderWizard } from "@/components/inventory/purchase-order-wizard";
 import { ProductDetailSheet } from "@/components/inventory/product-detail-sheet";
 import { PurchaseOrderList } from "@/components/inventory/purchase-order-list";
@@ -77,9 +80,7 @@ export const Route = createFileRoute("/_app/inventory")({
     const searchParam = typeof search["search"] === "string" ? search["search"] : undefined;
     const category = typeof search["category"] === "string" ? search["category"] : undefined;
     const status =
-      typeof search["status"] === "string"
-        ? (search["status"] as StockStatus | "all")
-        : undefined;
+      typeof search["status"] === "string" ? (search["status"] as StockStatus | "all") : undefined;
     const selectedProductId =
       typeof search["selectedProductId"] === "string" ? search["selectedProductId"] : undefined;
     const selectedPoId =
@@ -130,7 +131,12 @@ function InventoryPage() {
   const searchParams = Route.useSearch();
 
   // Suspense Queries
-  const { data: inventoryData, isLoading, error, refetch: refetchInventory } = useSuspenseQuery(inventoryListQuery);
+  const {
+    data: inventoryData,
+    isLoading,
+    error,
+    refetch: refetchInventory,
+  } = useSuspenseQuery(inventoryListQuery);
   const { data: summaryMetrics } = useSuspenseQuery(inventorySummaryQuery);
   const { data: suppliersData } = useSuspenseQuery(suppliersQuery);
   const { data: purchaseOrdersData } = useSuspenseQuery(purchaseOrdersQuery);
@@ -350,9 +356,7 @@ function InventoryPage() {
       {/* Module Tabs Navigation */}
       <Tabs
         value={activeTab}
-        onValueChange={(tab) =>
-          handleUpdateSearch({ tab: tab as InventorySearchParams["tab"] })
-        }
+        onValueChange={(tab) => handleUpdateSearch({ tab: tab as InventorySearchParams["tab"] })}
         className="w-full space-y-4"
       >
         <TabsList className="grid grid-cols-4 w-full sm:w-[540px] h-9">
@@ -527,7 +531,11 @@ function InventoryPage() {
           }
         }}
         onViewPoDetails={(poId) => {
-          handleUpdateSearch({ selectedProductId: undefined, selectedPoId: poId, tab: "purchase_orders" });
+          handleUpdateSearch({
+            selectedProductId: undefined,
+            selectedPoId: poId,
+            tab: "purchase_orders",
+          });
         }}
       />
 

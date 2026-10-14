@@ -79,9 +79,7 @@ export function ProductDetailSheet({
                     </Badge>
                     <StatusBadge status={data.status} />
                   </div>
-                  <h2 className="text-xl font-bold text-foreground mt-1.5">
-                    {data.product.name}
-                  </h2>
+                  <h2 className="text-xl font-bold text-foreground mt-1.5">{data.product.name}</h2>
                   {data.product.description && (
                     <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                       {data.product.description}
@@ -165,7 +163,8 @@ export function ProductDetailSheet({
                       Reserved Stock ({data.reservedStock})
                     </div>
                     <p className="text-[11px] text-muted-foreground">
-                      * Incoming stock ({data.incomingStock} units) is scheduled replenishment and is not yet available.
+                      * Incoming stock ({data.incomingStock} units) is scheduled replenishment and
+                      is not yet available.
                     </p>
                   </div>
 
@@ -182,14 +181,18 @@ export function ProductDetailSheet({
                     </div>
 
                     <div className="rounded-lg border bg-card p-3 shadow-xs">
-                      <span className="text-[11px] text-muted-foreground block">Reserved stock</span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        Reserved stock
+                      </span>
                       <span className="text-xl font-bold text-warning-foreground">
                         {data.reservedStock}
                       </span>
                     </div>
 
                     <div className="rounded-lg border bg-card p-3 shadow-xs">
-                      <span className="text-[11px] text-muted-foreground block">Available stock</span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        Available stock
+                      </span>
                       <span
                         className={`text-xl font-bold ${
                           data.availableStock <= 0
@@ -204,21 +207,27 @@ export function ProductDetailSheet({
                     </div>
 
                     <div className="rounded-lg border bg-card p-3 shadow-xs">
-                      <span className="text-[11px] text-muted-foreground block">Incoming on order</span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        Incoming on order
+                      </span>
                       <span className="text-xl font-bold text-primary">
                         {data.incomingStock > 0 ? `+${data.incomingStock}` : "0"}
                       </span>
                     </div>
 
                     <div className="rounded-lg border bg-card p-3 shadow-xs">
-                      <span className="text-[11px] text-muted-foreground block">Reorder threshold</span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        Reorder threshold
+                      </span>
                       <span className="text-xl font-bold text-foreground">
                         {data.reorderThreshold}
                       </span>
                     </div>
 
                     <div className="rounded-lg border bg-card p-3 shadow-xs">
-                      <span className="text-[11px] text-muted-foreground block">Unit purchase cost</span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        Unit purchase cost
+                      </span>
                       <span className="text-xl font-bold text-foreground font-mono">
                         {data.unitCostPaise > 0 ? formatMoney(data.unitCostPaise) : "—"}
                       </span>
@@ -235,7 +244,8 @@ export function ProductDetailSheet({
                         </span>
                       </div>
                       <div className="text-[11px] text-muted-foreground leading-relaxed">
-                        Calculated as {data.stockOnHand} on-hand units × {formatMoney(data.unitCostPaise)} unit cost.
+                        Calculated as {data.stockOnHand} on-hand units ×{" "}
+                        {formatMoney(data.unitCostPaise)} unit cost.
                       </div>
                     </div>
                   )}
@@ -248,7 +258,8 @@ export function ProductDetailSheet({
                       <span className="font-medium text-foreground">
                         {data.preferredSupplier ? (
                           <Link to="/suppliers" className="text-primary hover:underline">
-                            {data.preferredSupplier.name} ({data.preferredSupplier.paymentTermsDays}d terms)
+                            {data.preferredSupplier.name} ({data.preferredSupplier.paymentTermsDays}
+                            d terms)
                           </Link>
                         ) : (
                           "None assigned"
@@ -320,8 +331,7 @@ export function ProductDetailSheet({
                   ) : (
                     <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
                       {data.movements.map((mov) => {
-                        const isPositive =
-                          mov.type === "receipt" || mov.type === "return";
+                        const isPositive = mov.type === "receipt" || mov.type === "return";
                         return (
                           <div
                             key={mov.id}
@@ -458,9 +468,7 @@ export function ProductDetailSheet({
                           className="p-3 rounded-lg border bg-card text-xs space-y-1"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-semibold text-foreground">
-                              {co.customerName}
-                            </span>
+                            <span className="font-semibold text-foreground">{co.customerName}</span>
                             <StatusBadge status={co.status} />
                           </div>
                           <div className="flex justify-between text-muted-foreground text-[11px]">
@@ -500,34 +508,42 @@ export function ProductDetailSheet({
                     <div className="text-xs text-muted-foreground space-y-2 leading-relaxed">
                       {data.status === "stockout_risk" ? (
                         <p className="text-destructive font-medium">
-                          Critical Alert: Open customer order commitments exceed available warehouse stock.
-                          Immediate procurement action required to avoid delivery delay penalties.
+                          Critical Alert: Open customer order commitments exceed available warehouse
+                          stock. Immediate procurement action required to avoid delivery delay
+                          penalties.
                         </p>
                       ) : data.status === "low_stock" ? (
                         <p className="text-warning-foreground font-medium">
-                          Warning: Available stock ({data.availableStock}) is below reorder threshold (
-                          {data.reorderThreshold}). Place a purchase order before supplier lead time window closes.
+                          Warning: Available stock ({data.availableStock}) is below reorder
+                          threshold ({data.reorderThreshold}). Place a purchase order before
+                          supplier lead time window closes.
                         </p>
                       ) : data.status === "out_of_stock" ? (
                         <p className="text-destructive font-medium">
-                          Critical Alert: Zero units available on hand. Product cannot fulfill new customer orders.
+                          Critical Alert: Zero units available on hand. Product cannot fulfill new
+                          customer orders.
                         </p>
                       ) : (
                         <p className="text-success font-medium">
-                          Healthy: Available stock buffer adequately covers projected demand and current order commitments.
+                          Healthy: Available stock buffer adequately covers projected demand and
+                          current order commitments.
                         </p>
                       )}
                     </div>
 
                     <div className="border-t pt-2 grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-muted-foreground block text-[11px]">Forecast Demand</span>
+                        <span className="text-muted-foreground block text-[11px]">
+                          Forecast Demand
+                        </span>
                         <span className="font-semibold text-foreground">
                           ~{data.forecastDemand} units / week
                         </span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground block text-[11px]">Lead Time Buffer</span>
+                        <span className="text-muted-foreground block text-[11px]">
+                          Lead Time Buffer
+                        </span>
                         <span className="font-semibold text-foreground">
                           {data.preferredSupplier
                             ? `${data.preferredSupplier.paymentTermsDays} days supplier lead time`

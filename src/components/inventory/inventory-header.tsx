@@ -102,10 +102,7 @@ export function InventoryHeader({
       {/* Search and Filters Bar */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search
-            className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
-            aria-hidden
-          />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden />
           <Input
             placeholder="Search by product name, SKU or category..."
             value={search}

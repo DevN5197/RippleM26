@@ -41,14 +41,7 @@ import type {
 
 const movementSchema = z.object({
   productId: z.string().min(1, "Please select a product"),
-  type: z.enum([
-    "receipt",
-    "sale",
-    "reservation",
-    "reservation_release",
-    "adjustment",
-    "return",
-  ]),
+  type: z.enum(["receipt", "sale", "reservation", "reservation_release", "adjustment", "return"]),
   quantity: z
     .number({ invalid_type_error: "Must be a valid number" })
     .int("Must be an integer")
@@ -125,7 +118,11 @@ export function StockMovementDialog({
   useEffect(() => {
     if (selectedType === "receipt") {
       form.setValue("referenceType", "purchase_order");
-    } else if (selectedType === "sale" || selectedType === "reservation" || selectedType === "reservation_release") {
+    } else if (
+      selectedType === "sale" ||
+      selectedType === "reservation" ||
+      selectedType === "reservation_release"
+    ) {
       form.setValue("referenceType", "customer_order");
     } else if (selectedType === "adjustment") {
       form.setValue("referenceType", "adjustment");
@@ -141,9 +138,7 @@ export function StockMovementDialog({
       po.lineItems?.some((li) => li.productId === selectedProductId),
   );
 
-  const relevantCustomerOrders = customerOrders.filter(
-    (co) => co.productId === selectedProductId,
-  );
+  const relevantCustomerOrders = customerOrders.filter((co) => co.productId === selectedProductId);
 
   // Check if material adjustment requires review step (> 10 units or > 20% of stock)
   const isMaterialAdjustment =
@@ -244,11 +239,7 @@ export function StockMovementDialog({
             </div>
 
             <DialogFooter className="pt-4 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsReviewStep(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setIsReviewStep(false)}>
                 Back to Edit
               </Button>
               <Button
@@ -317,7 +308,9 @@ export function StockMovementDialog({
                           <SelectItem value="sale">Sale / Customer Fulfillment</SelectItem>
                           <SelectItem value="reservation">Reserve Stock</SelectItem>
                           <SelectItem value="reservation_release">Release Reservation</SelectItem>
-                          <SelectItem value="adjustment">Stock Adjustment (Count / Shrinkage)</SelectItem>
+                          <SelectItem value="adjustment">
+                            Stock Adjustment (Count / Shrinkage)
+                          </SelectItem>
                           <SelectItem value="return">Return (Customer / Vendor)</SelectItem>
                         </SelectContent>
                       </Select>
@@ -426,16 +419,14 @@ export function StockMovementDialog({
                               <SelectItem value="manual">None / Retail Sale</SelectItem>
                               {relevantCustomerOrders.map((co) => (
                                 <SelectItem key={co.id} value={co.id}>
-                                  {co.id} ({co.quantity} units, delivery: {co.deliveryDate || "TBD"})
+                                  {co.id} ({co.quantity} units, delivery: {co.deliveryDate || "TBD"}
+                                  )
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         ) : (
-                          <Input
-                            placeholder="Enter customer order ID (e.g. CO-101)"
-                            {...field}
-                          />
+                          <Input placeholder="Enter customer order ID (e.g. CO-101)" {...field} />
                         )}
                       </FormControl>
                       <FormMessage />
@@ -470,11 +461,7 @@ export function StockMovementDialog({
               />
 
               <DialogFooter className="pt-4 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>

@@ -68,7 +68,9 @@ function enrichPurchaseOrder(po: PurchaseOrder): EnrichedPurchaseOrder {
 }
 
 export const purchaseOrderApi = {
-  async list(params: PurchaseOrderListParams = {}): Promise<ApiListResponse<EnrichedPurchaseOrder>> {
+  async list(
+    params: PurchaseOrderListParams = {},
+  ): Promise<ApiListResponse<EnrichedPurchaseOrder>> {
     if (DATA_MODE === "mock") {
       await delay();
       let pos = db.purchaseOrders.map(enrichPurchaseOrder);

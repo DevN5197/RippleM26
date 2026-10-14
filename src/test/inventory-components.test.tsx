@@ -30,7 +30,12 @@ import { InventorySummaryCards } from "@/components/inventory/inventory-summary-
 import { InventoryTable } from "@/components/inventory/inventory-table";
 import { ReorderRecommendationsPanel } from "@/components/inventory/reorder-recommendations-panel";
 import { InventoryRiskAlertsPanel } from "@/components/inventory/inventory-risk-alerts-panel";
-import type { InventoryItemWithDetails, InventorySummaryMetrics, ReorderRecommendation, InventoryRiskAlert } from "@/types";
+import type {
+  InventoryItemWithDetails,
+  InventorySummaryMetrics,
+  ReorderRecommendation,
+  InventoryRiskAlert,
+} from "@/types";
 
 const mockMetrics: InventorySummaryMetrics = {
   totalProducts: 5,
@@ -203,11 +208,7 @@ describe("Inventory UI Components", () => {
     ];
 
     render(
-      <InventoryRiskAlertsPanel
-        alerts={mockAlerts}
-        isLoading={false}
-        onSelectProduct={vi.fn()}
-      />,
+      <InventoryRiskAlertsPanel alerts={mockAlerts} isLoading={false} onSelectProduct={vi.fn()} />,
     );
 
     expect(screen.getByText(/Projected stockout: Denim Jacket/)).toBeInTheDocument();

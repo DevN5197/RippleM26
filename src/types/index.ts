@@ -20,16 +20,98 @@ export interface Business {
   industry?: string;
 }
 
+export type SupplierStatus = "active" | "archived";
+
 export interface Supplier {
   id: string;
   businessId: string;
   name: string;
-  contactName?: string;
-  email?: string;
-  phone?: string;
+  contactName?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  address?: string | undefined;
+  taxId?: string | undefined; // GSTIN / Tax Identification Number
   paymentTermsDays: number;
   outstandingPaise: number;
   reliabilityScore: number; // 0-100
+  status?: SupplierStatus | undefined;
+  notes?: string | undefined;
+  leadTimeDays?: number | undefined;
+  createdAt?: string | undefined;
+  updatedAt?: string | undefined;
+}
+
+export interface CreateSupplierInput {
+  name: string;
+  contactName?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  address?: string | undefined;
+  taxId?: string | undefined;
+  paymentTermsDays: number;
+  notes?: string | undefined;
+  status?: SupplierStatus | undefined;
+  leadTimeDays?: number | undefined;
+  reliabilityScore?: number | undefined;
+}
+
+export type UpdateSupplierInput = Partial<CreateSupplierInput>;
+
+export interface EnrichedSupplier extends Supplier {
+  openPoCount: number;
+  totalPoCount: number;
+  nextPaymentDate?: string | undefined;
+  nextPaymentAmountPaise?: number | undefined;
+  overdueAmountPaise: number;
+  hasOverdue: boolean;
+  isAtRisk: boolean;
+  riskReasons: string[];
+  payableInvoicesCount: number;
+}
+
+export interface SupplierSummaryMetrics {
+  totalSuppliers: number;
+  activeSuppliers: number;
+  archivedSuppliers: number;
+  totalOutstandingPayablesPaise: number;
+  dueInSevenDaysPaise: number;
+  overduePayablesPaise: number;
+  atRiskSuppliersCount: number;
+}
+
+export interface SupplierPaymentCommitment extends Payment {
+  linkedReference?: string | undefined;
+  linkedPoNumber?: string | undefined;
+  linkedInvoiceNumber?: string | undefined;
+  cashFlowImpactNote?: string | undefined;
+  dueDate: string;
+}
+
+export interface SupplierDetailData {
+  supplier: Supplier;
+  metrics: {
+    totalPurchasesPaise: number;
+    totalPaymentsMadePaise: number;
+    outstandingPayablesPaise: number;
+    overdueBalancePaise: number;
+    openPoCount: number;
+    totalPoCount: number;
+    onTimeDeliveryRate: number; // 0-100 percentage
+    reliabilityScore: number;
+    riskLevel: "low" | "medium" | "high";
+    riskFactors: string[];
+  };
+  purchaseOrders: (PurchaseOrder & {
+    lineItemsDetails?: (PurchaseOrderLineItem & { product?: Product | undefined })[] | undefined;
+    orderedUnits: number;
+    receivedUnits: number;
+    outstandingPaise: number;
+  })[];
+  invoices: Invoice[]; // payable invoices
+  payments: Payment[]; // all payments
+  upcomingPayments: SupplierPaymentCommitment[];
+  completedPayments: Payment[];
+  products: Product[];
 }
 
 export interface Customer {
@@ -69,13 +151,7 @@ export interface InventoryItem {
 }
 
 export type PurchaseOrderStatus =
-  | "draft"
-  | "sent"
-  | "confirmed"
-  | "partially_received"
-  | "received"
-  | "delayed"
-  | "cancelled";
+  "draft" | "sent" | "confirmed" | "partially_received" | "received" | "delayed" | "cancelled";
 
 export interface PurchaseOrderLineItem {
   id: string;
@@ -106,12 +182,7 @@ export interface PurchaseOrder {
 }
 
 export type InventoryMovementType =
-  | "receipt"
-  | "sale"
-  | "reservation"
-  | "reservation_release"
-  | "adjustment"
-  | "return";
+  "receipt" | "sale" | "reservation" | "reservation_release" | "adjustment" | "return";
 
 export interface InventoryMovement {
   id: string;
@@ -121,18 +192,15 @@ export interface InventoryMovement {
   quantity: number;
   resultingBalance: number;
   date: string;
-  referenceType?: "purchase_order" | "customer_order" | "adjustment" | "manual" | "return" | undefined;
+  referenceType?:
+    "purchase_order" | "customer_order" | "adjustment" | "manual" | "return" | undefined;
   referenceId?: string | undefined;
   note?: string | undefined;
   createdAt: string;
 }
 
 export type StockStatus =
-  | "healthy"
-  | "low_stock"
-  | "stockout_risk"
-  | "out_of_stock"
-  | "incoming_stock";
+  "healthy" | "low_stock" | "stockout_risk" | "out_of_stock" | "incoming_stock";
 
 export interface InventoryItemWithDetails {
   product: Product;
@@ -240,7 +308,8 @@ export interface RecordMovementInput {
   type: InventoryMovementType;
   quantity: number;
   date?: string | undefined;
-  referenceType?: "purchase_order" | "customer_order" | "adjustment" | "manual" | "return" | undefined;
+  referenceType?:
+    "purchase_order" | "customer_order" | "adjustment" | "manual" | "return" | undefined;
   referenceId?: string | undefined;
   note?: string | undefined;
 }
@@ -272,18 +341,23 @@ export interface CustomerOrder {
   deliveryDate?: string;
 }
 
+export type InvoiceType = "receivable" | "payable";
 export type InvoiceStatus = "draft" | "sent" | "partially_paid" | "paid" | "overdue" | "void";
 
 export interface Invoice {
   id: string;
   invoiceNumber: string;
-  customerId: string;
-  customerOrderId?: string;
+  type?: InvoiceType | undefined;
+  customerId?: string | undefined;
+  customerOrderId?: string | undefined;
+  supplierId?: string | undefined;
+  purchaseOrderId?: string | undefined;
   amountPaise: number;
   amountPaidPaise: number;
   status: InvoiceStatus;
   issueDate: string;
   dueDate: string;
+  notes?: string | undefined;
 }
 
 export type PaymentDirection = "incoming" | "outgoing";
@@ -294,6 +368,8 @@ export interface Payment {
   direction: PaymentDirection;
   invoiceId?: string;
   purchaseOrderId?: string;
+  supplierId?: string;
+  customerId?: string;
   amountPaise: number;
   status: PaymentStatus;
   scheduledDate: string;
