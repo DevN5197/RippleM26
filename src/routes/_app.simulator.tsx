@@ -26,10 +26,21 @@ import {
   SimulatorEventTimeline,
 } from "@/components/simulator/simulator-results";
 import {
+  AutoPhaseDialog,
+  SplitEscrowDialog,
+  NodeInspectionDialog,
+} from "@/components/simulator/simulator-rescues";
+import {
   simulatorApi,
   type SimulatorControls,
   type SimulatorResult,
 } from "@/lib/api/simulationApi";
+import type {
+  SimulatorTimelineNode,
+  AutoPhasePreview,
+  SplitEscrowPreview,
+  ChaosStressTestResult,
+} from "@/types";
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -95,6 +106,15 @@ function SimulatorPage() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [scenarioName, setScenarioName] = useState("");
 
+  // ── Features A, C, D states ──
+  const [chaosResult, setChaosResult] = useState<ChaosStressTestResult | null>(null);
+  const [inspectNode, setInspectNode] = useState<SimulatorTimelineNode | null>(null);
+  const [isInspectOpen, setIsInspectOpen] = useState(false);
+  const [autoPhasePreview, setAutoPhasePreview] = useState<AutoPhasePreview | null>(null);
+  const [isAutoPhaseOpen, setIsAutoPhaseOpen] = useState(false);
+  const [splitEscrowPreview, setSplitEscrowPreview] = useState<SplitEscrowPreview | null>(null);
+  const [isSplitEscrowOpen, setIsSplitEscrowOpen] = useState(false);
+
   // ── Run simulation mutation ──
   const runMutation = useMutation({
     mutationFn: (c: SimulatorControls) => simulatorApi.simulate(c),
@@ -108,6 +128,157 @@ function SimulatorPage() {
       toast.error("Simulation failed", { description: err.message });
     },
   });
+
+  // ── Feature A: Chaos Stress-Test Mutation ──
+  const chaosMutation = useMutation({
+    mutationFn: () => simulatorApi.runChaosStressTest(controls),
+    onSuccess: (data) => {
+      setChaosResult(data);
+      if (data.stressedResult) {
+        setResult(data.stressedResult);
+      }
+      toast.success("Chaos Stress-Test Applied (+5d shock)", {
+        description: `Most fragile node identified: ${data.mostFragileNodeLabel} (${data.mostFragileMultiplier}x multiplier)`,
+      });
+    },
+    onError: (err: Error) => {
+      toast.error("Chaos test failed", { description: err.message });
+    },
+  });
+
+  const handleExitChaos = useCallback(() => {
+    setChaosResult(null);
+    runMutation.mutate(controls);
+    toast.info("Returned to baseline scenario");
+  }, [controls, runMutation]);
+
+  // ── Feature C: Auto-Phase Inventory ──
+  const previewAutoPhaseMutation = useMutation({
+    mutationFn: () =>
+      simulatorApi.previewAutoPhase({
+        supplierCommitmentPaise: controls.supplierPaymentAmountPaise ?? 12_000_000,
+        actualAvailableCashPaise: 15_000_000,
+        safetyBufferPaise: 5_000_000,
+        customerPaymentDate: `Day ${15 + controls.customerPaymentDelayDays}`,
+      }),
+    onSuccess: (data) => {
+      setAutoPhasePreview(data);
+      setIsAutoPhaseOpen(true);
+    },
+    onError: (err: Error) => {
+      toast.error("Auto-Phase preview failed", { description: err.message });
+    },
+  });
+
+  const applyAutoPhaseMutation = useMutation({
+    mutationFn: () =>
+      simulatorApi.applyAutoPhase({
+        supplierCommitmentPaise: controls.supplierPaymentAmountPaise ?? 12_000_000,
+        actualAvailableCashPaise: 15_000_000,
+        safetyBufferPaise: 5_000_000,
+        customerPaymentDate: `Day ${15 + controls.customerPaymentDelayDays}`,
+      }),
+    onSuccess: () => {
+      setIsAutoPhaseOpen(false);
+      setIsInspectOpen(false);
+      runMutation.mutate(controls);
+      void queryClient.invalidateQueries({ queryKey: ["simulator"] });
+      toast.success("Auto-Phase Inventory Applied", {
+        description: "Supplier order split into Batch 1 (Day 18) and Batch 2 (Day 32). Safety buffer preserved.",
+      });
+    },
+    onError: (err: Error) => {
+      toast.error("Auto-Phase failed", { description: err.message });
+    },
+  });
+
+  // ── Feature D: Tri-Party Split-Escrow ──
+  const previewSplitEscrowMutation = useMutation({
+    mutationFn: () =>
+      simulatorApi.previewSplitEscrow({
+        customerInvoicePaise: controls.customerPaymentAmountPaise ?? 50_000_000,
+        supplierCommitmentPaise: controls.supplierPaymentAmountPaise ?? 12_000_000,
+        supplierFundingDate: "Day 18",
+        customerSettlementDate: `Day ${15 + controls.customerPaymentDelayDays}`,
+      }),
+    onSuccess: (data) => {
+      setSplitEscrowPreview(data);
+      setIsSplitEscrowOpen(true);
+    },
+    onError: (err: Error) => {
+      toast.error("Split-Escrow preview failed", { description: err.message });
+    },
+  });
+
+  const applySplitEscrowMutation = useMutation({
+    mutationFn: () =>
+      simulatorApi.applySplitEscrow({
+        customerInvoicePaise: controls.customerPaymentAmountPaise ?? 50_000_000,
+        supplierCommitmentPaise: controls.supplierPaymentAmountPaise ?? 12_000_000,
+        supplierFundingDate: "Day 18",
+        customerSettlementDate: `Day ${15 + controls.customerPaymentDelayDays}`,
+      }),
+    onSuccess: () => {
+      setIsSplitEscrowOpen(false);
+      setIsInspectOpen(false);
+      runMutation.mutate(controls);
+      void queryClient.invalidateQueries({ queryKey: ["simulator"] });
+      toast.success("Tri-Party Split-Escrow Locked", {
+        description: "Zero business cash outlay on Day 18. Customer receivable assigned with bypass arc.",
+      });
+    },
+    onError: (err: Error) => {
+      toast.error("Split-Escrow failed", { description: err.message });
+    },
+  });
+
+  // ── Revert Rescues Mutation ──
+  const revertRescuesMutation = useMutation({
+    mutationFn: () => simulatorApi.revertAllRescues(),
+    onSuccess: () => {
+      runMutation.mutate(controls);
+      void queryClient.invalidateQueries({ queryKey: ["simulator"] });
+      toast.info("Scenario rescues reverted to baseline");
+    },
+    onError: (err: Error) => {
+      toast.error("Revert failed", { description: err.message });
+    },
+  });
+
+  // ── Preset Handler ──
+  const handleSelectPreset = useCallback((preset: "flagship" | "baseline") => {
+    if (preset === "flagship") {
+      setControls({
+        supplierDeliveryDelayDays: 0,
+        customerPaymentDelayDays: 16,
+        customerPaymentAmountPaise: 50_000_000, // ₹5,00,000 Apex Corp
+        supplierPaymentAmountPaise: 12_000_000, // ₹1,20,000 Kaveri Timber
+        orderQuantityMultiplier: 1.0,
+        horizonDays: 30,
+      });
+      setChaosResult(null);
+      toast.info("Loaded Apex Corp Flagship Scenario", {
+        description: "₹5L Customer Receivable delayed +16d (Day 31); ₹1.2L Kaveri Timber payable Day 18.",
+      });
+    } else {
+      setControls(DEFAULT_CONTROLS);
+      setChaosResult(null);
+      toast.info("Reset to Baseline Scenario");
+    }
+  }, []);
+
+  const handleInspectNode = useCallback((node: SimulatorTimelineNode) => {
+    setInspectNode(node);
+    setIsInspectOpen(true);
+  }, []);
+
+  const handleTriggerAutoPhaseFromNode = useCallback((_node?: SimulatorTimelineNode) => {
+    previewAutoPhaseMutation.mutate();
+  }, [previewAutoPhaseMutation]);
+
+  const handleTriggerSplitEscrowFromNode = useCallback((_node?: SimulatorTimelineNode) => {
+    previewSplitEscrowMutation.mutate();
+  }, [previewSplitEscrowMutation]);
 
   // ── Dynamic simulation trigger on mount & whenever controls change ──
   useEffect(() => {
@@ -134,11 +305,13 @@ function SimulatorPage() {
 
   const handleRun = useCallback(() => {
     setError(null);
+    setChaosResult(null);
     runMutation.mutate(controls);
   }, [controls, runMutation]);
 
   const handleReset = useCallback(() => {
     setControls(DEFAULT_CONTROLS);
+    setChaosResult(null);
     setError(null);
     setChartView("both");
   }, []);
@@ -163,26 +336,26 @@ function SimulatorPage() {
   }, [result, scenarioName, controls, saveMutation]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page header */}
       <PageHeader
         title="Ripple Simulator"
-        description="Change a business event and instantly see how it ripples through suppliers, inventory, customer orders, and cash flow."
+        description="See how a delayed payment affects your cash flow and connected orders."
         actions={
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsBaselineDialogOpen(true)}
-              className="text-xs gap-1.5 h-8 font-medium"
+              className="h-7 text-xs text-muted-foreground hover:text-foreground border-border/70 font-medium gap-1.5"
             >
-              <FlaskConical className="h-3.5 w-3.5 text-primary" />
+              <FlaskConical className="h-3 w-3 text-muted-foreground" />
               Custom Amounts
             </Button>
-            <Badge variant="outline" className="gap-1.5 text-xs bg-primary/5 text-primary border-primary/20">
-              <FlaskConical className="h-3 w-3" aria-hidden />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium text-muted-foreground bg-muted/40 border border-border/60">
+              <FlaskConical className="h-3 w-3 text-muted-foreground" aria-hidden />
               What-if Engine
-            </Badge>
+            </span>
           </div>
         }
       />
@@ -200,18 +373,25 @@ function SimulatorPage() {
             onReset={handleReset}
             onRun={handleRun}
             onSave={handleSaveClick}
+            onChaosStressTest={() => chaosMutation.mutate()}
+            isChaosTesting={chaosMutation.isPending}
+            chaosStressTestResult={chaosResult}
+            onExitChaosStressTest={handleExitChaos}
+            onSelectPreset={handleSelectPreset}
           />
         </div>
 
         {/* ── Right: chart + results ── */}
         <div className="space-y-4">
           {/* Chart card */}
-          <Card className="shadow-xs">
-            <CardHeader className="pb-2">
+          <Card className="shadow-[0_1px_3px_rgba(0,0,0,0.02)] border-border/70 rounded-xl bg-card">
+            <CardHeader className="pb-2 pt-4 px-4 sm:px-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="text-base">Cash Flow Comparison</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
+                  <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
+                    Cash Flow Comparison
+                  </CardTitle>
+                  <CardDescription className="text-xs mt-0.5 text-muted-foreground">
                     {result
                       ? `${controls.horizonDays}-day projection · Baseline vs. simulated scenario`
                       : "Run a simulation to compare baseline and scenario forecasts"}
@@ -220,7 +400,7 @@ function SimulatorPage() {
 
                 {/* Series toggle — only visible once there's a result */}
                 {result && (
-                  <div className="flex items-center rounded-md border bg-muted/40 p-0.5 gap-0.5">
+                  <div className="flex items-center rounded-lg border border-border/70 bg-muted/30 p-0.5 gap-0.5">
                     {(
                       [
                         { key: "baseline", label: "Baseline" },
@@ -232,13 +412,9 @@ function SimulatorPage() {
                         key={key}
                         onClick={() => setChartView(key)}
                         className={[
-                          "rounded px-3 py-1 text-xs font-medium transition-colors",
+                          "rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer",
                           chartView === key
-                            ? key === "baseline"
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : key === "scenario"
-                                ? "bg-warning text-warning-foreground shadow-sm"
-                                : "bg-background text-foreground shadow-sm"
+                            ? "bg-background text-foreground shadow-xs font-semibold"
                             : "text-muted-foreground hover:text-foreground",
                         ].join(" ")}
                       >
@@ -277,7 +453,13 @@ function SimulatorPage() {
 
           {/* Timeline panel */}
           {result && !runMutation.isPending && (
-            <SimulatorEventTimeline result={result} />
+            <SimulatorEventTimeline
+              result={result}
+              onInspectNode={handleInspectNode}
+              onAutoPhaseClick={handleTriggerAutoPhaseFromNode}
+              onSplitEscrowClick={handleTriggerSplitEscrowFromNode}
+              onRevertRescues={() => revertRescuesMutation.mutate()}
+            />
           )}
         </div>
       </div>
@@ -410,6 +592,33 @@ function SimulatorPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Node Inspection Dialog (Feature A) */}
+      <NodeInspectionDialog
+        open={isInspectOpen}
+        onOpenChange={setIsInspectOpen}
+        node={inspectNode}
+        onTriggerAutoPhase={() => handleTriggerAutoPhaseFromNode(inspectNode ?? undefined)}
+        onTriggerSplitEscrow={() => handleTriggerSplitEscrowFromNode(inspectNode ?? undefined)}
+      />
+
+      {/* Auto-Phase Inventory Rescue Dialog (Feature C) */}
+      <AutoPhaseDialog
+        open={isAutoPhaseOpen}
+        onOpenChange={setIsAutoPhaseOpen}
+        preview={autoPhasePreview}
+        isLoading={applyAutoPhaseMutation.isPending}
+        onConfirm={() => applyAutoPhaseMutation.mutate()}
+      />
+
+      {/* Zero-Cash Tri-Party Split-Escrow Dialog (Feature D) */}
+      <SplitEscrowDialog
+        open={isSplitEscrowOpen}
+        onOpenChange={setIsSplitEscrowOpen}
+        preview={splitEscrowPreview}
+        isLoading={applySplitEscrowMutation.isPending}
+        onConfirm={() => applySplitEscrowMutation.mutate()}
+      />
     </div>
   );
 }

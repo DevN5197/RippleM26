@@ -8,7 +8,7 @@ from app.models.order import PurchaseOrder, PurchaseOrderLineItem, CustomerOrder
 from app.models.invoice import Invoice
 from app.models.payment import Payment
 from app.models.cash_flow import CashFlowEvent
-from app.models.simulation import SimulationScenario, DependencyEdge
+from app.models.simulation import SimulationScenario, DependencyEdge, ScenarioRescue, ScenarioStressTest
 from app.models.settings import AppSettingsModel
 
 __all__ = [
@@ -28,5 +28,7 @@ __all__ = [
     "CashFlowEvent",
     "SimulationScenario",
     "DependencyEdge",
+    "ScenarioRescue",
+    "ScenarioStressTest",
     "AppSettingsModel",
 ]

@@ -756,3 +756,109 @@ export interface ListParams {
 }
 
 export * from "./relationships";
+
+// ─── Flagship Simulator Intelligence Types ───────────────────────────────────
+
+export interface FragilityData {
+  nodeId: string;
+  invoiceAmountPaise: number;
+  downstreamValueAtRiskPaise: number;
+  multiplier: number;
+  isKeystone: boolean;
+  badgeText: string;
+  badgeVariant: "destructive" | "warning" | "outline" | "secondary";
+  exposedOrders: string[];
+}
+
+export interface TrueMarginBreakdown {
+  lostDiscountPaise: number;
+  supplierHaltFeesPaise: number;
+  slaPenaltiesPaise: number;
+  workingCapitalDragPaise: number;
+  floatFeePaise: number;
+}
+
+export interface TrueMarginData {
+  revenuePaise: number;
+  directCogsPaise: number;
+  paperMarginPaise: number;
+  paperMarginPercent: number;
+  contagionDays: number;
+  breakdown: TrueMarginBreakdown;
+  totalContagionCostPaise: number;
+  trueRippleMarginPaise: number;
+  trueRippleMarginPercent: number;
+  explanation: string;
+}
+
+export interface SimulatorTimelineNode {
+  id: string;
+  label: string;
+  type: "cash_reserve" | "customer_receivable" | "supplier_payable" | "downstream_fulfillment";
+  dayLabel: string;
+  date: string;
+  amountPaise: number;
+  direction: "balance" | "incoming" | "outgoing";
+  status: string;
+  counterparty: string;
+  description: string;
+  fragility?: FragilityData | undefined;
+  margin?: TrueMarginData | undefined;
+  hasBypassArc?: boolean | undefined;
+  bypassTargetId?: string | undefined;
+  isMostFragileUnderStress?: boolean | undefined;
+  stressHighlightColor?: string | undefined;
+  stressBadge?: string | undefined;
+  isEligibleForAutoPhase?: boolean | undefined;
+  isEligibleForSplitEscrow?: boolean | undefined;
+  isAutoPhasedChild?: boolean | undefined;
+}
+
+export interface AutoPhaseBatch {
+  amountPaise: number;
+  date: string;
+  label: string;
+  purpose: string;
+}
+
+export interface AutoPhasePreview {
+  supplierCommitmentPaise: number;
+  actualAvailableCashPaise: number;
+  safetyBufferPaise: number;
+  usableFreeCashPaise: number;
+  shortfallPaise: number;
+  batch1: AutoPhaseBatch;
+  batch2: AutoPhaseBatch;
+  safetyBufferPreserved: boolean;
+  explanation: string;
+}
+
+export interface SplitEscrowPreview {
+  customerInvoicePaise: number;
+  supplierCommitmentPaise: number;
+  floatFeePaise: number;
+  totalDeductionPaise: number;
+  netProceedsPaise: number;
+  isEligible: boolean;
+  supplierFundingDate: string;
+  customerSettlementDate: string;
+  bypassArcLabel: string;
+  explanation: string;
+}
+
+export interface ChaosStressTestResult {
+  isStressTestActive: boolean;
+  baselineMinCashPaise: number;
+  stressedMinCashPaise: number;
+  additionalShortfallPaise: number;
+  newlyAffectedNodesCount: number;
+  newlyEndangeredOrderValuePaise: number;
+  mostFragileNodeBefore: string;
+  mostFragileNodeAfter: string;
+  mostFragileNodeLabel: string;
+  mostFragileMultiplier: number;
+  baselineTrueMargin: TrueMarginData;
+  stressedTrueMargin: TrueMarginData;
+  stressedResult: any;
+  summary: string;
+}

@@ -40,16 +40,31 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { IS_DEMO } from "@/lib/config";
 
-const navItems = [
-  { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Relationship Graph", url: "/relationships", icon: Network },
-  { title: "Cash Flow", url: "/cash-flow", icon: Waves },
-  { title: "Ripple Simulator", url: "/simulator", icon: FlaskConical },
-  { title: "Inventory", url: "/inventory", icon: Package },
-  { title: "Suppliers", url: "/suppliers", icon: Truck },
-  { title: "Customers", url: "/customers", icon: Users },
-  { title: "Invoices & Payments", url: "/invoices", icon: FileText },
-  { title: "Insights & AI", url: "/insights", icon: Sparkles },
+const navGroups = [
+  {
+    label: "Cash & Planning",
+    items: [
+      { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
+      { title: "Cash Flow", url: "/cash-flow", icon: Waves },
+      { title: "Ripple Simulator", url: "/simulator", icon: FlaskConical },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { title: "Invoices & Bills", url: "/invoices", icon: FileText },
+      { title: "Customers", url: "/customers", icon: Users },
+      { title: "Suppliers", url: "/suppliers", icon: Truck },
+      { title: "Inventory", url: "/inventory", icon: Package },
+    ],
+  },
+  {
+    label: "Intelligence",
+    items: [
+      { title: "Relationship Map", url: "/relationships", icon: Network },
+      { title: "Insights & AI", url: "/insights", icon: Sparkles },
+    ],
+  },
 ];
 
 import { authApi, getStoredUser, getStoredBusiness } from "@/lib/api/authApi";
@@ -93,7 +108,7 @@ export function AppSidebar() {
                 Ripple
               </span>
               <span className="text-[10px] leading-tight text-muted-foreground">
-                See the impact before it happens
+                Financial coordination platform
               </span>
             </span>
           )}
@@ -134,34 +149,41 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                    onClick={() => setOpenMobile(false)}
-                  >
-                    <Link to={item.url} preload="intent">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {navGroups.map((group) => (
+          <SidebarGroup key={group.label} className="py-1">
+            {!collapsed && (
+              <SidebarGroupLabel className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase px-3 py-1">
+                {group.label}
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.url)}
+                      tooltip={item.title}
+                      onClick={() => setOpenMobile(false)}
+                      className="text-xs h-8"
+                    >
+                      <Link to={item.url} preload="intent">
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
 
-        <SidebarGroup>
+        <SidebarGroup className="pt-2">
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/settings")} tooltip="Settings">
+                <SidebarMenuButton asChild isActive={isActive("/settings")} tooltip="Settings" className="text-xs h-8">
                   <Link to="/settings" preload="intent">
                     <Settings className="h-4 w-4" />
                     <span>Settings</span>

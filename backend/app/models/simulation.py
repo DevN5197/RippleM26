@@ -30,3 +30,36 @@ class DependencyEdge(Base):
     target_type = Column(String(50), nullable=False)
     label = Column(String(255), nullable=False)
     lag_days = Column(Integer, default=0, nullable=False)
+
+class ScenarioRescue(Base):
+    __tablename__ = "simulation_rescues"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"res_{uuid.uuid4().hex[:12]}")
+    business_id = Column(String(64), ForeignKey("businesses.id", ondelete="CASCADE"), nullable=False, index=True)
+    scenario_id = Column(String(64), nullable=True)
+    rescue_type = Column(String(50), nullable=False) # "auto_phase" | "split_escrow"
+    status = Column(String(20), default="active", nullable=False) # "active" | "reverted"
+    target_supplier_id = Column(String(64), nullable=True)
+    target_customer_id = Column(String(64), nullable=True)
+    parent_order_id = Column(String(64), nullable=True)
+    batch1_amount_paise = Column(Integer, nullable=True)
+    batch1_date = Column(String(50), nullable=True)
+    batch2_amount_paise = Column(Integer, nullable=True)
+    batch2_date = Column(String(50), nullable=True)
+    float_fee_paise = Column(Integer, nullable=True)
+    net_proceeds_paise = Column(Integer, nullable=True)
+    metadata_json = Column(Text, nullable=True)
+    created_at = Column(String(50), nullable=True)
+
+class ScenarioStressTest(Base):
+    __tablename__ = "simulation_stress_tests"
+
+    id = Column(String(64), primary_key=True, default=lambda: f"stress_{uuid.uuid4().hex[:12]}")
+    business_id = Column(String(64), ForeignKey("businesses.id", ondelete="CASCADE"), nullable=False, index=True)
+    scenario_id = Column(String(64), nullable=True)
+    baseline_min_paise = Column(Integer, nullable=False)
+    stressed_min_paise = Column(Integer, nullable=False)
+    additional_shortfall_paise = Column(Integer, nullable=False)
+    most_fragile_node_id = Column(String(64), nullable=False)
+    most_fragile_multiplier = Column(Float, nullable=False)
+    created_at = Column(String(50), nullable=True)

@@ -40,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatMoney } from "@/lib/formatters";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { CreateInvoiceInput } from "@/types";
 
@@ -130,21 +131,38 @@ function DashboardPage() {
           isShortfall: summary.cashOnHandPaise < 0,
         };
 
+  const primaryAlert = summary.alerts[0];
+  const hasRisk = minPoint.isShortfall || summary.alerts.length > 0;
+
+  const primaryRiskTitle = minPoint.isShortfall
+    ? `Cash shortage risk around ${minPoint.date}`
+    : primaryAlert
+      ? primaryAlert.title
+      : "Cash flow is stable";
+
+  const primaryRiskDescription = minPoint.isShortfall
+    ? `Projected balance dips to ${formatMoney(minPoint.projectedBalancePaise)} around ${minPoint.date}. Scheduled supplier payments exceed available funds unless receipt or payment timing is adjusted.`
+    : primaryAlert
+      ? primaryAlert.description
+      : "No payment bottlenecks or reserve breaches projected over the next 30 days.";
+
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Overview"
-        description={`${summary.businessName || "Business"} · 30-day cash forecast`}
+        title="Business Overview"
+        description={`${summary.businessName || "Rupi Clothing"} · What matters today and what to do next`}
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm">
-                <Plus className="mr-1.5 h-4 w-4" aria-hidden />
+              <Button size="sm" className="shadow-xs gap-1.5 font-medium">
+                <Plus className="h-4 w-4" aria-hidden />
                 New record
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Create New Record</DropdownMenuLabel>
+              <DropdownMenuLabel>Create Record</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="cursor-pointer"
@@ -190,166 +208,242 @@ function DashboardPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          label="Cash on hand"
-          value={formatMoney(summary.cashOnHandPaise)}
-          icon={Wallet}
-          trend={{
-            direction: minPoint.isShortfall ? "down" : "flat",
-            label: minPoint.isShortfall
-              ? `Dips below zero around ${formatMoney(minPoint.projectedBalancePaise)}`
-              : "Stays positive for 30 days",
-            sentiment: minPoint.isShortfall ? "bad" : "good",
-          }}
-        />
-        <MetricCard
-          label="Receivables"
-          value={formatMoney(summary.receivablesPaise)}
-          icon={ArrowDownToLine}
-          hint={`${summary.openInvoiceCount} open invoices · ${formatMoney(summary.overdueReceivablesPaise)} overdue`}
-        />
-        <MetricCard
-          label="Payables"
-          value={formatMoney(summary.payablesPaise)}
-          icon={ArrowUpFromLine}
-          hint="Scheduled supplier payments"
-        />
-        <MetricCard
-          label="Low-stock items"
-          value={String(summary.lowStockCount)}
-          icon={PackageSearch}
-          trend={
-            summary.lowStockCount > 0
-              ? { direction: "down", label: "Below reorder point", sentiment: "bad" }
-              : { direction: "flat", label: "All healthy", sentiment: "good" }
-          }
-        />
-      </div>
-
-      <Card className="shadow-xs">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base">Projected cash balance</CardTitle>
-              <CardDescription>Next 30 days, including scheduled payments</CardDescription>
+      {/* ── LEVEL 1: WHAT MATTERS NOW (Compact & focused answers to the 4 core questions) ── */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Question 1: How much usable cash do I have? */}
+        <Card className="shadow-xs border-primary/20 bg-card">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Available Cash
+              </span>
+              <Badge
+                variant="outline"
+                className={
+                  summary.cashOnHandPaise >= 5_000_000
+                    ? "bg-success/10 text-success border-success/30 font-medium text-xs"
+                    : "bg-warning/15 text-warning-foreground border-warning/30 font-medium text-xs"
+                }
+              >
+                {summary.cashOnHandPaise >= 5_000_000 ? "Healthy Reserve" : "Near Minimum Reserve"}
+              </Badge>
             </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/cash-flow">
-                Details <ArrowRight className="ml-1 h-3.5 w-3.5" aria-hidden />
-              </Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <CashFlowChart data={summary.forecast} />
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="shadow-xs">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Risk alerts</CardTitle>
-            <CardDescription>What needs attention right now</CardDescription>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+                {formatMoney(summary.cashOnHandPaise)}
+              </span>
+              <span className="text-xs text-muted-foreground">cash on hand</span>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {summary.alerts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-6 text-center text-xs text-muted-foreground">
-                <CheckCircle2 className="h-6 w-6 text-emerald-500 mb-1.5" />
-                <span className="font-medium text-foreground">No active risk alerts</span>
-                <span>All cash buffers and counterparty scores are healthy.</span>
+          <CardContent className="pt-2">
+            <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/20 p-2.5 text-xs">
+              <div>
+                <span className="text-muted-foreground">Incoming Receivables:</span>
+                <p className="font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
+                  +{formatMoney(summary.receivablesPaise)}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{summary.openInvoiceCount} open invoices</p>
               </div>
-            ) : (
-              summary.alerts.map((alert) => (
-                <div key={alert.id} className="rounded-md border bg-background p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-foreground">{alert.title}</span>
-                    <RiskIndicator severity={alert.severity} />
-                  </div>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    {alert.description}
-                  </p>
-                </div>
-              ))
-            )}
+              <div>
+                <span className="text-muted-foreground">Committed Payables:</span>
+                <p className="font-semibold text-destructive mt-0.5 tabular-nums">
+                  -{formatMoney(summary.payablesPaise)}
+                </p>
+                <p className="text-[10px] text-muted-foreground">Scheduled supplier bills</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <div className="space-y-4">
-          <Card className="shadow-xs">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Upcoming cash events</CardTitle>
-              <CardDescription>Next scheduled inflows and outflows</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {summary.upcomingEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 text-center text-xs text-muted-foreground">
-                  <Calendar className="h-6 w-6 text-muted-foreground mb-1.5" />
-                  <span className="font-medium text-foreground">No upcoming cash events</span>
-                  <span>Scheduled receipts and disbursements will appear here.</span>
-                </div>
-              ) : (
-                <ul className="divide-y">
-                  {summary.upcomingEvents.map((event) => (
-                    <li key={event.id} className="flex items-center justify-between gap-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-foreground">{event.label}</p>
-                        <DateLabel iso={event.date} className="text-xs text-muted-foreground" />
-                      </div>
-                      <MoneyAmount
-                        paise={
-                          event.direction === "incoming" ? event.amountPaise : -event.amountPaise
-                        }
-                        signed
-                        className="shrink-0 text-sm font-medium"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-xs">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Recommended actions</CardTitle>
-              <CardDescription>Ranked by impact on your cash position</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {summary.recommendations.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 text-center text-xs text-muted-foreground">
-                  <Sparkles className="h-6 w-6 text-muted-foreground mb-1.5" />
-                  <span className="font-medium text-foreground">No pending recommendations</span>
-                  <span>Your cash-flow coordination is currently optimized.</span>
-                </div>
-              ) : (
-                summary.recommendations.map((rec) => (
-                  <div key={rec.id} className="rounded-md border bg-background p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium text-foreground">{rec.title}</span>
-                      <Badge
-                        variant="outline"
-                        className={
-                          rec.priority === "high"
-                            ? "border-transparent bg-destructive/10 text-destructive"
-                            : rec.priority === "medium"
-                              ? "border-transparent bg-warning/15 text-warning-foreground"
-                              : "border-transparent bg-muted text-muted-foreground"
-                        }
-                      >
-                        {rec.priority}
-                      </Badge>
-                    </div>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      {rec.rationale}
-                    </p>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        {/* Questions 2, 3, 4: What could go wrong? Who causes it? What should I do? */}
+        <Card
+          className={cn(
+            "shadow-xs transition-all",
+            hasRisk
+              ? "border-amber-500/40 bg-amber-500/5 ring-1 ring-amber-500/20"
+              : "border-success/30 bg-success/5",
+          )}
+        >
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Primary Cash Risk & Action
+              </span>
+              <Badge
+                className={
+                  hasRisk
+                    ? "bg-amber-600 text-white text-[10px] uppercase font-bold"
+                    : "bg-success text-white text-[10px]"
+                }
+              >
+                {hasRisk ? "Action Needed" : "All Clear"}
+              </Badge>
+            </div>
+            <CardTitle className="text-base font-semibold mt-1 text-foreground leading-snug">
+              {primaryRiskTitle}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-1">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {primaryRiskDescription}
+            </p>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <Button size="sm" asChild className="gap-1.5 font-medium shadow-xs h-8 text-xs">
+                <Link to="/simulator">
+                  {hasRisk ? "Explore payment options" : "Run what-if scenario"}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild className="text-xs h-8">
+                <Link to="/cash-flow">View 30-day forecast</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* ── LEVEL 2: WHAT IS HAPPENING (Timeline & Upcoming Transactions) ── */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Left: 30-day projected cash balance */}
+        <Card className="shadow-xs lg:col-span-2">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-semibold">Projected Cash Balance</CardTitle>
+              <CardDescription className="text-xs">
+                Next 30 days, including scheduled customer receipts and supplier payments
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" asChild className="text-xs h-7">
+              <Link to="/cash-flow">
+                Full ledger <ArrowRight className="ml-1 h-3 w-3" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <CashFlowChart data={summary.forecast} />
+          </CardContent>
+        </Card>
+
+        {/* Right: Key upcoming transactions */}
+        <Card className="shadow-xs lg:col-span-1 flex flex-col">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-semibold">Upcoming Transactions</CardTitle>
+              <CardDescription className="text-xs">Next key receipts and disbursements</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" asChild className="text-xs h-7">
+              <Link to="/invoices">
+                View all <ArrowRight className="ml-1 h-3 w-3" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="flex-1">
+            {summary.upcomingEvents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center text-xs text-muted-foreground">
+                <Calendar className="h-6 w-6 text-muted-foreground mb-1.5" />
+                <span className="font-medium text-foreground">No upcoming transactions</span>
+                <span>Scheduled payments will appear here.</span>
+              </div>
+            ) : (
+              <ul className="divide-y text-xs">
+                {summary.upcomingEvents.slice(0, 5).map((event) => (
+                  <li key={event.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-1">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-foreground">{event.label}</p>
+                      <DateLabel iso={event.date} className="text-[11px] text-muted-foreground" />
+                    </div>
+                    <MoneyAmount
+                      paise={
+                        event.direction === "incoming" ? event.amountPaise : -event.amountPaise
+                      }
+                      signed
+                      className="shrink-0 font-medium tabular-nums text-xs"
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── LEVEL 3: EXPLORE THE DETAILS (Progressive Disclosure) ── */}
+      <Card className="shadow-xs border-muted">
+        <CardHeader className="py-3 px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <div>
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                  Secondary Operational Details & Warnings
+                </CardTitle>
+                <CardDescription className="text-[11px]">
+                  Inventory statuses, counterparty risk alerts, and operational recommendations
+                </CardDescription>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDetailsExpanded((v) => !v)}
+              className="text-xs h-7"
+            >
+              {detailsExpanded ? "Hide Details" : "Show Details"}
+            </Button>
+          </div>
+        </CardHeader>
+
+        {detailsExpanded && (
+          <CardContent className="pt-2 border-t space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Risk alerts */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-foreground">Active Risk Warnings</p>
+                {summary.alerts.length === 0 ? (
+                  <div className="rounded-md border p-3 text-xs text-muted-foreground flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <span>No active operational warnings.</span>
+                  </div>
+                ) : (
+                  summary.alerts.map((alert) => (
+                    <div key={alert.id} className="rounded-md border bg-background p-2.5 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-foreground">{alert.title}</span>
+                        <RiskIndicator severity={alert.severity} />
+                      </div>
+                      <p className="text-muted-foreground text-[11px] leading-snug">{alert.description}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Inventory & Operational Notes */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-foreground">Inventory & Supply Chain</p>
+                <div className="rounded-md border p-3 text-xs space-y-2 bg-muted/10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Items Below Reorder Point:</span>
+                    <Badge variant={summary.lowStockCount > 0 ? "destructive" : "outline"} className="text-[10px]">
+                      {summary.lowStockCount} items
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Overdue Receivables:</span>
+                    <span className="font-mono font-medium text-destructive">
+                      {formatMoney(summary.overdueReceivablesPaise)}
+                    </span>
+                  </div>
+                  <div className="pt-1 flex justify-end">
+                    <Button variant="ghost" size="sm" asChild className="h-6 text-[11px] p-0 text-primary">
+                      <Link to="/inventory">Manage inventory & orders →</Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
       {/* Quick Action Modal for Invoices & Bills */}
       <InvoiceDialog

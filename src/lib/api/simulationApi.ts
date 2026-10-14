@@ -10,6 +10,11 @@ import type {
   ForecastPoint,
   CashFlowEvent,
   DependencyEdge,
+  TrueMarginData,
+  SimulatorTimelineNode,
+  AutoPhasePreview,
+  SplitEscrowPreview,
+  ChaosStressTestResult,
 } from "@/types";
 
 // ---------------------------------------------------------------------------
@@ -58,6 +63,13 @@ export interface SimulatorResult {
   rippleScore: RippleScoreBreakdown;
   recommendations: SimulatorRecommendation[];
   savedScenarioId?: string;
+  trueMargin?: TrueMarginData | undefined;
+  timelineNodes?: SimulatorTimelineNode[] | undefined;
+  activeRescues?: any[] | undefined;
+  isAutoPhaseApplied?: boolean | undefined;
+  isSplitEscrowApplied?: boolean | undefined;
+  hasAutoPhaseRescue?: boolean | undefined;
+  hasSplitEscrowRescue?: boolean | undefined;
 }
 
 export interface SimulatorRecommendation {
@@ -310,6 +322,116 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
     affectedDeps,
   );
 
+  const effectiveContagionDays = Math.max(0, controls.customerPaymentDelayDays);
+  const lostDiscount = effectiveContagionDays > 0 ? 360_000 : 0;
+  const haltFees = effectiveContagionDays * 250_000;
+  const slaPenalties = effectiveContagionDays * 300_000;
+  const floatDrag = effectiveContagionDays * 140_000;
+  const totalContagion = lostDiscount + haltFees + slaPenalties + floatDrag;
+
+  const mockTrueMargin = {
+    revenuePaise: 50_000_000,
+    directCogsPaise: 37_500_000,
+    paperMarginPaise: 12_500_000,
+    paperMarginPercent: 25.0,
+    contagionDays: effectiveContagionDays,
+    breakdown: {
+      lostDiscountPaise: lostDiscount,
+      supplierHaltFeesPaise: haltFees,
+      slaPenaltiesPaise: slaPenalties,
+      workingCapitalDragPaise: floatDrag,
+      floatFeePaise: 0,
+    },
+    totalContagionCostPaise: totalContagion,
+    trueRippleMarginPaise: 12_500_000 - totalContagion,
+    trueRippleMarginPercent: Math.round(((12_500_000 - totalContagion) / 50_000_000) * 10000) / 100,
+    explanation: `Paper Margin of 25% reduced by ₹${(totalContagion / 100).toLocaleString()} in ripple contagion to True Margin of ${Math.round(((12_500_000 - totalContagion) / 50_000_000) * 10000) / 100}%.`,
+  };
+
+  const mockTimelineNodes: SimulatorTimelineNode[] = [
+    {
+      id: "node_opening_cash",
+      label: "Opening Cash Reserve",
+      type: "cash_reserve",
+      dayLabel: "Day 0",
+      date: new Date().toISOString().slice(0, 10),
+      amountPaise: 15_000_000,
+      direction: "balance",
+      status: "completed",
+      counterparty: "Rupi Clothing Treasury",
+      description: "Initial usable balance with ₹50,000 protected safety buffer.",
+    },
+    {
+      id: "node_apex_corp",
+      label: "Apex Corp — Customer Invoice #INV-APEX",
+      type: "customer_receivable",
+      dayLabel: `Day ${15 + controls.customerPaymentDelayDays}`,
+      date: new Date(Date.now() + (15 + controls.customerPaymentDelayDays) * 86400000).toISOString().slice(0, 10),
+      amountPaise: controls.customerPaymentAmountPaise ?? 50_000_000,
+      direction: "incoming",
+      status: controls.customerPaymentDelayDays > 0 ? "delayed" : "upcoming",
+      counterparty: "Apex Corp",
+      description: "Customer receivable protecting downstream supply chain fulfillment.",
+      fragility: {
+        nodeId: "node_apex_corp",
+        invoiceAmountPaise: 4_000_000,
+        downstreamValueAtRiskPaise: 80_000_000,
+        multiplier: 20.0,
+        isKeystone: true,
+        badgeText: "Ripple Risk: 20.0x (Critical Keystone)",
+        badgeVariant: "destructive",
+        exposedOrders: ["Metro Retail Wholesale Order #MR-2026", "Central Distribution Lot #4"],
+      },
+      margin: mockTrueMargin,
+    },
+    {
+      id: "node_kaveri_timber",
+      label: "Kaveri Timber — Supplier Commitment",
+      type: "supplier_payable",
+      dayLabel: `Day ${18 + controls.supplierDeliveryDelayDays}`,
+      date: new Date(Date.now() + (18 + controls.supplierDeliveryDelayDays) * 86400000).toISOString().slice(0, 10),
+      amountPaise: controls.supplierPaymentAmountPaise ?? 12_000_000,
+      direction: "outgoing",
+      status: controls.supplierDeliveryDelayDays > 0 ? "delayed" : "upcoming",
+      counterparty: "Kaveri Timber",
+      description: "Supplier procurement commitment of ₹1,20,000 for raw materials.",
+      fragility: {
+        nodeId: "node_kaveri_timber",
+        invoiceAmountPaise: 12_000_000,
+        downstreamValueAtRiskPaise: 16_500_000,
+        multiplier: 1.4,
+        isKeystone: false,
+        badgeText: "Ripple Risk: 1.4x",
+        badgeVariant: "outline",
+        exposedOrders: ["Metro Retail Wholesale Order #MR-2026"],
+      },
+      isEligibleForAutoPhase: true,
+      isEligibleForSplitEscrow: true,
+    },
+    {
+      id: "node_metro_retail",
+      label: "Metro Retail — Wholesale Order #MR-2026",
+      type: "downstream_fulfillment",
+      dayLabel: `Day ${22 + controls.supplierDeliveryDelayDays}`,
+      date: new Date(Date.now() + (22 + controls.supplierDeliveryDelayDays) * 86400000).toISOString().slice(0, 10),
+      amountPaise: 16_500_000,
+      direction: "incoming",
+      status: effectiveContagionDays > 0 ? "at_risk" : "active",
+      counterparty: "Metro Retail",
+      description: effectiveContagionDays > 0 ? "Exposed to secondary SLA delay penalty." : "Inventory gate unlocked.",
+      fragility: {
+        nodeId: "node_metro_retail",
+        invoiceAmountPaise: 16_500_000,
+        downstreamValueAtRiskPaise: 16_500_000,
+        multiplier: 1.0,
+        isKeystone: false,
+        badgeText: "Fulfillment Gate",
+        badgeVariant: "outline",
+        exposedOrders: ["Direct Customer Delivery"],
+      },
+    },
+  ];
+
   return {
     baselinePoints,
     scenarioPoints,
@@ -323,6 +445,8 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
     affectedDependencies: affectedDeps,
     rippleScore,
     recommendations,
+    trueMargin: mockTrueMargin,
+    timelineNodes: mockTimelineNodes,
   };
 }
 
@@ -511,14 +635,247 @@ export const simulatorApi = {
   /**
    * Run a what-if simulation with the given controls.
    * Mock mode: fully deterministic local engine.
-   * API mode: delegates to POST /api/simulate.
+   * API mode: delegates to POST /api/simulator/simulate.
    */
   async simulate(controls: SimulatorControls): Promise<SimulatorResult> {
     if (DATA_MODE === "mock") {
       await delay(700);
       return runMockSimulation(controls);
     }
-    return httpRequest<SimulatorResult>("/api/simulate", { method: "POST", body: controls });
+    return httpRequest<SimulatorResult>("/api/simulator/simulate", { method: "POST", body: controls });
+  },
+
+  /**
+   * Run isolated Chaos Stress-Test (+5-day shock)
+   */
+  async runChaosStressTest(controls: SimulatorControls): Promise<ChaosStressTestResult> {
+    if (DATA_MODE === "mock") {
+      await delay(500);
+      const baseline = await runMockSimulation(controls);
+      const stressedControls = {
+        ...controls,
+        customerPaymentDelayDays: controls.customerPaymentDelayDays + 5,
+        supplierDeliveryDelayDays: controls.supplierDeliveryDelayDays + 5,
+      };
+      const stressedResult = await runMockSimulation(stressedControls);
+      return {
+        isStressTestActive: true,
+        baselineMinCashPaise: baseline.scenarioMinPaise,
+        stressedMinCashPaise: stressedResult.scenarioMinPaise,
+        additionalShortfallPaise: Math.max(0, baseline.scenarioMinPaise - stressedResult.scenarioMinPaise),
+        newlyAffectedNodesCount: 1,
+        newlyEndangeredOrderValuePaise: 16_500_000,
+        mostFragileNodeBefore: "node_apex_corp",
+        mostFragileNodeAfter: "node_apex_corp",
+        mostFragileNodeLabel: "Apex Corp — Customer Invoice #INV-APEX",
+        mostFragileMultiplier: 20.0,
+        baselineTrueMargin: baseline.trueMargin || {
+          revenuePaise: 50_000_000,
+          directCogsPaise: 37_500_000,
+          paperMarginPaise: 12_500_000,
+          paperMarginPercent: 25.0,
+          contagionDays: 13,
+          breakdown: {
+            lostDiscountPaise: 360_000,
+            supplierHaltFeesPaise: 3_250_000,
+            slaPenaltiesPaise: 3_900_000,
+            workingCapitalDragPaise: 1_820_000,
+            floatFeePaise: 0,
+          },
+          totalContagionCostPaise: 9_330_000,
+          trueRippleMarginPaise: 3_170_000,
+          trueRippleMarginPercent: 6.34,
+          explanation: "Paper Margin of 25% reduced by ₹93,300 in ripple contagion to True Margin of 6.34%.",
+        },
+        stressedTrueMargin: stressedResult.trueMargin || {
+          revenuePaise: 50_000_000,
+          directCogsPaise: 37_500_000,
+          paperMarginPaise: 12_500_000,
+          paperMarginPercent: 25.0,
+          contagionDays: 18,
+          breakdown: {
+            lostDiscountPaise: 360_000,
+            supplierHaltFeesPaise: 4_500_000,
+            slaPenaltiesPaise: 5_400_000,
+            workingCapitalDragPaise: 2_520_000,
+            floatFeePaise: 0,
+          },
+          totalContagionCostPaise: 12_780_000,
+          trueRippleMarginPaise: -280_000,
+          trueRippleMarginPercent: -0.56,
+          explanation: "+5-day stress creates negative True Margin.",
+        },
+        stressedResult,
+        summary: "+5-day Chaos Stress Test reduced minimum liquidity. Most fragile node: Apex Corp (20.0x multiplier).",
+      };
+    }
+    return httpRequest<ChaosStressTestResult>("/api/simulator/chaos-test", {
+      method: "POST",
+      body: controls,
+    });
+  },
+
+  /**
+   * Auto-Phase Inventory preview
+   */
+  async previewAutoPhase(params: {
+    supplierCommitmentPaise?: number;
+    actualAvailableCashPaise?: number;
+    safetyBufferPaise?: number;
+    originalPaymentDate?: string;
+    customerPaymentDate?: string;
+  }): Promise<AutoPhasePreview> {
+    if (DATA_MODE === "mock") {
+      await delay(200);
+      const commitment = params.supplierCommitmentPaise ?? 12_000_000;
+      const cash = params.actualAvailableCashPaise ?? 15_000_000;
+      const buffer = params.safetyBufferPaise ?? 5_000_000;
+      const usable = Math.max(0, cash - buffer);
+      const shortfall = Math.max(0, commitment - usable);
+      return {
+        supplierCommitmentPaise: commitment,
+        actualAvailableCashPaise: cash,
+        safetyBufferPaise: buffer,
+        usableFreeCashPaise: usable,
+        shortfallPaise: shortfall,
+        batch1: {
+          amountPaise: commitment - shortfall,
+          date: params.originalPaymentDate || "Day 18",
+          label: `Batch 1 (₹${((commitment - shortfall) / 100).toLocaleString()})`,
+          purpose: "Immediate dispatch within available usable free cash",
+        },
+        batch2: {
+          amountPaise: shortfall,
+          date: "Day 32",
+          label: `Batch 2 (₹${(shortfall / 100).toLocaleString()})`,
+          purpose: "Deferred settlement aligned with customer inflow",
+        },
+        safetyBufferPreserved: true,
+        explanation: `Splits ₹${(commitment / 100).toLocaleString()} into Batch 1 (₹${((commitment - shortfall) / 100).toLocaleString()}) on Day 18 and Batch 2 (₹${(shortfall / 100).toLocaleString()}) on Day 32, safeguarding the safety buffer.`,
+      };
+    }
+    return httpRequest<AutoPhasePreview>("/api/simulator/rescues/auto-phase/preview", {
+      method: "POST",
+      body: params,
+    });
+  },
+
+  /**
+   * Apply Auto-Phase Inventory rescue
+   */
+  async applyAutoPhase(params: {
+    supplierCommitmentPaise?: number;
+    actualAvailableCashPaise?: number;
+    safetyBufferPaise?: number;
+    originalPaymentDate?: string;
+    customerPaymentDate?: string;
+  }): Promise<{ success: boolean; rescueId: string; rescue: AutoPhasePreview; message: string }> {
+    if (DATA_MODE === "mock") {
+      await delay(300);
+      const preview = await this.previewAutoPhase(params);
+      return {
+        success: true,
+        rescueId: nextId("res_ap"),
+        rescue: preview,
+        message: "Auto-Phase Inventory applied. Batch 1 and Batch 2 scheduled with safety buffer intact.",
+      };
+    }
+    return httpRequest("/api/simulator/rescues/auto-phase/apply", {
+      method: "POST",
+      body: params,
+    });
+  },
+
+  /**
+   * Tri-Party Split-Escrow preview
+   */
+  async previewSplitEscrow(params: {
+    customerInvoicePaise?: number;
+    supplierCommitmentPaise?: number;
+    supplierFundingDate?: string;
+    customerSettlementDate?: string;
+  }): Promise<SplitEscrowPreview> {
+    if (DATA_MODE === "mock") {
+      await delay(200);
+      const invoice = params.customerInvoicePaise ?? 50_000_000;
+      const supplier = params.supplierCommitmentPaise ?? 12_000_000;
+      const fee = Math.round(supplier * 0.02);
+      const net = Math.max(0, invoice - supplier - fee);
+      return {
+        customerInvoicePaise: invoice,
+        supplierCommitmentPaise: supplier,
+        floatFeePaise: fee,
+        totalDeductionPaise: supplier + fee,
+        netProceedsPaise: net,
+        isEligible: invoice >= supplier + fee,
+        supplierFundingDate: params.supplierFundingDate || "Day 18",
+        customerSettlementDate: params.customerSettlementDate || "Day 31",
+        bypassArcLabel: "Tri-Party Split-Escrow",
+        explanation: `Escrow satisfies ₹${(supplier / 100).toLocaleString()} obligation with zero ordinary cash outlay. Deducts supplier cost and ₹${(fee / 100).toLocaleString()} fee at settlement, remitting net ₹${(net / 100).toLocaleString()} to business.`,
+      };
+    }
+    return httpRequest<SplitEscrowPreview>("/api/simulator/rescues/split-escrow/preview", {
+      method: "POST",
+      body: params,
+    });
+  },
+
+  /**
+   * Apply Tri-Party Split-Escrow arrangement
+   */
+  async applySplitEscrow(params: {
+    customerInvoicePaise?: number;
+    supplierCommitmentPaise?: number;
+    supplierFundingDate?: string;
+    customerSettlementDate?: string;
+  }): Promise<{ success: boolean; rescueId: string; rescue: SplitEscrowPreview; message: string }> {
+    if (DATA_MODE === "mock") {
+      await delay(300);
+      const preview = await this.previewSplitEscrow(params);
+      return {
+        success: true,
+        rescueId: nextId("res_esc"),
+        rescue: preview,
+        message: "Tri-Party Split-Escrow arrangement locked. Supplier obligation funded with zero ordinary cash outlay.",
+      };
+    }
+    return httpRequest("/api/simulator/rescues/split-escrow/apply", {
+      method: "POST",
+      body: params,
+    });
+  },
+
+  /**
+   * Revert a specific rescue
+   */
+  async revertRescue(rescueId: string): Promise<{ success: boolean; message: string }> {
+    if (DATA_MODE === "mock") {
+      await delay(200);
+      return { success: true, message: "Rescue reverted." };
+    }
+    return httpRequest(`/api/simulator/rescues/${rescueId}/revert`, { method: "POST" });
+  },
+
+  /**
+   * Revert all rescues
+   */
+  async revertAllRescues(): Promise<{ success: boolean; revertedCount: number; message: string }> {
+    if (DATA_MODE === "mock") {
+      await delay(200);
+      return { success: true, revertedCount: 1, message: "All rescues reverted." };
+    }
+    return httpRequest("/api/simulator/rescues/revert-all", { method: "POST" });
+  },
+
+  /**
+   * Get active rescues
+   */
+  async getRescues(): Promise<any[]> {
+    if (DATA_MODE === "mock") {
+      await delay(100);
+      return [];
+    }
+    return httpRequest<any[]>("/api/simulator/rescues");
   },
 
   /**

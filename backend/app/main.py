@@ -16,6 +16,7 @@ from app.api import cash_flow
 from app.api import relationships
 from app.api import settings as settings_api
 from app.api import dashboard
+from app.api import simulator
 
 app = FastAPI(
     title="Ripple Cash-Flow Intelligence API",
@@ -45,6 +46,7 @@ app.include_router(inventory.router)
 app.include_router(purchase_orders.router)
 app.include_router(invoices.router)
 app.include_router(cash_flow.router)
+app.include_router(simulator.router)
 app.include_router(relationships.router)
 app.include_router(settings_api.router)
 app.include_router(dashboard.router)
