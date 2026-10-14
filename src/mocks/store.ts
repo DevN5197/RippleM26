@@ -20,6 +20,7 @@ export const db = {
   invoices: clone(seed.invoices),
   payments: clone(seed.payments),
   cashFlowEvents: clone(seed.cashFlowEvents),
+  simulationScenarios: clone(seed.simulationScenarios),
   riskAlerts: clone(seed.riskAlerts),
   recommendations: clone(seed.recommendations),
 };

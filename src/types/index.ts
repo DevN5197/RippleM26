@@ -16,6 +16,7 @@ export interface Business {
   name: string;
   currency: CurrencyCode;
   openingCashPaise: number;
+  safetyThresholdPaise?: number;
   industry?: string;
 }
 
@@ -130,6 +131,9 @@ export interface CashFlowEvent {
   relatedInvoiceId?: string;
   relatedPurchaseOrderId?: string;
   isProjected: boolean;
+  counterpartyName?: string;
+  status?: "completed" | "scheduled" | "overdue" | "projected";
+  riskNote?: string;
 }
 
 /** An edge in the dependency graph: `sourceId` affects `targetId`. */
@@ -151,6 +155,84 @@ export interface ForecastPoint {
   inflowsPaise: number;
   outflowsPaise: number;
   isShortfall: boolean;
+  netMovementPaise?: number;
+  openingBalancePaise?: number;
+  isHistorical?: boolean;
+  scenarioBalancePaise?: number;
+  shortfallPaise?: number;
+}
+
+export interface DailyLedgerEntry {
+  date: string;
+  openingBalancePaise: number;
+  expectedIncomingPaise: number;
+  otherInflowsPaise: number;
+  totalInflowsPaise: number;
+  supplierPaymentsPaise: number;
+  operatingExpensesPaise: number;
+  otherOutflowsPaise: number;
+  totalOutflowsPaise: number;
+  netMovementPaise: number;
+  closingBalancePaise: number;
+  status: "healthy" | "warning" | "shortfall";
+  shortfallPaise: number;
+  isHistorical: boolean;
+  events: CashFlowEvent[];
+}
+
+export interface ForecastConfidenceMetadata {
+  confidenceScore: number;
+  reconciliationStatus: "verified" | "provisional";
+  lastReconciledAt: string;
+  actualsThroughDate: string;
+  invoicedCoveragePercent: number;
+  isDemo: boolean;
+}
+
+export interface ForecastScenarioComparison {
+  scenarioId: string;
+  scenarioName: string;
+  description: string;
+  assumptions: string;
+  targetEventId: string;
+  baselineMinBalancePaise: number;
+  baselineMinBalanceDate: string;
+  scenarioMinBalancePaise: number;
+  scenarioMinBalanceDate: string;
+  minBalanceDifferencePaise: number;
+  baselineBreachDates: string[];
+  scenarioBreachDates: string[];
+  scenarioPoints: ForecastPoint[];
+}
+
+export interface ForecastResponsePayload {
+  periodDays: number;
+  period: string;
+  currency: CurrencyCode;
+  openingBalancePaise: number;
+  closingBalancePaise: number;
+  totalInflowsPaise: number;
+  totalOutflowsPaise: number;
+  netMovementPaise: number;
+  minBalancePaise: number;
+  minBalanceDate: string;
+  safetyThresholdPaise: number;
+  breachDates: string[];
+  daysBelowThreshold: number;
+  points: ForecastPoint[];
+  dailyLedger: DailyLedgerEntry[];
+  events: CashFlowEvent[];
+  confidenceMetadata: ForecastConfidenceMetadata;
+  scenario?: ForecastScenarioComparison;
+}
+
+export type ForecastResponse = ForecastPoint[] & ForecastResponsePayload;
+
+export interface GetForecastParams {
+  days?: number;
+  businessId?: string;
+  scenarioId?: string;
+  safetyThresholdPaise?: number;
 }
 
 export type RiskSeverity = "info" | "warning" | "critical";

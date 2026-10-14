@@ -39,4 +39,12 @@ export const simulationApi = {
     }
     return httpRequest<SimulationResult>("/api/simulations", { method: "POST", body: input });
   },
+
+  async getScenarios(): Promise<SimulationScenario[]> {
+    if (DATA_MODE === "mock") {
+      await delay(150);
+      return db.simulationScenarios;
+    }
+    return httpRequest<SimulationScenario[]>("/api/simulations/scenarios");
+  },
 };

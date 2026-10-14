@@ -12,6 +12,9 @@ import type {
   Payment,
   CashFlowEvent,
   ForecastPoint,
+  DailyLedgerEntry,
+  ForecastResponse,
+  SimulationScenario,
   RiskAlert,
   Recommendation,
 } from "@/types";
@@ -31,6 +34,7 @@ export const business: Business = {
   name: "Rupi Clothing",
   currency: "INR",
   openingCashPaise: 1_000_000, // ₹10,000
+  safetyThresholdPaise: 500_000, // ₹5,000 safety threshold
   industry: "Apparel retail",
 };
 
@@ -285,85 +289,359 @@ export const payments: Payment[] = [
 ];
 
 export const cashFlowEvents: CashFlowEvent[] = [
+  // Historical / Actual past events (reconciled bank records)
+  {
+    id: "cfe_past_1",
+    type: "other",
+    label: "In-store cash deposit",
+    counterpartyName: "Retail counter",
+    direction: "incoming",
+    amountPaise: 450_000,
+    date: dp(7),
+    isProjected: false,
+    status: "completed",
+  },
+  {
+    id: "cfe_past_2",
+    type: "other",
+    label: "Electricity & Fiber Internet",
+    counterpartyName: "Tata Power",
+    direction: "outgoing",
+    amountPaise: 350_000,
+    date: dp(5),
+    isProjected: false,
+    status: "completed",
+  },
   {
     id: "cfe_1",
     type: "supplier_payment",
-    label: "Advance to Shree Textiles",
+    label: "Advance to Shree Textiles (PO-1)",
+    counterpartyName: "Shree Textiles",
     direction: "outgoing",
     amountPaise: 500_000,
     date: dp(2),
     relatedPurchaseOrderId: "po_1",
     isProjected: false,
+    status: "completed",
   },
+  {
+    id: "cfe_today",
+    type: "customer_payment",
+    label: "Counter retail sales — UPI settlement",
+    counterpartyName: "Walk-in customers",
+    direction: "incoming",
+    amountPaise: 250_000,
+    date: d(0),
+    isProjected: false,
+    status: "completed",
+  },
+
+  // Forward commitments (Days 1 - 90)
   {
     id: "cfe_2",
     type: "supplier_payment",
     label: "Balance to Shree Textiles (PO-1 delivery)",
+    counterpartyName: "Shree Textiles",
     direction: "outgoing",
     amountPaise: 3_000_000,
     date: d(4),
     relatedPurchaseOrderId: "po_1",
     isProjected: true,
-  },
-  {
-    id: "cfe_3",
-    type: "customer_payment",
-    label: "Urban Threads — INV-2001",
-    direction: "incoming",
-    amountPaise: 800_000,
-    date: d(21),
-    relatedInvoiceId: "inv_2001",
-    isProjected: true,
+    status: "scheduled",
+    riskNote: "Critical outflow triggering cash deficit",
   },
   {
     id: "cfe_4",
     type: "rent",
-    label: "Shop rent",
+    label: "Retail showroom rent",
+    counterpartyName: "Metro Commercial Properties",
     direction: "outgoing",
     amountPaise: 1_200_000,
     date: d(5),
     isProjected: true,
+    status: "scheduled",
+    riskNote: "Fixed non-negotiable monthly commitment",
   },
   {
     id: "cfe_5",
     type: "customer_payment",
-    label: "Style Mart — INV-1999 (overdue)",
+    label: "Style Mart — INV-1999 (overdue recovery)",
+    counterpartyName: "Style Mart",
     direction: "incoming",
     amountPaise: 130_000,
-    date: dp(5),
+    date: d(6),
     relatedInvoiceId: "inv_1999",
     isProjected: true,
-  },
-  {
-    id: "cfe_6",
-    type: "customer_payment",
-    label: "Style Mart — INV-2002",
-    direction: "incoming",
-    amountPaise: 1_320_000,
-    date: d(39),
-    relatedInvoiceId: "inv_2002",
-    isProjected: true,
+    status: "overdue",
+    riskNote: "5 days overdue, follow-up payment promised",
   },
   {
     id: "cfe_7",
     type: "supplier_payment",
-    label: "Mehta Fabrics — PO-2",
+    label: "Mehta Fabrics — PO-2 fabric batch",
+    counterpartyName: "Mehta Fabrics",
     direction: "outgoing",
     amountPaise: 2_250_000,
     date: d(11),
     relatedPurchaseOrderId: "po_2",
     isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_8",
+    type: "customer_payment",
+    label: "Fashion Hub — Wholesale Order",
+    counterpartyName: "Fashion Hub",
+    direction: "incoming",
+    amountPaise: 1_800_000,
+    date: d(15),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_9",
+    type: "supplier_payment",
+    label: "Khan Dye House — Batch dye run",
+    counterpartyName: "Khan Dye House",
+    direction: "outgoing",
+    amountPaise: 320_000,
+    date: d(18),
+    isProjected: true,
+    status: "scheduled",
+    riskNote: "Supplier reliability score: 71",
+  },
+  {
+    id: "cfe_10",
+    type: "tax",
+    label: "GST Monthly Return Filing",
+    counterpartyName: "Goods & Services Tax Network",
+    direction: "outgoing",
+    amountPaise: 650_000,
+    date: d(20),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_3",
+    type: "customer_payment",
+    label: "Urban Threads — INV-2001",
+    counterpartyName: "Urban Threads Boutique",
+    direction: "incoming",
+    amountPaise: 800_000,
+    date: d(21),
+    relatedInvoiceId: "inv_2001",
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_11",
+    type: "other",
+    label: "Logistics & packaging supplies",
+    counterpartyName: "BlueDart Express",
+    direction: "outgoing",
+    amountPaise: 180_000,
+    date: d(25),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_12",
+    type: "customer_payment",
+    label: "Urban Threads — Festive reorder",
+    counterpartyName: "Urban Threads Boutique",
+    direction: "incoming",
+    amountPaise: 2_500_000,
+    date: d(28),
+    isProjected: true,
+    status: "projected",
+  },
+  {
+    id: "cfe_13",
+    type: "payroll",
+    label: "Staff payroll (Month 1)",
+    counterpartyName: "Rupi Staff Payroll",
+    direction: "outgoing",
+    amountPaise: 1_500_000,
+    date: d(30),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_4_m2",
+    type: "rent",
+    label: "Retail showroom rent (Month 2)",
+    counterpartyName: "Metro Commercial Properties",
+    direction: "outgoing",
+    amountPaise: 1_200_000,
+    date: d(35),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_6",
+    type: "customer_payment",
+    label: "Style Mart — INV-2002",
+    counterpartyName: "Style Mart",
+    direction: "incoming",
+    amountPaise: 1_320_000,
+    date: d(39),
+    relatedInvoiceId: "inv_2002",
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_14",
+    type: "supplier_payment",
+    label: "Mehta Fabrics — Organic cotton yarn",
+    counterpartyName: "Mehta Fabrics",
+    direction: "outgoing",
+    amountPaise: 1_850_000,
+    date: d(42),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_15",
+    type: "customer_payment",
+    label: "Style Mart — Summer linen batch",
+    counterpartyName: "Style Mart",
+    direction: "incoming",
+    amountPaise: 3_200_000,
+    date: d(45),
+    isProjected: true,
+    status: "projected",
+  },
+  {
+    id: "cfe_16",
+    type: "tax",
+    label: "Quarterly Advance Income Tax",
+    counterpartyName: "Income Tax Department",
+    direction: "outgoing",
+    amountPaise: 850_000,
+    date: d(50),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_17",
+    type: "supplier_payment",
+    label: "Autumn collection fabric pre-order",
+    counterpartyName: "Shree Textiles",
+    direction: "outgoing",
+    amountPaise: 1_500_000,
+    date: d(55),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_18",
+    type: "payroll",
+    label: "Staff payroll (Month 2)",
+    counterpartyName: "Rupi Staff Payroll",
+    direction: "outgoing",
+    amountPaise: 1_500_000,
+    date: d(60),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_4_m3",
+    type: "rent",
+    label: "Retail showroom rent (Month 3)",
+    counterpartyName: "Metro Commercial Properties",
+    direction: "outgoing",
+    amountPaise: 1_200_000,
+    date: d(65),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_19",
+    type: "customer_payment",
+    label: "Fashion Hub — Autumn catalogue contract",
+    counterpartyName: "Fashion Hub",
+    direction: "incoming",
+    amountPaise: 3_500_000,
+    date: d(70),
+    isProjected: true,
+    status: "projected",
+  },
+  {
+    id: "cfe_20",
+    type: "customer_payment",
+    label: "E-commerce wholesale fulfillment",
+    counterpartyName: "Urban Threads Boutique",
+    direction: "incoming",
+    amountPaise: 2_800_000,
+    date: d(75),
+    isProjected: true,
+    status: "projected",
+  },
+  {
+    id: "cfe_21",
+    type: "supplier_payment",
+    label: "Winter outerwear raw materials",
+    counterpartyName: "Mehta Fabrics",
+    direction: "outgoing",
+    amountPaise: 2_000_000,
+    date: d(80),
+    isProjected: true,
+    status: "scheduled",
+  },
+  {
+    id: "cfe_22",
+    type: "payroll",
+    label: "Staff payroll (Month 3)",
+    counterpartyName: "Rupi Staff Payroll",
+    direction: "outgoing",
+    amountPaise: 1_500_000,
+    date: d(90),
+    isProjected: true,
+    status: "scheduled",
   },
 ];
 
-/** Deterministic 30-day forecast built from opening cash + events. */
+export const simulationScenarios: SimulationScenario[] = [
+  {
+    id: "sim_shree_delay",
+    name: "Extend Shree Textiles PO-1 by 7 Days",
+    description: "Move the ₹30,000 balance payment from Day 4 to Day 11 on net-7 terms.",
+    targetEventId: "cfe_2",
+    changeType: "delay_payment",
+    changeMagnitude: 7,
+    createdAt: dp(1),
+  },
+  {
+    id: "sim_urban_discount",
+    name: "Accelerate Urban Threads Collection (-11 Days)",
+    description:
+      "Offer 2% prompt-payment discount on INV-2001 (₹8,000) to collect on Day 10 instead of Day 21.",
+    targetEventId: "cfe_3",
+    changeType: "advance_payment",
+    changeMagnitude: -11,
+    createdAt: dp(1),
+  },
+  {
+    id: "sim_stylemart_delay",
+    name: "Style Mart Delayed Payment (+30 Days)",
+    description:
+      "Stress test scenario where Style Mart defers INV-2002 (₹13,200) by an additional 30 days.",
+    targetEventId: "cfe_6",
+    changeType: "delay_payment",
+    changeMagnitude: 30,
+    createdAt: dp(1),
+  },
+];
+
+/** Deterministic forecast built from opening cash + events. */
 export function buildForecast(
   events: CashFlowEvent[] = cashFlowEvents,
   openingCashPaise: number = business.openingCashPaise,
+  days = 30,
 ): ForecastPoint[] {
   const points: ForecastPoint[] = [];
   let balance = openingCashPaise;
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < days; i++) {
     const date = d(i);
     const dayEvents = events.filter((e) => e.date === date);
     const inflows = dayEvents
@@ -372,16 +650,230 @@ export function buildForecast(
     const outflows = dayEvents
       .filter((e) => e.direction === "outgoing")
       .reduce((s, e) => s + e.amountPaise, 0);
-    balance += inflows - outflows;
+    const net = inflows - outflows;
+    const dayOpening = balance;
+    balance += net;
     points.push({
       date,
       projectedBalancePaise: balance,
       inflowsPaise: inflows,
       outflowsPaise: outflows,
       isShortfall: balance < 0,
+      netMovementPaise: net,
+      openingBalancePaise: dayOpening,
     });
   }
   return points;
+}
+
+export function buildDetailedForecast(
+  events: CashFlowEvent[] = cashFlowEvents,
+  openingCashPaise: number = business.openingCashPaise,
+  days = 30,
+  safetyThresholdPaise: number = business.safetyThresholdPaise ?? 500_000,
+  scenarioId?: string,
+): ForecastResponse {
+  let runningBalance = openingCashPaise;
+  const points: ForecastPoint[] = [];
+  const dailyLedger: DailyLedgerEntry[] = [];
+  const breachDates: string[] = [];
+
+  let totalInflows = 0;
+  let totalOutflows = 0;
+
+  for (let i = 0; i < days; i++) {
+    const date = d(i);
+    const dayEvents = events.filter((e) => e.date === date);
+
+    const expectedIncoming = dayEvents
+      .filter((e) => e.direction === "incoming" && e.type === "customer_payment")
+      .reduce((s, e) => s + e.amountPaise, 0);
+
+    const otherInflows = dayEvents
+      .filter((e) => e.direction === "incoming" && e.type !== "customer_payment")
+      .reduce((s, e) => s + e.amountPaise, 0);
+
+    const dayInflows = expectedIncoming + otherInflows;
+
+    const supplierPayments = dayEvents
+      .filter((e) => e.direction === "outgoing" && e.type === "supplier_payment")
+      .reduce((s, e) => s + e.amountPaise, 0);
+
+    const operatingExpenses = dayEvents
+      .filter((e) => e.direction === "outgoing" && (e.type === "rent" || e.type === "payroll"))
+      .reduce((s, e) => s + e.amountPaise, 0);
+
+    const otherOutflows = dayEvents
+      .filter(
+        (e) =>
+          e.direction === "outgoing" &&
+          e.type !== "supplier_payment" &&
+          e.type !== "rent" &&
+          e.type !== "payroll",
+      )
+      .reduce((s, e) => s + e.amountPaise, 0);
+
+    const dayOutflows = supplierPayments + operatingExpenses + otherOutflows;
+    const netMovement = dayInflows - dayOutflows;
+    const dayOpening = runningBalance;
+    runningBalance += netMovement;
+    const closingBalance = runningBalance;
+
+    totalInflows += dayInflows;
+    totalOutflows += dayOutflows;
+
+    const isBelowThreshold = closingBalance < safetyThresholdPaise;
+    const isDeficit = closingBalance < 0;
+    if (isBelowThreshold) {
+      breachDates.push(date);
+    }
+
+    const shortfallPaise = isBelowThreshold ? safetyThresholdPaise - closingBalance : 0;
+    const status: "healthy" | "warning" | "shortfall" = isDeficit
+      ? "shortfall"
+      : isBelowThreshold
+        ? "warning"
+        : "healthy";
+
+    const point: ForecastPoint = {
+      date,
+      projectedBalancePaise: closingBalance,
+      inflowsPaise: dayInflows,
+      outflowsPaise: dayOutflows,
+      isShortfall: isDeficit,
+      netMovementPaise: netMovement,
+      openingBalancePaise: dayOpening,
+      shortfallPaise,
+    };
+    points.push(point);
+
+    dailyLedger.push({
+      date,
+      openingBalancePaise: dayOpening,
+      expectedIncomingPaise: expectedIncoming,
+      otherInflowsPaise: otherInflows,
+      totalInflowsPaise: dayInflows,
+      supplierPaymentsPaise: supplierPayments,
+      operatingExpensesPaise: operatingExpenses,
+      otherOutflowsPaise: otherOutflows,
+      totalOutflowsPaise: dayOutflows,
+      netMovementPaise: netMovement,
+      closingBalancePaise: closingBalance,
+      status,
+      shortfallPaise,
+      isHistorical: false,
+      events: dayEvents,
+    });
+  }
+
+  const minPoint =
+    points.length > 0
+      ? points.reduce((min, p) => (p.projectedBalancePaise < min.projectedBalancePaise ? p : min))
+      : { projectedBalancePaise: openingCashPaise, date: d(0) };
+
+  let scenarioData = undefined;
+  if (scenarioId) {
+    const scenario = simulationScenarios.find((s) => s.id === scenarioId);
+    if (scenario) {
+      const modifiedEvents = events.map((e) => {
+        if (e.id === scenario.targetEventId) {
+          if (scenario.id === "sim_shree_delay") {
+            return { ...e, date: d(11), riskNote: "Scenario: Shifted to Day 11 (+7 days)" };
+          }
+          if (scenario.id === "sim_urban_discount") {
+            return {
+              ...e,
+              date: d(10),
+              amountPaise: 784_000,
+              riskNote: "Scenario: Collected Day 10 (2% settlement discount)",
+            };
+          }
+          if (scenario.id === "sim_stylemart_delay") {
+            return { ...e, date: d(69), riskNote: "Scenario: Delayed to Day 69 (+30 days)" };
+          }
+        }
+        return e;
+      });
+
+      const scenarioForecast = buildForecast(modifiedEvents, openingCashPaise, days);
+      const scenarioMinPoint = scenarioForecast.reduce(
+        (min, p) => (p.projectedBalancePaise < min.projectedBalancePaise ? p : min),
+        scenarioForecast[0] ?? { projectedBalancePaise: openingCashPaise, date: d(0) },
+      );
+      const scenarioBreachDates = scenarioForecast
+        .filter((p) => p.projectedBalancePaise < safetyThresholdPaise)
+        .map((p) => p.date);
+
+      scenarioForecast.forEach((sp, idx) => {
+        if (points[idx]) {
+          points[idx].scenarioBalancePaise = sp.projectedBalancePaise;
+        }
+      });
+
+      let assumptionsText = "";
+      if (scenario.id === "sim_shree_delay") {
+        assumptionsText =
+          "Shree Textiles approves a 7-day payment delay on PO-1 delivery balance. Eliminates immediate Day 5 cash deficit.";
+      } else if (scenario.id === "sim_urban_discount") {
+        assumptionsText =
+          "Urban Threads accepts a 2% early-settlement incentive (₹160 discount), accelerating ₹7,840 net inflow to Day 10.";
+      } else if (scenario.id === "sim_stylemart_delay") {
+        assumptionsText =
+          "Stress test simulating extended buyer delay: Style Mart defers INV-2002 payment by 30 days.";
+      }
+
+      scenarioData = {
+        scenarioId: scenario.id,
+        scenarioName: scenario.name,
+        description: scenario.description ?? "",
+        assumptions: assumptionsText,
+        targetEventId: scenario.targetEventId,
+        baselineMinBalancePaise: minPoint.projectedBalancePaise,
+        baselineMinBalanceDate: minPoint.date,
+        scenarioMinBalancePaise: scenarioMinPoint.projectedBalancePaise,
+        scenarioMinBalanceDate: scenarioMinPoint.date,
+        minBalanceDifferencePaise:
+          scenarioMinPoint.projectedBalancePaise - minPoint.projectedBalancePaise,
+        baselineBreachDates: breachDates,
+        scenarioBreachDates,
+        scenarioPoints: scenarioForecast,
+      };
+    }
+  }
+
+  const confidenceMetadata = {
+    confidenceScore: 94,
+    reconciliationStatus: "verified" as const,
+    lastReconciledAt: new Date().toISOString(),
+    actualsThroughDate: d(0),
+    invoicedCoveragePercent: 89,
+    isDemo: true,
+  };
+
+  const relevantEvents = events.filter((e) => e.date >= d(0) && e.date <= d(days - 1));
+
+  const result = Object.assign(points, {
+    periodDays: days,
+    period: `${days} days`,
+    currency: "INR" as const,
+    openingBalancePaise: openingCashPaise,
+    closingBalancePaise: runningBalance,
+    totalInflowsPaise: totalInflows,
+    totalOutflowsPaise: totalOutflows,
+    netMovementPaise: totalInflows - totalOutflows,
+    minBalancePaise: minPoint.projectedBalancePaise,
+    minBalanceDate: minPoint.date,
+    safetyThresholdPaise,
+    breachDates,
+    daysBelowThreshold: breachDates.length,
+    points,
+    dailyLedger,
+    events: relevantEvents,
+    confidenceMetadata,
+    scenario: scenarioData,
+  }) as ForecastResponse;
+
+  return result;
 }
 
 export const riskAlerts: RiskAlert[] = [
