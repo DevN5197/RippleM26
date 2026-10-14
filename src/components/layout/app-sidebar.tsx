@@ -88,14 +88,19 @@ export function AppSidebar() {
                   <span className="truncate font-medium text-foreground">Rupi Clothing</span>
                   <span className="text-[11px] text-muted-foreground">Apparel retail · INR</span>
                 </span>
-                <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                <ChevronsUpDown
+                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                  aria-hidden
+                />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
               <DropdownMenuLabel>Businesses</DropdownMenuLabel>
               <DropdownMenuItem>
                 Rupi Clothing
-                <Badge variant="secondary" className="ml-auto">Current</Badge>
+                <Badge variant="secondary" className="ml-auto">
+                  Current
+                </Badge>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled>Add another business (soon)</DropdownMenuItem>

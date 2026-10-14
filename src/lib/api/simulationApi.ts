@@ -1,6 +1,6 @@
 import { DATA_MODE } from "@/lib/config";
 import { httpRequest } from "@/lib/api/client";
-import { delay, nextId } from "@/mocks/store";
+import { db, delay, nextId } from "@/mocks/store";
 import { buildForecast } from "@/mocks/data";
 import type { SimulationScenario, SimulationResult } from "@/types";
 
@@ -20,12 +20,13 @@ export const simulationApi = {
         id: nextId("sim"),
         createdAt: new Date().toISOString(),
       };
-      const baseline = buildForecast();
+      const baseline = buildForecast(db.cashFlowEvents, db.business.openingCashPaise);
       // Deterministic placeholder: scenario forecast equals baseline until the
       // real engine exists. Kept structurally correct so the UI is fully wired.
-      const min = baseline.reduce((a, b) =>
-        a.projectedBalancePaise <= b.projectedBalancePaise ? a : b,
-      );
+      const min =
+        baseline.length > 0
+          ? baseline.reduce((a, b) => (a.projectedBalancePaise <= b.projectedBalancePaise ? a : b))
+          : { projectedBalancePaise: 0, date: new Date().toISOString().slice(0, 10) };
       return {
         scenarioId: scenario.id,
         baselineForecast: baseline,

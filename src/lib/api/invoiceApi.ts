@@ -50,7 +50,10 @@ export const invoiceApi = {
     return httpRequest<Invoice>(`/api/invoices/${id}`, { method: "PATCH", body: patch });
   },
 
-  async recordPayment(invoiceId: string, payment: Omit<Payment, "id" | "invoiceId">): Promise<Payment> {
+  async recordPayment(
+    invoiceId: string,
+    payment: Omit<Payment, "id" | "invoiceId">,
+  ): Promise<Payment> {
     if (DATA_MODE === "mock") {
       await delay();
       const record: Payment = { ...payment, id: nextId("pay"), invoiceId };

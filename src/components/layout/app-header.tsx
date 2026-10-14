@@ -21,7 +21,10 @@ export function AppHeader() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
             <Bell className="h-4.5 w-4.5" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" aria-hidden />
+            <span
+              className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive"
+              aria-hidden
+            />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-80">

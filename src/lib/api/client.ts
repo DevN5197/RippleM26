@@ -28,7 +28,14 @@ interface RequestOptions {
 export async function httpRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, signal, query } = options;
 
-  const url = new URL(path, API_BASE_URL);
+  const baseUrl =
+    API_BASE_URL ||
+    (typeof window !== "undefined" && window.location.origin
+      ? window.location.origin
+      : "http://localhost:3000");
+  const url = new URL(
+    path.startsWith("http") ? path : `${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`,
+  );
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined) url.searchParams.set(key, String(value));

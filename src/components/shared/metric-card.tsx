@@ -8,7 +8,11 @@ interface MetricCardProps {
   value: string;
   icon: LucideIcon;
   hint?: string;
-  trend?: { direction: "up" | "down" | "flat"; label: string; sentiment?: "good" | "bad" | "neutral" };
+  trend?: {
+    direction: "up" | "down" | "flat";
+    label: string;
+    sentiment?: "good" | "bad" | "neutral";
+  };
 }
 
 export function MetricCard({ label, value, icon: Icon, hint, trend }: MetricCardProps) {

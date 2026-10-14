@@ -18,13 +18,16 @@ export interface DashboardSummary {
 }
 
 function computeSummary(): DashboardSummary {
-  const forecast = buildForecast();
+  const forecast = buildForecast(db.cashFlowEvents, db.business.openingCashPaise);
   const cashOnHandPaise = forecast[0]?.projectedBalancePaise ?? db.business.openingCashPaise;
 
   const openInvoices = db.invoices.filter(
     (i) => i.status === "sent" || i.status === "partially_paid" || i.status === "overdue",
   );
-  const receivablesPaise = openInvoices.reduce((s, i) => s + (i.amountPaise - i.amountPaidPaise), 0);
+  const receivablesPaise = openInvoices.reduce(
+    (s, i) => s + (i.amountPaise - i.amountPaidPaise),
+    0,
+  );
   const overdueReceivablesPaise = db.invoices
     .filter((i) => i.status === "overdue")
     .reduce((s, i) => s + (i.amountPaise - i.amountPaidPaise), 0);

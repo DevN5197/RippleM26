@@ -33,7 +33,11 @@ function ChartTooltip({
       <div className="mt-1 space-y-0.5 tabular-nums">
         <div className="flex justify-between gap-4">
           <span className="text-muted-foreground">Balance</span>
-          <span className={point.isShortfall ? "font-medium text-destructive" : "font-medium text-foreground"}>
+          <span
+            className={
+              point.isShortfall ? "font-medium text-destructive" : "font-medium text-foreground"
+            }
+          >
             {formatMoney(point.projectedBalancePaise)}
           </span>
         </div>
@@ -57,7 +61,11 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
   }));
 
   return (
-    <div className="h-72 w-full" role="img" aria-label="Projected cash balance over the next 30 days">
+    <div
+      className="h-72 w-full"
+      role="img"
+      aria-label="Projected cash balance over the next 30 days"
+    >
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <defs>

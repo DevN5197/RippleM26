@@ -357,12 +357,15 @@ export const cashFlowEvents: CashFlowEvent[] = [
 ];
 
 /** Deterministic 30-day forecast built from opening cash + events. */
-export function buildForecast(): ForecastPoint[] {
+export function buildForecast(
+  events: CashFlowEvent[] = cashFlowEvents,
+  openingCashPaise: number = business.openingCashPaise,
+): ForecastPoint[] {
   const points: ForecastPoint[] = [];
-  let balance = business.openingCashPaise;
+  let balance = openingCashPaise;
   for (let i = 0; i < 30; i++) {
     const date = d(i);
-    const dayEvents = cashFlowEvents.filter((e) => e.date === date);
+    const dayEvents = events.filter((e) => e.date === date);
     const inflows = dayEvents
       .filter((e) => e.direction === "incoming")
       .reduce((s, e) => s + e.amountPaise, 0);
@@ -441,7 +444,8 @@ export const recommendations: Recommendation[] = [
   {
     id: "rec_2",
     title: "Send a payment reminder to Style Mart",
-    rationale: "INV-1999 (₹1,300) is 5 days overdue. Early reminders typically halve late-payment duration.",
+    rationale:
+      "INV-1999 (₹1,300) is 5 days overdue. Early reminders typically halve late-payment duration.",
     impactPaise: 130_000,
     priority: "medium",
     relatedEntityId: "inv_1999",

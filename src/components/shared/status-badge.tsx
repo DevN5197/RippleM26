@@ -41,9 +41,10 @@ const labelByStatus: Record<string, string> = {
 
 export function StatusBadge({ status }: { status: string }) {
   const tone = toneByStatus[status] ?? "neutral";
-  const label = labelByStatus[status] ?? status.charAt(0).toUpperCase() + status.slice(1);
+  const formattedDefault = status.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+  const label = labelByStatus[status] ?? formattedDefault;
   return (
-    <Badge variant="outline" className={cn("font-medium capitalize", toneClasses[tone])}>
+    <Badge variant="outline" className={cn("font-medium", toneClasses[tone])}>
       {label}
     </Badge>
   );

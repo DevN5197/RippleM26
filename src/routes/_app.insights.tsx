@@ -6,7 +6,10 @@ export const Route = createFileRoute("/_app/insights")({
   head: () => ({
     meta: [
       { title: "Insights & AI — Ripple" },
-      { name: "description", content: "AI-generated recommendations to protect your cash position." },
+      {
+        name: "description",
+        content: "AI-generated recommendations to protect your cash position.",
+      },
       { property: "og:title", content: "Insights & AI — Ripple" },
       { property: "og:description", content: "Recommendations ranked by cash impact." },
       { property: "og:type", content: "website" },

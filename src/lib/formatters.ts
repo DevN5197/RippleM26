@@ -13,9 +13,11 @@ export function formatMoney(paise: number, currency: CurrencyCode = "INR"): stri
 /** Compact money for tight spaces: ₹12.4k, ₹1.2L */
 export function formatMoneyCompact(paise: number): string {
   const rupees = paise / 100;
-  if (Math.abs(rupees) >= 100000) return `₹${(rupees / 100000).toFixed(1)}L`;
-  if (Math.abs(rupees) >= 1000) return `₹${(rupees / 1000).toFixed(1)}k`;
-  return `₹${rupees.toFixed(0)}`;
+  const sign = rupees < 0 ? "−" : "";
+  const abs = Math.abs(rupees);
+  if (abs >= 100000) return `${sign}₹${(abs / 100000).toFixed(1)}L`;
+  if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(1)}k`;
+  return `${sign}₹${abs.toFixed(0)}`;
 }
 
 export function formatDate(iso: string, pattern = "d MMM yyyy"): string {

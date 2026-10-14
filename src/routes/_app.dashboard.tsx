@@ -51,9 +51,18 @@ function DashboardPage() {
   const { data } = useSuspenseQuery(summaryQuery);
   const summary: DashboardSummary = data;
 
-  const minPoint = summary.forecast.reduce((a, b) =>
-    a.projectedBalancePaise <= b.projectedBalancePaise ? a : b,
-  );
+  const minPoint =
+    summary.forecast.length > 0
+      ? summary.forecast.reduce((a, b) =>
+          a.projectedBalancePaise <= b.projectedBalancePaise ? a : b,
+        )
+      : {
+          date: new Date().toISOString().slice(0, 10),
+          projectedBalancePaise: summary.cashOnHandPaise,
+          inflowsPaise: 0,
+          outflowsPaise: 0,
+          isShortfall: summary.cashOnHandPaise < 0,
+        };
 
   return (
     <div className="space-y-6">
@@ -132,10 +141,7 @@ function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {summary.alerts.map((alert) => (
-              <div
-                key={alert.id}
-                className="rounded-md border bg-background p-3"
-              >
+              <div key={alert.id} className="rounded-md border bg-background p-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium text-foreground">{alert.title}</span>
                   <RiskIndicator severity={alert.severity} />
@@ -163,7 +169,9 @@ function DashboardPage() {
                       <DateLabel iso={event.date} className="text-xs text-muted-foreground" />
                     </div>
                     <MoneyAmount
-                      paise={event.direction === "incoming" ? event.amountPaise : -event.amountPaise}
+                      paise={
+                        event.direction === "incoming" ? event.amountPaise : -event.amountPaise
+                      }
                       signed
                       className="shrink-0 text-sm font-medium"
                     />

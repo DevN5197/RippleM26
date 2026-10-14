@@ -21,7 +21,8 @@ const config: Record<RiskSeverity, { icon: typeof Info; classes: string; label: 
 };
 
 export function RiskIndicator({ severity }: { severity: RiskSeverity }) {
-  const { icon: Icon, classes, label } = config[severity];
+  const item = config[severity] ?? config.info;
+  const { icon: Icon, classes, label } = item;
   return (
     <span
       className={cn(

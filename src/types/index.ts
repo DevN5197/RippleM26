@@ -118,12 +118,7 @@ export interface Payment {
 }
 
 export type CashFlowEventType =
-  | "supplier_payment"
-  | "customer_payment"
-  | "payroll"
-  | "rent"
-  | "tax"
-  | "other";
+  "supplier_payment" | "customer_payment" | "payroll" | "rent" | "tax" | "other";
 
 export interface CashFlowEvent {
   id: string;
@@ -141,9 +136,11 @@ export interface CashFlowEvent {
 export interface DependencyEdge {
   id: string;
   sourceId: string;
-  sourceType: "supplier" | "purchase_order" | "inventory" | "customer_order" | "invoice" | "payment";
+  sourceType:
+    "supplier" | "purchase_order" | "inventory" | "customer_order" | "invoice" | "payment";
   targetId: string;
-  targetType: "supplier" | "purchase_order" | "inventory" | "customer_order" | "invoice" | "payment";
+  targetType:
+    "supplier" | "purchase_order" | "inventory" | "customer_order" | "invoice" | "payment";
   label: string;
   lagDays: number;
 }

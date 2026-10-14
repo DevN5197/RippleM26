@@ -13,7 +13,12 @@ interface FeaturePlaceholderProps {
  * Polished placeholder for feature pages scheduled in later phases.
  * Keeps every route functional while the foundation settles.
  */
-export function FeaturePlaceholder({ title, description, icon: Icon, planned }: FeaturePlaceholderProps) {
+export function FeaturePlaceholder({
+  title,
+  description,
+  icon: Icon,
+  planned,
+}: FeaturePlaceholderProps) {
   return (
     <div className="space-y-6">
       <PageHeader

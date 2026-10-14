@@ -6,7 +6,10 @@ export const Route = createFileRoute("/_app/suppliers")({
   head: () => ({
     meta: [
       { title: "Suppliers — Ripple" },
-      { name: "description", content: "Supplier directory with payment terms, outstanding balances and reliability." },
+      {
+        name: "description",
+        content: "Supplier directory with payment terms, outstanding balances and reliability.",
+      },
       { property: "og:title", content: "Suppliers — Ripple" },
       { property: "og:description", content: "Manage suppliers and purchase orders." },
       { property: "og:type", content: "website" },

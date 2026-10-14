@@ -8,7 +8,8 @@ export const Route = createFileRoute("/_app/simulator")({
       { title: "Ripple Simulator — Ripple" },
       {
         name: "description",
-        content: "What-if simulation engine: change one event and watch the impact ripple through your operating cycle.",
+        content:
+          "What-if simulation engine: change one event and watch the impact ripple through your operating cycle.",
       },
       { property: "og:title", content: "Ripple Simulator — Ripple" },
       { property: "og:description", content: "See the impact before it happens." },

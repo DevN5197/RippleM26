@@ -8,7 +8,8 @@ export const Route = createFileRoute("/_app/relationships")({
       { title: "Relationship Graph — Ripple" },
       {
         name: "description",
-        content: "Interactive dependency graph connecting suppliers, inventory, orders, invoices and payments.",
+        content:
+          "Interactive dependency graph connecting suppliers, inventory, orders, invoices and payments.",
       },
       { property: "og:title", content: "Relationship Graph — Ripple" },
       { property: "og:description", content: "See how every business event connects." },
