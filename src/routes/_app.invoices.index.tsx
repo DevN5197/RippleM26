@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQueryClient, useQuery, keepPreviousData } from "@tanstack/react-query";
 import { PageHeader } from "@/components/shared/page-header";
+import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { InvoiceSummaryCards } from "@/components/invoices/invoice-summary-cards";
 import { InvoiceTable } from "@/components/invoices/invoice-table";
@@ -19,7 +20,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { invoiceApi, type InvoiceListFilterParams, type OverdueReminderPayload } from "@/lib/api/invoiceApi";
-import { db } from "@/mocks/store";
+import { customerApi } from "@/lib/api/customerApi";
+import { supplierApi } from "@/lib/api/supplierApi";
 import { PlusCircle, Ban } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -115,6 +117,13 @@ export const Route = createFileRoute("/_app/invoices/")({
     ],
   }),
   component: InvoicesIndexPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load invoices"
+      message={error instanceof Error ? error.message : "Failed to load invoices records."}
+      onRetry={reset}
+    />
+  ),
 });
 
 function InvoicesIndexPage() {
@@ -132,6 +141,20 @@ function InvoicesIndexPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedForPayment, setSelectedForPayment] = useState<EnrichedInvoice | null>(null);
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers", "list-quick"],
+    queryFn: () => customerApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    enabled: createDialogOpen,
+    staleTime: 60_000,
+  });
+
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["suppliers", "list-quick"],
+    queryFn: () => supplierApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    enabled: createDialogOpen,
+    staleTime: 60_000,
+  });
 
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderData, setReminderData] = useState<OverdueReminderPayload | null>(null);
@@ -177,7 +200,7 @@ function InvoicesIndexPage() {
 
   const handleSendReminder = (invoice: EnrichedInvoice) => {
     try {
-      const payload = invoiceApi.generateOverdueReminder(invoice.id);
+      const payload = invoiceApi.generateOverdueReminder(invoice);
       setReminderData(payload);
       setReminderDialogOpen(true);
     } catch (err: unknown) {
@@ -252,8 +275,8 @@ function InvoicesIndexPage() {
       <InvoiceDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        customers={db.customers}
-        suppliers={db.suppliers}
+        customers={customers}
+        suppliers={suppliers}
         onSubmit={handleCreateSubmit}
       />
 

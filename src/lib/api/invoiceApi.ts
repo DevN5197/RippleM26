@@ -349,7 +349,13 @@ export const invoiceApi = {
       const existing = db.invoices.find((i) => i.id === id);
       if (!existing) throw new Error(`Invoice ${id} not found`);
 
-      const updated: Invoice = { ...existing, ...patch, id };
+      const updated: Invoice = {
+        ...existing,
+        ...patch,
+        id,
+        invoiceNumber: patch.invoiceNumber ?? existing.invoiceNumber,
+        status: patch.status ?? existing.status,
+      };
       db.invoices = db.invoices.map((i) => (i.id === id ? updated : i));
       return updated;
     }
@@ -474,12 +480,24 @@ export const invoiceApi = {
     return httpRequest<Invoice>(`/api/invoices/${invoiceId}/cancel`, { method: "POST" });
   },
 
-  generateOverdueReminder(invoiceId: string): OverdueReminderPayload {
-    const invoice = db.invoices.find((i) => i.id === invoiceId);
-    if (!invoice) throw new Error(`Invoice ${invoiceId} not found`);
+  generateOverdueReminder(invoiceOrId: string | Invoice | EnrichedInvoice): OverdueReminderPayload {
+    let invoice: Invoice;
+    let enriched: EnrichedInvoice;
 
-    const enriched = enrichInvoice(invoice);
-    let recipientName = enriched.counterpartyName;
+    if (typeof invoiceOrId === "object" && invoiceOrId !== null) {
+      invoice = invoiceOrId;
+      enriched =
+        "counterpartyName" in invoiceOrId && invoiceOrId.counterpartyName
+          ? (invoiceOrId as EnrichedInvoice)
+          : enrichInvoice(invoiceOrId);
+    } else {
+      const found = db.invoices.find((i) => i.id === invoiceOrId);
+      if (!found) throw new Error(`Invoice ${invoiceOrId} not found`);
+      invoice = found;
+      enriched = enrichInvoice(found);
+    }
+
+    let recipientName = enriched.counterpartyName || "Accounts Team";
     let recipientEmail = "accounts@customer.com";
 
     if (invoice.customerId) {
@@ -537,5 +555,9 @@ accounts@rupiclothing.in
       subject,
       body,
     };
+  },
+
+  createInvoice(input: CreateInvoiceInput): Promise<Invoice> {
+    return this.create(input);
   },
 };

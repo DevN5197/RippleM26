@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/shared/page-header";
+import { ErrorState } from "@/components/shared/error-state";
 import { SimulatorControlPanel } from "@/components/simulator/simulator-controls";
 import { SimulatorChart, type ChartView } from "@/components/simulator/simulator-chart";
 import {
@@ -57,6 +58,13 @@ export const Route = createFileRoute("/_app/simulator")({
     ],
   }),
   component: SimulatorPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load simulator"
+      message={error instanceof Error ? error.message : "Failed to load simulator engine."}
+      onRetry={reset}
+    />
+  ),
 });
 
 // ─── Default controls ─────────────────────────────────────────────────────────

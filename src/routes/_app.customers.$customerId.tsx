@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery, useQueryClient, useQuery } from "@tanstack/react-query";
 import { customerApi, enrichCustomer } from "@/lib/api/customerApi";
+import { supplierApi } from "@/lib/api/supplierApi";
 import { invoiceApi, type OverdueReminderPayload } from "@/lib/api/invoiceApi";
 import { CustomerDetailHeader } from "@/components/customers/customer-detail-header";
 import { CustomerDetailMetrics } from "@/components/customers/customer-detail-metrics";
@@ -11,7 +12,7 @@ import { CustomerArchiveDialog } from "@/components/customers/customer-archive-d
 import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
 import { RecordPaymentDialog } from "@/components/invoices/record-payment-dialog";
 import { OverdueReminderDialog } from "@/components/invoices/overdue-reminder-dialog";
-import { db } from "@/mocks/store";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 import type {
   CreateCustomerInput,
@@ -38,6 +39,13 @@ export const Route = createFileRoute("/_app/customers/$customerId")({
     ],
   }),
   component: CustomerDetailPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load customer"
+      message={error instanceof Error ? error.message : "The requested customer profile could not be found."}
+      onRetry={reset}
+    />
+  ),
 });
 
 function CustomerDetailPage() {
@@ -53,6 +61,20 @@ function CustomerDetailPage() {
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState<Invoice | null>(null);
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers", "list-quick"],
+    queryFn: () => customerApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    enabled: invoiceDialogOpen,
+    staleTime: 60_000,
+  });
+
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["suppliers", "list-quick"],
+    queryFn: () => supplierApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    enabled: invoiceDialogOpen,
+    staleTime: 60_000,
+  });
 
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderData, setReminderData] = useState<OverdueReminderPayload | null>(null);
@@ -103,7 +125,7 @@ function CustomerDetailPage() {
 
   const handleSendReminder = (inv: Invoice) => {
     try {
-      const payload = invoiceApi.generateOverdueReminder(inv.id);
+      const payload = invoiceApi.generateOverdueReminder(inv);
       setReminderData(payload);
       setReminderDialogOpen(true);
     } catch (err: unknown) {
@@ -151,8 +173,8 @@ function CustomerDetailPage() {
       <InvoiceDialog
         open={invoiceDialogOpen}
         onOpenChange={setInvoiceDialogOpen}
-        customers={db.customers}
-        suppliers={db.suppliers}
+        customers={customers}
+        suppliers={suppliers}
         initialType="receivable"
         preselectedCustomerId={customer.id}
         onSubmit={handleCreateInvoice}

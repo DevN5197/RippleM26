@@ -9,6 +9,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    env: {
+      VITE_DATA_MODE: "mock",
+    },
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },

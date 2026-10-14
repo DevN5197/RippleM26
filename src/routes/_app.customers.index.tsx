@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQueryClient, useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
+import { ErrorState } from "@/components/shared/error-state";
 import { CustomerSummaryCards } from "@/components/customers/customer-summary-cards";
 import { CustomerTable } from "@/components/customers/customer-table";
 import { CustomerDialog } from "@/components/customers/customer-dialog";
@@ -76,6 +77,13 @@ export const Route = createFileRoute("/_app/customers/")({
     ],
   }),
   component: CustomersIndexPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load customers"
+      message={error instanceof Error ? error.message : "Failed to load customer records."}
+      onRetry={reset}
+    />
+  ),
 });
 
 function CustomersIndexPage() {

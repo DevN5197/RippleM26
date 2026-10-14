@@ -29,7 +29,7 @@ export const forecastApi = {
       );
     }
 
-    return httpRequest<ForecastResponse>("/api/forecast", {
+    const res = await httpRequest<any>("/api/forecast", {
       query: {
         business_id: businessId,
         days,
@@ -37,6 +37,11 @@ export const forecastApi = {
         safety_threshold: safetyThresholdPaise,
       },
     });
+
+    if (res && res.points && Array.isArray(res.points)) {
+      return Object.assign([...res.points], res) as ForecastResponse;
+    }
+    return res as ForecastResponse;
   },
 
   async updateSafetyThreshold(

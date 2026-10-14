@@ -52,10 +52,26 @@ const navItems = [
   { title: "Insights & AI", url: "/insights", icon: Sparkles },
 ];
 
+import { authApi, getStoredUser, getStoredBusiness } from "@/lib/api/authApi";
+import { useQuery } from "@tanstack/react-query";
+import { settingsApi } from "@/lib/api/settingsApi";
+
 export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed" && !isMobile;
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
+
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => settingsApi.getSettings(),
+  });
+
+  const storedUser = getStoredUser();
+  const storedBiz = getStoredBusiness();
+
+  const businessName = storedBiz?.name || settings?.business?.name || "Rupi Clothing";
+  const userFullName = storedUser?.fullName || settings?.business?.ownerName || "Demo Owner";
+  const userEmail = storedUser?.email || settings?.business?.ownerEmail || "owner@rupiclothing.in";
 
   const isActive = (path: string) => currentPath === path;
 
@@ -91,8 +107,8 @@ export function AppSidebar() {
                 aria-label="Select business"
               >
                 <span className="flex min-w-0 flex-col">
-                  <span className="truncate font-medium text-foreground">Rupi Clothing</span>
-                  <span className="text-[11px] text-muted-foreground">Apparel retail · INR</span>
+                  <span className="truncate font-medium text-foreground">{businessName}</span>
+                  <span className="text-[11px] text-muted-foreground">{settings?.business?.industry || "Apparel retail"} · {settings?.business?.currency || "INR"}</span>
                 </span>
                 <ChevronsUpDown
                   className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
@@ -103,13 +119,15 @@ export function AppSidebar() {
             <DropdownMenuContent align="start" className="w-56">
               <DropdownMenuLabel>Businesses</DropdownMenuLabel>
               <DropdownMenuItem>
-                Rupi Clothing
+                {businessName}
                 <Badge variant="secondary" className="ml-auto">
                   Current
                 </Badge>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>Add another business (soon)</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/register">Register another business</Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -160,7 +178,7 @@ export function AppSidebar() {
           <div className="mb-2 rounded-md border border-warning/40 bg-warning/10 px-2.5 py-2">
             <p className="text-[11px] font-medium text-warning-foreground">Demo workspace</p>
             <p className="text-[11px] leading-snug text-muted-foreground">
-              Synthetic data — no bank connected.
+              Synthetic data — mock mode active.
             </p>
           </div>
         )}
@@ -178,25 +196,25 @@ export function AppSidebar() {
               {!collapsed && (
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate text-sm font-medium text-sidebar-foreground">
-                    Demo Owner
+                    {userFullName}
                   </span>
                   <span className="truncate text-[11px] text-muted-foreground">
-                    owner@rupiclothing.in
+                    {userEmail}
                   </span>
                 </span>
               )}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-56">
-            <DropdownMenuLabel>Demo Owner</DropdownMenuLabel>
+            <DropdownMenuLabel>{userFullName}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link to="/settings">
                 <Settings className="mr-2 h-4 w-4" /> Settings
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem disabled>
-              <LogOut className="mr-2 h-4 w-4" /> Sign out (demo)
+            <DropdownMenuItem onClick={() => authApi.logout()} className="cursor-pointer text-destructive focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" /> Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

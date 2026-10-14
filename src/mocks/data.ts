@@ -19,6 +19,8 @@ import type {
   SimulationScenario,
   RiskAlert,
   Recommendation,
+  NotificationPreferences,
+  AppPreferences,
 } from "@/types";
 
 /**

@@ -81,7 +81,7 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSubmit }: Suppl
   const isEditing = Boolean(supplier);
 
   const form = useForm<SupplierFormValues>({
-    resolver: zodResolver(supplierFormSchema),
+    resolver: zodResolver(supplierFormSchema) as any,
     defaultValues: {
       name: "",
       contactName: "",

@@ -516,6 +516,7 @@ export const supplierApi = {
         address: patch.address !== undefined ? patch.address.trim() || undefined : existing.address,
         taxId: patch.taxId !== undefined ? patch.taxId.trim() || undefined : existing.taxId,
         notes: patch.notes !== undefined ? patch.notes.trim() || undefined : existing.notes,
+        reliabilityScore: patch.reliabilityScore ?? existing.reliabilityScore,
         updatedAt: todayStr,
       };
 
@@ -565,7 +566,7 @@ export const supplierApi = {
 
     return httpRequest<void>(`/api/suppliers/${id}`, {
       method: "DELETE",
-      query: { force: options.force },
+      query: options.force !== undefined ? { force: options.force ? 1 : 0 } : undefined,
     });
   },
 };

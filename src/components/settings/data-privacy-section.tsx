@@ -16,14 +16,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { db } from "@/mocks/store";
+import type { Business } from "@/types";
 
 interface DataPrivacySectionProps {
+  business?: Business;
   dataMode: "mock" | "api";
   onResetDemoData: () => Promise<void>;
   isResetting: boolean;
 }
 
 export function DataPrivacySection({
+  business,
   dataMode,
   onResetDemoData,
   isResetting,
@@ -33,6 +36,11 @@ export function DataPrivacySection({
   const handleExportAllCsv = () => {
     setIsExporting(true);
     try {
+      const bName = business?.name ?? (dataMode === "mock" ? db.business.name : "Active Business");
+      const bCurr = business?.currency ?? (dataMode === "mock" ? db.business.currency : "INR");
+      const bOpenCash = business?.openingCashPaise ?? (dataMode === "mock" ? db.business.openingCashPaise : 0);
+      const bSafety = business?.safetyThresholdPaise ?? (dataMode === "mock" ? db.business.safetyThresholdPaise ?? 0 : 0);
+
       // Export cohesive business summary CSV
       const rows = [
         ["Data Export", "Ripple Business Summary"],
@@ -40,16 +48,16 @@ export function DataPrivacySection({
         ["Mode", dataMode],
         [],
         ["Entity", "Count / Value"],
-        ["Business Name", db.business.name],
-        ["Currency", db.business.currency],
-        ["Opening Cash (Paise)", String(db.business.openingCashPaise)],
-        ["Safety Threshold (Paise)", String(db.business.safetyThresholdPaise ?? 0)],
-        ["Suppliers Count", String(db.suppliers.length)],
-        ["Customers Count", String(db.customers.length)],
-        ["Products Count", String(db.products.length)],
-        ["Invoices Count", String(db.invoices.length)],
-        ["Purchase Orders Count", String(db.purchaseOrders.length)],
-        ["Cash Flow Events Count", String(db.cashFlowEvents.length)],
+        ["Business Name", bName],
+        ["Currency", bCurr],
+        ["Opening Cash (Paise)", String(bOpenCash)],
+        ["Safety Threshold (Paise)", String(bSafety)],
+        ["Suppliers Count", String(dataMode === "mock" ? db.suppliers.length : "N/A (API Mode)")],
+        ["Customers Count", String(dataMode === "mock" ? db.customers.length : "N/A (API Mode)")],
+        ["Products Count", String(dataMode === "mock" ? db.products.length : "N/A (API Mode)")],
+        ["Invoices Count", String(dataMode === "mock" ? db.invoices.length : "N/A (API Mode)")],
+        ["Purchase Orders Count", String(dataMode === "mock" ? db.purchaseOrders.length : "N/A (API Mode)")],
+        ["Cash Flow Events Count", String(dataMode === "mock" ? db.cashFlowEvents.length : "N/A (API Mode)")],
       ];
 
       const csvContent = rows

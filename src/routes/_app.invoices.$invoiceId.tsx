@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Ban } from "lucide-react";
 import { toast } from "sonner";
+import { ErrorState } from "@/components/shared/error-state";
 import type { RecordPaymentInput } from "@/types";
 
 const invoiceDetailQuery = (invoiceId: string) =>
@@ -37,6 +38,13 @@ export const Route = createFileRoute("/_app/invoices/$invoiceId")({
     ],
   }),
   component: InvoiceDetailPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load invoice"
+      message={error instanceof Error ? error.message : "The requested invoice could not be found."}
+      onRetry={reset}
+    />
+  ),
 });
 
 function InvoiceDetailPage() {
@@ -72,7 +80,7 @@ function InvoiceDetailPage() {
 
   const handleSendReminder = () => {
     try {
-      const payload = invoiceApi.generateOverdueReminder(invoice.id);
+      const payload = invoiceApi.generateOverdueReminder(invoice);
       setReminderData(payload);
       setReminderDialogOpen(true);
     } catch (err: unknown) {

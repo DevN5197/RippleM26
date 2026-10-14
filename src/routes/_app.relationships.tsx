@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { relationshipsApi } from "@/lib/api/relationshipsApi";
 import { PageHeader } from "@/components/shared/page-header";
+import { ErrorState } from "@/components/shared/error-state";
 import { MetricCard } from "@/components/shared/metric-card";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/formatters";
@@ -48,6 +49,13 @@ export const Route = createFileRoute("/_app/relationships")({
     ],
   }),
   component: RelationshipsPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load relationships"
+      message={error instanceof Error ? error.message : "Failed to load relationship graph."}
+      onRetry={reset}
+    />
+  ),
 });
 
 function RelationshipsPage() {

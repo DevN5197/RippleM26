@@ -8,6 +8,7 @@ import { SupplierDetailMetrics } from "@/components/suppliers/supplier-detail-me
 import { SupplierDetailTabs } from "@/components/suppliers/supplier-detail-tabs";
 import { SupplierDialog } from "@/components/suppliers/supplier-dialog";
 import { SupplierArchiveDialog } from "@/components/suppliers/supplier-archive-dialog";
+import { ErrorState } from "@/components/shared/error-state";
 import type { SupplierDetailData, UpdateSupplierInput } from "@/types";
 
 const supplierDetailQuery = (supplierId: string) =>
@@ -38,6 +39,13 @@ export const Route = createFileRoute("/_app/suppliers/$supplierId")({
     ],
   }),
   component: SupplierDetailPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load supplier"
+      message={error instanceof Error ? error.message : "The requested supplier profile could not be found."}
+      onRetry={reset}
+    />
+  ),
 });
 
 function SupplierDetailPage() {

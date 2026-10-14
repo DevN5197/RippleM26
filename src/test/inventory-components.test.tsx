@@ -173,6 +173,7 @@ describe("Inventory UI Components", () => {
         suggestedReorderQuantity: 20,
         preferredSupplierName: "Shree Textiles",
         proposedPurchaseAmountPaise: 700000,
+        relatedCustomerOrderCount: 1,
         customerCommitmentsAtRisk: ["Urban Threads Boutique (10 units)"],
         reason: "Available stock (2 units) is below reorder threshold (25 units).",
         hasSufficientData: true,

@@ -8,6 +8,7 @@ import { inventoryApi } from "@/lib/api/inventoryApi";
 import { purchaseOrderApi } from "@/lib/api/purchaseOrderApi";
 import { supplierApi } from "@/lib/api/supplierApi";
 import { InventoryHeader } from "@/components/inventory/inventory-header";
+import { ErrorState } from "@/components/shared/error-state";
 import { InventorySummaryCards } from "@/components/inventory/inventory-summary-cards";
 import { InventoryTable } from "@/components/inventory/inventory-table";
 import { ProductDialog, type ProductFormValues } from "@/components/inventory/product-dialog";
@@ -123,6 +124,13 @@ export const Route = createFileRoute("/_app/inventory")({
     ],
   }),
   component: InventoryPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load inventory"
+      message={error instanceof Error ? error.message : "Failed to load inventory records."}
+      onRetry={reset}
+    />
+  ),
 });
 
 function InventoryPage() {
@@ -143,11 +151,11 @@ function InventoryPage() {
   const { data: reordersData } = useSuspenseQuery(reorderRecommendationsQuery);
   const { data: alertsData } = useSuspenseQuery(inventoryRiskAlertsQuery);
 
-  const items = inventoryData.data;
-  const suppliers = suppliersData.data;
-  const purchaseOrders = purchaseOrdersData.data;
-  const reorders = reordersData;
-  const alerts = alertsData;
+  const items = inventoryData?.data ?? [];
+  const suppliers = suppliersData?.data ?? [];
+  const purchaseOrders = purchaseOrdersData?.data ?? [];
+  const reorders = reordersData ?? [];
+  const alerts = alertsData ?? [];
 
   // Local UI State
   const activeTab = searchParams.tab || "items";

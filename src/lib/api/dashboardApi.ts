@@ -5,6 +5,8 @@ import { buildForecast } from "@/mocks/data";
 import type { ForecastPoint, RiskAlert, Recommendation, CashFlowEvent } from "@/types";
 
 export interface DashboardSummary {
+  businessName?: string;
+  currency?: string;
   cashOnHandPaise: number;
   receivablesPaise: number;
   payablesPaise: number;
@@ -67,6 +69,8 @@ function computeSummary(): DashboardSummary {
     }
 
     return {
+      businessName: db.business.name,
+      currency: db.business.currency,
       cashOnHandPaise,
       receivablesPaise,
       payablesPaise,
@@ -86,6 +90,30 @@ export const dashboardApi = {
       await delay();
       return computeSummary();
     }
-    return httpRequest<DashboardSummary>("/api/dashboard/summary");
+    const data = await httpRequest<DashboardSummary>("/api/dashboard/summary");
+    return {
+      ...data,
+      forecast: data?.forecast || [],
+      alerts: data?.alerts || [],
+      recommendations: data?.recommendations || [],
+      upcomingEvents: data?.upcomingEvents || [],
+    };
+  },
+
+  async getRecentActivity(): Promise<{ activities: any[] }> {
+    if (DATA_MODE === "mock") {
+      await delay();
+      return {
+        activities: db.invoices.slice(0, 5).map((inv) => ({
+          id: `act_inv_${inv.id}`,
+          type: "invoice",
+          title: `Invoice ${inv.invoiceNumber} (${inv.type})`,
+          amountPaise: inv.amountPaise,
+          status: inv.status,
+          date: inv.issueDate,
+        })),
+      };
+    }
+    return httpRequest<{ activities: any[] }>("/api/dashboard/recent-activity");
   },
 };

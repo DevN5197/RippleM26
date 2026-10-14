@@ -19,10 +19,10 @@ import { formatMoney } from "@/lib/formatters";
 import type { ForecastResponse, SimulationScenario } from "@/types";
 
 interface CashFlowSearchParams {
-  horizon?: ForecastHorizon;
-  view?: CashFlowViewMode;
-  scenarioId?: string;
-  threshold?: number;
+  horizon?: ForecastHorizon | undefined;
+  view?: CashFlowViewMode | undefined;
+  scenarioId?: string | undefined;
+  threshold?: number | undefined;
 }
 
 const scenariosQuery = queryOptions({
@@ -112,7 +112,7 @@ export const Route = createFileRoute("/_app/cash-flow")({
 
 function CashFlowPage() {
   const search = Route.useSearch();
-  const navigate = useNavigate({ from: Route.fullPath });
+  const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
 
   const horizon: ForecastHorizon = search.horizon ?? 30;

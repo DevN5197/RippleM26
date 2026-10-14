@@ -559,15 +559,15 @@ export type PaymentStatus = "scheduled" | "completed" | "failed" | "cancelled";
 export interface Payment {
   id: string;
   direction: PaymentDirection;
-  invoiceId?: string;
-  purchaseOrderId?: string;
-  supplierId?: string;
-  customerId?: string;
+  invoiceId?: string | undefined;
+  purchaseOrderId?: string | undefined;
+  supplierId?: string | undefined;
+  customerId?: string | undefined;
   amountPaise: number;
   status: PaymentStatus;
   scheduledDate: string;
-  completedDate?: string;
-  method?: string;
+  completedDate?: string | undefined;
+  method?: string | undefined;
 }
 
 export type CashFlowEventType =
@@ -580,12 +580,12 @@ export interface CashFlowEvent {
   direction: PaymentDirection;
   amountPaise: number;
   date: string;
-  relatedInvoiceId?: string;
-  relatedPurchaseOrderId?: string;
+  relatedInvoiceId?: string | undefined;
+  relatedPurchaseOrderId?: string | undefined;
   isProjected: boolean;
-  counterpartyName?: string;
-  status?: "completed" | "scheduled" | "overdue" | "projected";
-  riskNote?: string;
+  counterpartyName?: string | undefined;
+  status?: "completed" | "scheduled" | "overdue" | "projected" | undefined;
+  riskNote?: string | undefined;
 }
 
 /** An edge in the dependency graph: `sourceId` affects `targetId`. */
@@ -607,11 +607,11 @@ export interface ForecastPoint {
   inflowsPaise: number;
   outflowsPaise: number;
   isShortfall: boolean;
-  netMovementPaise?: number;
-  openingBalancePaise?: number;
-  isHistorical?: boolean;
-  scenarioBalancePaise?: number;
-  shortfallPaise?: number;
+  netMovementPaise?: number | undefined;
+  openingBalancePaise?: number | undefined;
+  isHistorical?: boolean | undefined;
+  scenarioBalancePaise?: number | undefined;
+  shortfallPaise?: number | undefined;
 }
 
 export interface DailyLedgerEntry {
@@ -681,10 +681,10 @@ export interface ForecastResponsePayload {
 export type ForecastResponse = ForecastPoint[] & ForecastResponsePayload;
 
 export interface GetForecastParams {
-  days?: number;
-  businessId?: string;
-  scenarioId?: string;
-  safetyThresholdPaise?: number;
+  days?: number | undefined;
+  businessId?: string | undefined;
+  scenarioId?: string | undefined;
+  safetyThresholdPaise?: number | undefined;
 }
 
 export type RiskSeverity = "info" | "warning" | "critical";
@@ -694,8 +694,8 @@ export interface RiskAlert {
   severity: RiskSeverity;
   title: string;
   description: string;
-  relatedEntityId?: string;
-  relatedEntityType?: string;
+  relatedEntityId?: string | undefined;
+  relatedEntityType?: string | undefined;
   createdAt: string;
   acknowledged: boolean;
 }
@@ -703,7 +703,7 @@ export interface RiskAlert {
 export interface SimulationScenario {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   /** Event ID being changed, e.g. an invoice payment date. */
   targetEventId: string;
   changeType: "delay_payment" | "advance_payment" | "cancel_order" | "price_change";
@@ -725,9 +725,9 @@ export interface Recommendation {
   id: string;
   title: string;
   rationale: string;
-  impactPaise?: number;
+  impactPaise?: number | undefined;
   priority: "low" | "medium" | "high";
-  relatedEntityId?: string;
+  relatedEntityId?: string | undefined;
 }
 
 /** Standard API envelope returned by the backend. */
@@ -747,11 +747,12 @@ export interface ApiErrorBody {
 }
 
 export interface ListParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  sortBy?: string;
-  sortDir?: "asc" | "desc";
+  page?: number | undefined;
+  pageSize?: number | undefined;
+  limit?: number | undefined;
+  search?: string | undefined;
+  sortBy?: string | undefined;
+  sortDir?: "asc" | "desc" | undefined;
 }
 
 export * from "./relationships";

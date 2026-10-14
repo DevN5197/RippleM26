@@ -4,6 +4,7 @@ import { queryOptions, useSuspenseQuery, useQueryClient, useQuery, keepPreviousD
 import { toast } from "sonner";
 import { supplierApi, type SupplierListFilterParams } from "@/lib/api/supplierApi";
 import { SupplierHeader } from "@/components/suppliers/supplier-header";
+import { ErrorState } from "@/components/shared/error-state";
 import { SupplierSummaryCards } from "@/components/suppliers/supplier-summary-cards";
 import { SupplierTable } from "@/components/suppliers/supplier-table";
 import { SupplierDialog } from "@/components/suppliers/supplier-dialog";
@@ -80,10 +81,17 @@ export const Route = createFileRoute("/_app/suppliers/")({
     ],
   }),
   component: SuppliersPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load suppliers"
+      message={error instanceof Error ? error.message : "Failed to load supplier records."}
+      onRetry={reset}
+    />
+  ),
 });
 
 function SuppliersPage() {
-  const navigate = useNavigate();
+  const navigate = Route.useNavigate();
   const searchParams = Route.useSearch();
   const queryClient = useQueryClient();
 

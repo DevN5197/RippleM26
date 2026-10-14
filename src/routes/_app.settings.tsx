@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
+import { ErrorState } from "@/components/shared/error-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { settingsApi } from "@/lib/api/settingsApi";
 import { BusinessProfileSection } from "@/components/settings/business-profile-section";
@@ -29,6 +30,13 @@ export const Route = createFileRoute("/_app/settings")({
     ],
   }),
   component: SettingsPage,
+  errorComponent: ({ error, reset }) => (
+    <ErrorState
+      title="Could not load settings"
+      message={error instanceof Error ? error.message : "Failed to load application settings."}
+      onRetry={reset}
+    />
+  ),
 });
 
 function SettingsPage() {
@@ -121,6 +129,7 @@ function SettingsPage() {
 
         <TabsContent value="data-privacy" className="space-y-4">
           <DataPrivacySection
+            business={settings.business}
             dataMode={settings.dataMode}
             onResetDemoData={async () => {
               await resetMutation.mutateAsync();

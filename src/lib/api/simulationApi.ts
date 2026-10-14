@@ -65,7 +65,7 @@ export interface SimulatorRecommendation {
   title: string;
   rationale: string;
   priority: "high" | "medium" | "low";
-  impactPaise?: number;
+  impactPaise?: number | undefined;
 }
 
 export interface SavedSimulatorScenario {

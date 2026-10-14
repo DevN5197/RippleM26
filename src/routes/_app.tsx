@@ -1,13 +1,20 @@
 import { useEffect, Suspense } from "react";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
 import { settingsApi } from "@/lib/api/settingsApi";
 import { applyTheme, applyCompactTables } from "@/lib/theme";
+import { DATA_MODE } from "@/lib/config";
+import { isUserAuthenticated } from "@/lib/api/authApi";
 
 export const Route = createFileRoute("/_app")({
+  beforeLoad: () => {
+    if (DATA_MODE === "api" && !isUserAuthenticated()) {
+      throw redirect({ to: "/login" });
+    }
+  },
   component: AppLayout,
 });
 

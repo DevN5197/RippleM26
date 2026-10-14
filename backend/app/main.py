@@ -1,0 +1,70 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
+from app.database import engine, Base, SessionLocal
+from app.models import *  # Import all models to ensure registration
+from app.seed import seed_rupi_clothing
+
+# Routers
+from app.api import auth
+from app.api import suppliers
+from app.api import customers
+from app.api import inventory
+from app.api import purchase_orders
+from app.api import invoices
+from app.api import cash_flow
+from app.api import relationships
+from app.api import settings as settings_api
+from app.api import dashboard
+
+app = FastAPI(
+    title="Ripple Cash-Flow Intelligence API",
+    description="Backend API for Ripple small-business financial coordination & cash-flow intelligence platform.",
+    version="1.0.0",
+)
+
+# CORS setup
+origins = settings.cors_origin_list
+if not origins:
+    origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins if "*" not in origins else ["*"],
+    allow_origin_regex=r"^https?://((localhost|127\.0\.0\.1)(:\d+)?|.*\.lovable\.(app|dev)|.*\.lovableproject\.com)$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include API Routers
+app.include_router(auth.router)
+app.include_router(suppliers.router)
+app.include_router(customers.router)
+app.include_router(inventory.router)
+app.include_router(purchase_orders.router)
+app.include_router(invoices.router)
+app.include_router(cash_flow.router)
+app.include_router(relationships.router)
+app.include_router(settings_api.router)
+app.include_router(dashboard.router)
+
+@app.on_event("startup")
+def on_startup():
+    # Ensure tables exist
+    Base.metadata.create_all(bind=engine)
+    # Automatically seed default demo business if not present
+    db = SessionLocal()
+    try:
+        seed_rupi_clothing(db, overwrite=False)
+    finally:
+        db.close()
+
+@app.get("/health", tags=["health"])
+@app.get("/api/health", tags=["health"])
+def health_check():
+    return {
+        "status": "healthy",
+        "service": "ripple-backend",
+        "environment": settings.ENVIRONMENT,
+    }

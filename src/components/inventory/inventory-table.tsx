@@ -10,6 +10,7 @@ import {
   Pencil,
   Network,
   FlaskConical,
+  Package,
   PackageX,
   PackagePlus,
   Truck,
@@ -139,6 +140,7 @@ export function InventoryTable({
     return (
       <div className="rounded-lg border bg-card p-8 shadow-xs">
         <EmptyState
+          icon={Package}
           title="No products in catalog"
           description="Track stock availability, procurement costs, reorder thresholds, and customer commitments."
           action={{
