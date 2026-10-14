@@ -219,3 +219,5 @@ export interface ListParams {
   sortBy?: string;
   sortDir?: "asc" | "desc";
 }
+
+export * from "./relationships";

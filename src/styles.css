@@ -1,6 +1,6 @@
-@import "tailwindcss" source(none);
-@source "../src";
+@import "tailwindcss";
 @import "tw-animate-css";
+@import "@xyflow/react/dist/style.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -146,4 +146,37 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+}
+
+/* React Flow styling aligned with Ripple design tokens */
+.react-flow {
+  background-color: var(--color-background);
+  font-family: var(--font-sans);
+}
+
+.react-flow__controls {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+  overflow: hidden;
+  background-color: var(--color-card);
+}
+
+.react-flow__controls-button {
+  background-color: var(--color-card) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  color: var(--color-foreground) !important;
+  fill: var(--color-foreground) !important;
+  transition: background-color 0.15s ease;
+}
+
+.react-flow__controls-button:hover {
+  background-color: var(--color-muted) !important;
+}
+
+.react-flow__minimap {
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  background-color: var(--color-card) !important;
+  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.06);
 }

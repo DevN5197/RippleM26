@@ -1,18 +1,48 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Network } from "lucide-react";
-import { FeaturePlaceholder } from "@/components/shared/feature-placeholder";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  Network,
+  Share2,
+  AlertTriangle,
+  FlaskConical,
+  Layers,
+  ArrowRight,
+  TrendingDown,
+} from "lucide-react";
+import { relationshipsApi } from "@/lib/api/relationshipsApi";
+import { PageHeader } from "@/components/shared/page-header";
+import { MetricCard } from "@/components/shared/metric-card";
+import { Button } from "@/components/ui/button";
+import { formatMoney } from "@/lib/formatters";
+import { RelationshipGraphView } from "@/components/relationships/relationship-graph-view";
+import type { RelationshipGraphData } from "@/types";
+
+const relationshipsQuery = queryOptions({
+  queryKey: ["relationships", "graph"],
+  queryFn: () => relationshipsApi.getGraph(),
+});
+
+interface RelationshipsSearchParams {
+  selectedId?: string | undefined;
+}
 
 export const Route = createFileRoute("/_app/relationships")({
+  validateSearch: (search: Record<string, unknown>): RelationshipsSearchParams => ({
+    selectedId: typeof search["selectedId"] === "string" ? search["selectedId"] : undefined,
+  }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(relationshipsQuery),
   head: () => ({
     meta: [
-      { title: "Relationship Graph — Ripple" },
+      { title: "Relationships — Ripple" },
       {
         name: "description",
-        content:
-          "Interactive dependency graph connecting suppliers, inventory, orders, invoices and payments.",
+        content: "See how suppliers, inventory, sales, invoices, and payments are connected.",
       },
-      { property: "og:title", content: "Relationship Graph — Ripple" },
-      { property: "og:description", content: "See how every business event connects." },
+      { property: "og:title", content: "Relationships — Ripple" },
+      {
+        property: "og:description",
+        content: "Interactive dependency graph and cash-flow intelligence for small businesses.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -21,17 +51,71 @@ export const Route = createFileRoute("/_app/relationships")({
 });
 
 function RelationshipsPage() {
+  const { data } = useSuspenseQuery(relationshipsQuery);
+  const search = Route.useSearch();
+  const graph: RelationshipGraphData = data;
+
+  const totalTouchpoints = graph.summary.totalNodes;
+  const totalDependencies = graph.summary.totalEdges;
+  const atRiskCount = graph.summary.atRiskCount;
+  const cashAtRiskPaise = graph.summary.totalCashAtRiskPaise;
+
   return (
-    <FeaturePlaceholder
-      title="Relationship Graph"
-      description="The interactive dependency map of your operating cycle."
-      icon={Network}
-      planned={[
-        "Interactive graph of suppliers, purchase orders, inventory, invoices and payments",
-        "Click any node to inspect its details and downstream impact",
-        "Highlight critical paths that lead to cash shortfalls",
-        "Filter by entity type and time window",
-      ]}
-    />
+    <div className="space-y-6">
+      {/* Page Header */}
+      <PageHeader
+        title="Relationships"
+        description="See how suppliers, inventory, sales, invoices, and payments are connected."
+        actions={
+          <div className="flex items-center gap-2">
+            <Button size="sm" asChild className="gap-1.5 shadow-xs">
+              <Link to="/simulator">
+                <FlaskConical className="h-4 w-4" />
+                <span>Simulate a Delay</span>
+              </Link>
+            </Button>
+          </div>
+        }
+      />
+
+      {/* High-level Metric Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          label="Operating Touchpoints"
+          value={String(totalTouchpoints)}
+          icon={Layers}
+          hint="Suppliers, orders, inventory & receipts"
+        />
+        <MetricCard
+          label="Active Dependencies"
+          value={String(totalDependencies)}
+          icon={Share2}
+          hint="Known causal sequence edges"
+        />
+        <MetricCard
+          label="Bottlenecks & At Risk"
+          value={String(atRiskCount)}
+          icon={AlertTriangle}
+          trend={{
+            direction: atRiskCount > 0 ? "down" : "flat",
+            label: `${atRiskCount} events need operational attention`,
+            sentiment: atRiskCount > 0 ? "bad" : "good",
+          }}
+        />
+        <MetricCard
+          label="Liquidity at Risk"
+          value={formatMoney(cashAtRiskPaise)}
+          icon={TrendingDown}
+          trend={{
+            direction: "down",
+            label: "Day 5 shortfall & overdue receipts",
+            sentiment: "bad",
+          }}
+        />
+      </div>
+
+      {/* Interactive Dependency Graph Canvas + Toolbar + Details Drawer */}
+      <RelationshipGraphView data={graph} initialSelectedId={search.selectedId} />
+    </div>
   );
 }
