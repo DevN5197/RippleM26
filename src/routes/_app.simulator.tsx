@@ -1,9 +1,36 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { FlaskConical, ArrowLeft, Network, Play, Calendar, AlertTriangle } from "lucide-react";
-import { FeaturePlaceholder } from "@/components/shared/feature-placeholder";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
+import { toast } from "sonner";
+import { FlaskConical, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/shared/page-header";
+import { SimulatorControlPanel } from "@/components/simulator/simulator-controls";
+import { SimulatorChart } from "@/components/simulator/simulator-chart";
+import {
+  SimulatorResults,
+  SimulatorEmptyState,
+  SimulatorErrorState,
+  SimulatorEventTimeline,
+} from "@/components/simulator/simulator-results";
+import {
+  simulatorApi,
+  type SimulatorControls,
+  type SimulatorResult,
+} from "@/lib/api/simulationApi";
+
+// ─── Validation ───────────────────────────────────────────────────────────────
 
 interface SimulatorSearchParams {
   eventId?: string | undefined;
@@ -32,88 +59,233 @@ export const Route = createFileRoute("/_app/simulator")({
   component: SimulatorPage,
 });
 
+// ─── Default controls ─────────────────────────────────────────────────────────
+
+const DEFAULT_CONTROLS: SimulatorControls = {
+  supplierDeliveryDelayDays: 0,
+  customerPaymentDelayDays: 0,
+  customerPaymentAmountPaise: null, // null = use seed default
+  supplierPaymentAmountPaise: null,
+  orderQuantityMultiplier: 1.0,
+  horizonDays: 30,
+};
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 function SimulatorPage() {
-  const { eventId, eventName } = Route.useSearch();
+  const queryClient = useQueryClient();
+
+  const [controls, setControls] = useState<SimulatorControls>(DEFAULT_CONTROLS);
+  const [result, setResult] = useState<SimulatorResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [scenarioName, setScenarioName] = useState("");
+
+  // ── Run simulation mutation ──
+  const runMutation = useMutation({
+    mutationFn: (c: SimulatorControls) => simulatorApi.simulate(c),
+    onSuccess: (data) => {
+      setResult(data);
+      setError(null);
+      toast.success("Simulation complete", {
+        description: `Ripple Impact Score: ${data.rippleScore.totalScore}/100`,
+      });
+    },
+    onError: (err: Error) => {
+      setError(err.message);
+      setResult(null);
+      toast.error("Simulation failed", { description: err.message });
+    },
+  });
+
+  // ── Save scenario mutation ──
+  const saveMutation = useMutation({
+    mutationFn: ({ name, c, r }: { name: string; c: SimulatorControls; r: SimulatorResult }) =>
+      simulatorApi.saveScenario(name, c, r),
+    onSuccess: () => {
+      setSaveDialogOpen(false);
+      setScenarioName("");
+      void queryClient.invalidateQueries({ queryKey: ["simulator", "scenarios"] });
+      toast.success("Scenario saved");
+    },
+    onError: (err: Error) => {
+      toast.error("Failed to save scenario", { description: err.message });
+    },
+  });
+
+  const handleRun = useCallback(() => {
+    setError(null);
+    runMutation.mutate(controls);
+  }, [controls, runMutation]);
+
+  const handleReset = useCallback(() => {
+    setControls(DEFAULT_CONTROLS);
+    setResult(null);
+    setError(null);
+  }, []);
+
+  const handleSaveClick = useCallback(() => {
+    if (!result) return;
+    // Suggest a name based on controls
+    const parts: string[] = [];
+    if (controls.supplierDeliveryDelayDays > 0)
+      parts.push(`+${controls.supplierDeliveryDelayDays}d supplier delay`);
+    if (controls.customerPaymentDelayDays > 0)
+      parts.push(`+${controls.customerPaymentDelayDays}d payment delay`);
+    if (controls.orderQuantityMultiplier !== 1.0)
+      parts.push(`${Math.round(controls.orderQuantityMultiplier * 100)}% demand`);
+    setScenarioName(parts.length > 0 ? parts.join(", ") : "Baseline scenario");
+    setSaveDialogOpen(true);
+  }, [controls, result]);
+
+  const handleSaveConfirm = useCallback(() => {
+    if (!result || !scenarioName.trim()) return;
+    saveMutation.mutate({ name: scenarioName.trim(), c: controls, r: result });
+  }, [result, scenarioName, controls, saveMutation]);
 
   return (
     <div className="space-y-6">
-      {eventId ? (
-        <Card className="border-primary/40 bg-primary/5 shadow-xs">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                  Active Simulation Target
-                </Badge>
-                <span className="text-xs text-muted-foreground">ID: {eventId}</span>
-              </div>
-              <Button variant="ghost" size="sm" asChild className="h-7 text-xs">
-                <Link to="/relationships">
-                  <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back to Graph
-                </Link>
-              </Button>
-            </div>
-            <CardTitle className="text-lg font-bold text-foreground mt-1">
-              {eventName || eventId}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Configure a what-if delay or advance on this event to project the cascading impact on
-              your operating cycle and 30-day cash balance.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border bg-card p-3 text-xs">
-                <span className="font-semibold text-foreground block mb-1">
-                  Scenario A: +3 Days
-                </span>
-                <p className="text-muted-foreground text-[11px] mb-2">
-                  Moderate delay in supplier fulfillment
-                </p>
-                <Button size="sm" variant="outline" className="w-full h-7 text-xs gap-1">
-                  <Play className="h-3 w-3" /> Run Scenario
-                </Button>
-              </div>
-
-              <div className="rounded-lg border bg-card p-3 text-xs">
-                <span className="font-semibold text-foreground block mb-1">
-                  Scenario B: +7 Days
-                </span>
-                <p className="text-muted-foreground text-[11px] mb-2">
-                  Full week delay; shifts customer billing
-                </p>
-                <Button size="sm" variant="outline" className="w-full h-7 text-xs gap-1">
-                  <Play className="h-3 w-3" /> Run Scenario
-                </Button>
-              </div>
-
-              <div className="rounded-lg border bg-card p-3 text-xs">
-                <span className="font-semibold text-foreground block mb-1">
-                  Scenario C: +14 Days
-                </span>
-                <p className="text-muted-foreground text-[11px] mb-2">
-                  Severe bottleneck; triggers negative cash
-                </p>
-                <Button size="sm" variant="outline" className="w-full h-7 text-xs gap-1">
-                  <Play className="h-3 w-3" /> Run Scenario
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <FeaturePlaceholder
-        title="Ripple Simulator Engine"
-        description="Change one event and watch the impact ripple through the whole operating cycle."
-        icon={FlaskConical}
-        planned={[
-          "Pick an event (invoice, order, payment) and apply a change — delay, advance, cancel",
-          "Side-by-side baseline vs scenario forecast chart with day-level deltas",
-          "Calculates exact working capital delta across all downstream dependencies",
-          "Export scenario reports for supplier negotiation or credit planning",
-        ]}
+      {/* Page header */}
+      <PageHeader
+        title="Ripple Simulator"
+        description="Change a business event and instantly see how it ripples through suppliers, inventory, customer orders, and cash flow."
+        actions={
+          <Badge variant="outline" className="gap-1.5 text-xs bg-primary/5 text-primary border-primary/20">
+            <FlaskConical className="h-3 w-3" aria-hidden />
+            What-if Engine
+          </Badge>
+        }
       />
+
+      {/* Main layout: left controls + right chart/results */}
+      <div className="grid gap-6 xl:grid-cols-[300px_1fr]">
+        {/* ── Left: scenario controls ── */}
+        <div>
+          <SimulatorControlPanel
+            controls={controls}
+            isRunning={runMutation.isPending}
+            isSaving={saveMutation.isPending}
+            hasResult={result !== null}
+            onChange={setControls}
+            onReset={handleReset}
+            onRun={handleRun}
+            onSave={handleSaveClick}
+          />
+        </div>
+
+        {/* ── Right: chart + results ── */}
+        <div className="space-y-4">
+          {/* Chart card */}
+          <Card className="shadow-xs">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">Cash Flow Comparison</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    {result
+                      ? `${controls.horizonDays}-day projection · Baseline vs. simulated scenario`
+                      : "Run a simulation to compare baseline and scenario forecasts"}
+                  </CardDescription>
+                </div>
+                {result && (
+                  <div className="flex items-center gap-3 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-6 rounded bg-primary/70" />
+                      <span className="text-muted-foreground">Baseline</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-0.5 w-6 border-t-2 border-dashed border-warning" />
+                      <span className="text-muted-foreground">Simulated</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {runMutation.isPending ? (
+                <div className="h-72 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                  <p className="text-sm">Calculating simulation…</p>
+                </div>
+              ) : error ? (
+                <SimulatorErrorState message={error} />
+              ) : result ? (
+                <SimulatorChart
+                  baselinePoints={result.baselinePoints}
+                  scenarioPoints={result.scenarioPoints}
+                  horizonDays={controls.horizonDays}
+                />
+              ) : (
+                <SimulatorEmptyState />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Results panel */}
+          {result && !runMutation.isPending && (
+            <SimulatorResults result={result} />
+          )}
+
+          {/* Timeline panel */}
+          {result && !runMutation.isPending && (
+            <SimulatorEventTimeline result={result} />
+          )}
+        </div>
+      </div>
+
+      {/* Save scenario dialog */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Scenario</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="scenario-name" className="text-sm">
+                Scenario name
+              </Label>
+              <Input
+                id="scenario-name"
+                value={scenarioName}
+                onChange={(e) => setScenarioName(e.target.value)}
+                placeholder="e.g. +7d supplier delay stress test"
+                className="text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveConfirm();
+                }}
+              />
+            </div>
+            {result && (
+              <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground space-y-0.5">
+                <p>
+                  <span className="font-medium text-foreground">Ripple Score:</span>{" "}
+                  {result.rippleScore.totalScore}/100
+                </p>
+                <p>
+                  <span className="font-medium text-foreground">Horizon:</span>{" "}
+                  {controls.horizonDays} days
+                </p>
+                <p>
+                  <span className="font-medium text-foreground">Affected events:</span>{" "}
+                  {result.affectedDependencies.length}
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setSaveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSaveConfirm}
+              disabled={!scenarioName.trim() || saveMutation.isPending}
+            >
+              {saveMutation.isPending ? "Saving…" : "Save Scenario"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
