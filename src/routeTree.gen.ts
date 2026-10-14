@@ -21,6 +21,10 @@ import { Route as AppRelationshipsRouteImport } from './routes/_app.relationship
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppSimulatorRouteImport } from './routes/_app.simulator'
 import { Route as AppSuppliersRouteImport } from './routes/_app.suppliers'
+import { Route as AppCustomersIndexRouteImport } from './routes/_app.customers.index'
+import { Route as AppCustomersCustomerIdRouteImport } from './routes/_app.customers.$customerId'
+import { Route as AppInvoicesIndexRouteImport } from './routes/_app.invoices.index'
+import { Route as AppInvoicesInvoiceIdRouteImport } from './routes/_app.invoices.$invoiceId'
 import { Route as AppSuppliersIndexRouteImport } from './routes/_app.suppliers.index'
 import { Route as AppSuppliersSupplierIdRouteImport } from './routes/_app.suppliers.$supplierId'
 
@@ -83,6 +87,26 @@ const AppSuppliersRoute = AppSuppliersRouteImport.update({
   path: '/suppliers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCustomersIndexRoute = AppCustomersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppCustomersRoute,
+} as any)
+const AppCustomersCustomerIdRoute = AppCustomersCustomerIdRouteImport.update({
+  id: '/$customerId',
+  path: '/$customerId',
+  getParentRoute: () => AppCustomersRoute,
+} as any)
+const AppInvoicesIndexRoute = AppInvoicesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppInvoicesRoute,
+} as any)
+const AppInvoicesInvoiceIdRoute = AppInvoicesInvoiceIdRouteImport.update({
+  id: '/$invoiceId',
+  path: '/$invoiceId',
+  getParentRoute: () => AppInvoicesRoute,
+} as any)
 const AppSuppliersIndexRoute = AppSuppliersIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -97,30 +121,36 @@ const AppSuppliersSupplierIdRoute = AppSuppliersSupplierIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cash-flow': typeof AppCashFlowRoute
-  '/customers': typeof AppCustomersRoute
+  '/customers': typeof AppCustomersRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/insights': typeof AppInsightsRoute
   '/inventory': typeof AppInventoryRoute
-  '/invoices': typeof AppInvoicesRoute
+  '/invoices': typeof AppInvoicesRouteWithChildren
   '/relationships': typeof AppRelationshipsRoute
   '/settings': typeof AppSettingsRoute
   '/simulator': typeof AppSimulatorRoute
   '/suppliers': typeof AppSuppliersRouteWithChildren
+  '/customers/$customerId': typeof AppCustomersCustomerIdRoute
+  '/invoices/$invoiceId': typeof AppInvoicesInvoiceIdRoute
   '/suppliers/$supplierId': typeof AppSuppliersSupplierIdRoute
+  '/customers/': typeof AppCustomersIndexRoute
+  '/invoices/': typeof AppInvoicesIndexRoute
   '/suppliers/': typeof AppSuppliersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cash-flow': typeof AppCashFlowRoute
-  '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
   '/insights': typeof AppInsightsRoute
   '/inventory': typeof AppInventoryRoute
-  '/invoices': typeof AppInvoicesRoute
   '/relationships': typeof AppRelationshipsRoute
   '/settings': typeof AppSettingsRoute
   '/simulator': typeof AppSimulatorRoute
+  '/customers/$customerId': typeof AppCustomersCustomerIdRoute
+  '/invoices/$invoiceId': typeof AppInvoicesInvoiceIdRoute
   '/suppliers/$supplierId': typeof AppSuppliersSupplierIdRoute
+  '/customers': typeof AppCustomersIndexRoute
+  '/invoices': typeof AppInvoicesIndexRoute
   '/suppliers': typeof AppSuppliersIndexRoute
 }
 export interface FileRoutesById {
@@ -128,16 +158,20 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/_app/cash-flow': typeof AppCashFlowRoute
-  '/_app/customers': typeof AppCustomersRoute
+  '/_app/customers': typeof AppCustomersRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/insights': typeof AppInsightsRoute
   '/_app/inventory': typeof AppInventoryRoute
-  '/_app/invoices': typeof AppInvoicesRoute
+  '/_app/invoices': typeof AppInvoicesRouteWithChildren
   '/_app/relationships': typeof AppRelationshipsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/simulator': typeof AppSimulatorRoute
   '/_app/suppliers': typeof AppSuppliersRouteWithChildren
+  '/_app/customers/$customerId': typeof AppCustomersCustomerIdRoute
+  '/_app/invoices/$invoiceId': typeof AppInvoicesInvoiceIdRoute
   '/_app/suppliers/$supplierId': typeof AppSuppliersSupplierIdRoute
+  '/_app/customers/': typeof AppCustomersIndexRoute
+  '/_app/invoices/': typeof AppInvoicesIndexRoute
   '/_app/suppliers/': typeof AppSuppliersIndexRoute
 }
 export interface FileRouteTypes {
@@ -154,21 +188,27 @@ export interface FileRouteTypes {
     | '/settings'
     | '/simulator'
     | '/suppliers'
+    | '/customers/$customerId'
+    | '/invoices/$invoiceId'
     | '/suppliers/$supplierId'
+    | '/customers/'
+    | '/invoices/'
     | '/suppliers/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/cash-flow'
-    | '/customers'
     | '/dashboard'
     | '/insights'
     | '/inventory'
-    | '/invoices'
     | '/relationships'
     | '/settings'
     | '/simulator'
+    | '/customers/$customerId'
+    | '/invoices/$invoiceId'
     | '/suppliers/$supplierId'
+    | '/customers'
+    | '/invoices'
     | '/suppliers'
   id:
     | '__root__'
@@ -184,7 +224,11 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/simulator'
     | '/_app/suppliers'
+    | '/_app/customers/$customerId'
+    | '/_app/invoices/$invoiceId'
     | '/_app/suppliers/$supplierId'
+    | '/_app/customers/'
+    | '/_app/invoices/'
     | '/_app/suppliers/'
   fileRoutesById: FileRoutesById
 }
@@ -279,6 +323,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSuppliersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/customers/': {
+      id: '/_app/customers/'
+      path: '/'
+      fullPath: '/customers/'
+      preLoaderRoute: typeof AppCustomersIndexRouteImport
+      parentRoute: typeof AppCustomersRoute
+    }
+    '/_app/customers/$customerId': {
+      id: '/_app/customers/$customerId'
+      path: '/$customerId'
+      fullPath: '/customers/$customerId'
+      preLoaderRoute: typeof AppCustomersCustomerIdRouteImport
+      parentRoute: typeof AppCustomersRoute
+    }
+    '/_app/invoices/': {
+      id: '/_app/invoices/'
+      path: '/'
+      fullPath: '/invoices/'
+      preLoaderRoute: typeof AppInvoicesIndexRouteImport
+      parentRoute: typeof AppInvoicesRoute
+    }
+    '/_app/invoices/$invoiceId': {
+      id: '/_app/invoices/$invoiceId'
+      path: '/$invoiceId'
+      fullPath: '/invoices/$invoiceId'
+      preLoaderRoute: typeof AppInvoicesInvoiceIdRouteImport
+      parentRoute: typeof AppInvoicesRoute
+    }
     '/_app/suppliers/': {
       id: '/_app/suppliers/'
       path: '/'
@@ -296,6 +368,34 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppCustomersRouteChildren {
+  AppCustomersCustomerIdRoute: typeof AppCustomersCustomerIdRoute
+  AppCustomersIndexRoute: typeof AppCustomersIndexRoute
+}
+
+const AppCustomersRouteChildren: AppCustomersRouteChildren = {
+  AppCustomersCustomerIdRoute: AppCustomersCustomerIdRoute,
+  AppCustomersIndexRoute: AppCustomersIndexRoute,
+}
+
+const AppCustomersRouteWithChildren = AppCustomersRoute._addFileChildren(
+  AppCustomersRouteChildren,
+)
+
+interface AppInvoicesRouteChildren {
+  AppInvoicesInvoiceIdRoute: typeof AppInvoicesInvoiceIdRoute
+  AppInvoicesIndexRoute: typeof AppInvoicesIndexRoute
+}
+
+const AppInvoicesRouteChildren: AppInvoicesRouteChildren = {
+  AppInvoicesInvoiceIdRoute: AppInvoicesInvoiceIdRoute,
+  AppInvoicesIndexRoute: AppInvoicesIndexRoute,
+}
+
+const AppInvoicesRouteWithChildren = AppInvoicesRoute._addFileChildren(
+  AppInvoicesRouteChildren,
+)
+
 interface AppSuppliersRouteChildren {
   AppSuppliersSupplierIdRoute: typeof AppSuppliersSupplierIdRoute
   AppSuppliersIndexRoute: typeof AppSuppliersIndexRoute
@@ -312,11 +412,11 @@ const AppSuppliersRouteWithChildren = AppSuppliersRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppCashFlowRoute: typeof AppCashFlowRoute
-  AppCustomersRoute: typeof AppCustomersRoute
+  AppCustomersRoute: typeof AppCustomersRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppInsightsRoute: typeof AppInsightsRoute
   AppInventoryRoute: typeof AppInventoryRoute
-  AppInvoicesRoute: typeof AppInvoicesRoute
+  AppInvoicesRoute: typeof AppInvoicesRouteWithChildren
   AppRelationshipsRoute: typeof AppRelationshipsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSimulatorRoute: typeof AppSimulatorRoute
@@ -325,11 +425,11 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppCashFlowRoute: AppCashFlowRoute,
-  AppCustomersRoute: AppCustomersRoute,
+  AppCustomersRoute: AppCustomersRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppInsightsRoute: AppInsightsRoute,
   AppInventoryRoute: AppInventoryRoute,
-  AppInvoicesRoute: AppInvoicesRoute,
+  AppInvoicesRoute: AppInvoicesRouteWithChildren,
   AppRelationshipsRoute: AppRelationshipsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSimulatorRoute: AppSimulatorRoute,

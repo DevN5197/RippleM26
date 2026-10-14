@@ -55,8 +55,12 @@
 │       ├── _app.suppliers.tsx         # Suppliers layout route (<Outlet />)
 │       ├── _app.suppliers.index.tsx   # Suppliers List (/suppliers)
 │       ├── _app.suppliers.$supplierId.tsx # Supplier Detail (/suppliers/:supplierId)
-│       ├── _app.customers.tsx         # Customers (/customers)
-│       ├── _app.invoices.tsx          # Invoices & Payments (/invoices)
+│       ├── _app.customers.tsx         # Customers layout route (<Outlet />)
+│       ├── _app.customers.index.tsx   # Customers List (/customers)
+│       ├── _app.customers.$customerId.tsx # Customer Detail (/customers/:customerId)
+│       ├── _app.invoices.tsx          # Invoices layout route (<Outlet />)
+│       ├── _app.invoices.index.tsx    # Invoices & Payments List (/invoices)
+│       ├── _app.invoices.$invoiceId.tsx # Invoice Detail (/invoices/:invoiceId)
 │       └── _app.settings.tsx          # Settings (/settings)
 ```
 

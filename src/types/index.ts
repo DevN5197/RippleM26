@@ -114,15 +114,97 @@ export interface SupplierDetailData {
   products: Product[];
 }
 
+export type CustomerStatus = "active" | "archived";
+
 export interface Customer {
   id: string;
   businessId: string;
   name: string;
-  contactName?: string;
-  email?: string;
-  phone?: string;
+  contactName?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  address?: string | undefined;
+  taxId?: string | undefined; // GSTIN / Tax ID
   creditTermsDays: number;
   outstandingPaise: number;
+  status?: CustomerStatus | undefined;
+  notes?: string | undefined;
+  createdAt?: string | undefined;
+  updatedAt?: string | undefined;
+}
+
+export type PaymentReliabilityCategory =
+  | "Excellent"
+  | "Good"
+  | "Fair"
+  | "Poor"
+  | "Very poor"
+  | "Insufficient payment history";
+
+export interface PaymentReliabilityResult {
+  score: number | null; // 0-100 or null if insufficient history
+  category: PaymentReliabilityCategory;
+  transactionCount: number;
+  onTimeCount: number;
+  lateCount: number;
+  averageLatenessDays: number;
+  hasSufficientHistory: boolean;
+  notes?: string | undefined;
+}
+
+export interface CreateCustomerInput {
+  name: string;
+  contactName?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  address?: string | undefined;
+  taxId?: string | undefined;
+  creditTermsDays: number;
+  notes?: string | undefined;
+  status?: CustomerStatus | undefined;
+}
+
+export type UpdateCustomerInput = Partial<CreateCustomerInput>;
+
+export interface EnrichedCustomer extends Customer {
+  status: CustomerStatus;
+  calculatedOutstandingPaise: number;
+  overdueInvoicesCount: number;
+  overdueAmountPaise: number;
+  totalInvoicedPaise: number;
+  totalPaidPaise: number;
+  orderCount: number;
+  invoiceCount: number;
+  paymentCount: number;
+  reliability: PaymentReliabilityResult;
+}
+
+export interface CustomerSummaryMetrics {
+  totalCustomers: number;
+  activeCustomers: number;
+  archivedCustomers: number;
+  totalOutstandingPaise: number;
+  totalOverduePaise: number;
+  overdueCustomersCount: number;
+  averageReliabilityScore: number | null;
+}
+
+export interface CustomerDetailData {
+  customer: Customer;
+  metrics: {
+    totalOrdersPaise: number;
+    totalInvoicedPaise: number;
+    totalPaidPaise: number;
+    outstandingPaise: number;
+    overdueBalancePaise: number;
+    openInvoicesCount: number;
+    overdueInvoicesCount: number;
+    totalOrdersCount: number;
+    reliability: PaymentReliabilityResult;
+  };
+  orders: CustomerOrder[];
+  invoices: Invoice[];
+  payments: Payment[];
 }
 
 export interface Product {
@@ -342,7 +424,16 @@ export interface CustomerOrder {
 }
 
 export type InvoiceType = "receivable" | "payable";
-export type InvoiceStatus = "draft" | "sent" | "partially_paid" | "paid" | "overdue" | "void";
+export type InvoiceStatus =
+  | "draft"
+  | "sent"
+  | "partially_paid"
+  | "paid"
+  | "overdue"
+  | "void"
+  | "cancelled";
+
+export type AgingBucket = "current" | "1_7" | "8_30" | "31_60" | "over_60";
 
 export interface Invoice {
   id: string;
@@ -358,6 +449,72 @@ export interface Invoice {
   issueDate: string;
   dueDate: string;
   notes?: string | undefined;
+  createdAt?: string | undefined;
+}
+
+export interface EnrichedInvoice extends Invoice {
+  counterpartyName: string;
+  counterpartyType: "customer" | "supplier";
+  daysOverdue: number;
+  agingBucket: AgingBucket;
+  isOverdue: boolean;
+  outstandingPaise: number;
+}
+
+export interface AgingBucketSummary {
+  bucket1to7Paise: number;
+  bucket1to7Count: number;
+  bucket8to30Paise: number;
+  bucket8to30Count: number;
+  bucket31to60Paise: number;
+  bucket31to60Count: number;
+  bucketOver60Paise: number;
+  bucketOver60Count: number;
+}
+
+export interface InvoiceSummaryMetrics {
+  totalInvoices: number;
+  totalReceivablesPaise: number;
+  totalPayablesPaise: number;
+  overdueReceivablesPaise: number;
+  overduePayablesPaise: number;
+  overdueInvoicesCount: number;
+  paidPaise: number;
+  outstandingReceivablesPaise: number;
+  outstandingPayablesPaise: number;
+  aging: AgingBucketSummary;
+}
+
+export interface CreateInvoiceInput {
+  invoiceNumber?: string | undefined;
+  type: InvoiceType;
+  customerId?: string | undefined;
+  customerOrderId?: string | undefined;
+  supplierId?: string | undefined;
+  purchaseOrderId?: string | undefined;
+  amountPaise: number;
+  issueDate: string;
+  dueDate: string;
+  notes?: string | undefined;
+  status?: InvoiceStatus | undefined;
+}
+
+export type UpdateInvoiceInput = Partial<CreateInvoiceInput>;
+
+export interface RecordPaymentInput {
+  amountPaise: number;
+  paymentDate?: string | undefined;
+  method?: string | undefined;
+  note?: string | undefined;
+}
+
+export interface InvoiceDetailData {
+  invoice: EnrichedInvoice;
+  customer?: Customer | undefined;
+  supplier?: Supplier | undefined;
+  customerOrder?: CustomerOrder | undefined;
+  purchaseOrder?: PurchaseOrder | undefined;
+  payments: Payment[];
 }
 
 export type PaymentDirection = "incoming" | "outgoing";
