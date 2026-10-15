@@ -38,7 +38,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { IS_DEMO } from "@/lib/config";
 
 const navGroups = [
   {
@@ -209,14 +208,6 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className={cn("pb-4", collapsed ? "items-center px-2" : "px-3.5")}>
-        {IS_DEMO && !collapsed && (
-          <div className="mb-2 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2">
-            <p className="text-[11px] font-semibold text-warning-foreground">Demo workspace</p>
-            <p className="text-[11px] leading-snug text-muted-foreground">
-              Synthetic data — mock mode active.
-            </p>
-          </div>
-        )}
         <Separator className="mb-2" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

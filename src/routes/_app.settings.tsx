@@ -62,17 +62,7 @@ function SettingsPage() {
     },
   });
 
-  const resetMutation = useMutation({
-    mutationFn: () => settingsApi.resetDemoData(),
-    onSuccess: (res) => {
-      // Invalidate all queries across the entire app
-      queryClient.invalidateQueries();
-      toast.success(res.message);
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to reset demo data.");
-    },
-  });
+
 
   return (
     <div className="space-y-6">
@@ -90,7 +80,7 @@ function SettingsPage() {
             Notifications
           </TabsTrigger>
           <TabsTrigger value="data-privacy" className="py-2 text-xs sm:text-sm">
-            Reset Demo Data
+            Data & Privacy
           </TabsTrigger>
           <TabsTrigger value="business" className="py-2 text-xs sm:text-sm">
             Business Profile
@@ -128,14 +118,7 @@ function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="data-privacy" className="space-y-4">
-          <DataPrivacySection
-            business={settings.business}
-            dataMode={settings.dataMode}
-            onResetDemoData={async () => {
-              await resetMutation.mutateAsync();
-            }}
-            isResetting={resetMutation.isPending}
-          />
+          <DataPrivacySection business={settings.business} />
         </TabsContent>
 
         <TabsContent value="app" className="space-y-4">

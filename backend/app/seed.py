@@ -11,7 +11,7 @@ from app.models.order import PurchaseOrder, PurchaseOrderLineItem, CustomerOrder
 from app.models.invoice import Invoice
 from app.models.payment import Payment
 from app.models.cash_flow import CashFlowEvent
-from app.models.simulation import SimulationScenario, DependencyEdge
+from app.models.simulation import SimulationScenario, DependencyEdge, ScenarioRescue, ScenarioStressTest
 from app.models.settings import AppSettingsModel
 from app.services.auth import hash_password
 from app.services.financial import to_iso_date
@@ -45,6 +45,8 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
         db.query(Customer).filter(Customer.business_id == "biz_1").delete()
         db.query(Supplier).filter(Supplier.business_id == "biz_1").delete()
         db.query(SimulationScenario).filter(SimulationScenario.business_id == "biz_1").delete()
+        db.query(ScenarioRescue).filter(ScenarioRescue.business_id == "biz_1").delete()
+        db.query(ScenarioStressTest).filter(ScenarioStressTest.business_id == "biz_1").delete()
         db.query(DependencyEdge).filter(DependencyEdge.business_id == "biz_1").delete()
         db.query(AppSettingsModel).filter(AppSettingsModel.business_id == "biz_1").delete()
         db.flush()

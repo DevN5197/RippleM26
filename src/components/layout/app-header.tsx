@@ -13,12 +13,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "@/lib/api/dashboardApi";
-import { getStoredBusiness } from "@/lib/api/authApi";
-import { isDemoAccount } from "@/lib/crossPageState";
 
 export function AppHeader() {
-  const storedBiz = typeof window !== "undefined" ? getStoredBusiness() : null;
-  const isDemo = isDemoAccount(storedBiz);
 
   const { data: summary } = useQuery({
     queryKey: ["dashboard", "summary"],

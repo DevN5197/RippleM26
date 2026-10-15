@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -14,7 +14,6 @@ import {
   Truck,
   Wallet,
   CheckCircle2,
-  RefreshCw,
   Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -26,8 +25,7 @@ import { settingsApi } from "@/lib/api/settingsApi";
 import { customerApi } from "@/lib/api/customerApi";
 import { supplierApi } from "@/lib/api/supplierApi";
 import { invoiceApi } from "@/lib/api/invoiceApi";
-import { DATA_MODE, setDataMode, API_BASE_URL } from "@/lib/config";
-import { isNetworkError, toApiError } from "@/lib/errors";
+import { toApiError } from "@/lib/errors";
 import { AuthVisualPanel } from "@/components/auth/auth-visual-panel";
 import { cn } from "@/lib/utils";
 
@@ -70,7 +68,6 @@ function RegisterPage() {
   // Step state: 1 = Account Info, 2 = Treasury Cash, 3 = Customers & Suppliers
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
-  const [serverStatus, setServerStatus] = useState<"checking" | "online" | "offline">("checking");
 
   // Step 1: Account info
   const [businessName, setBusinessName] = useState("");
@@ -91,26 +88,6 @@ function RegisterPage() {
   const [supplierName, setSupplierName] = useState<string>("Kaveri Fabrics & Mills");
   const [supplierAmount, setSupplierAmount] = useState<string>("20000");
   const [supplierTerms, setSupplierTerms] = useState<string>("15");
-
-  // Quietly check backend health
-  useEffect(() => {
-    let isMounted = true;
-    const checkHealth = async () => {
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 2000);
-        const res = await fetch(`${API_BASE_URL}/api/health`, { signal: controller.signal });
-        clearTimeout(timeout);
-        if (isMounted) setServerStatus(res.ok ? "online" : "offline");
-      } catch {
-        if (isMounted) setServerStatus("offline");
-      }
-    };
-    void checkHealth();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Real-time password strength hint
   const pwdStrength = isPasswordStrong(password);
@@ -194,14 +171,7 @@ function RegisterPage() {
       void navigate({ to: "/dashboard" });
     } catch (err) {
       const { message } = toApiError(err);
-      if (isNetworkError(err)) {
-        toast.error(
-          `${message ?? "Could not reach the server."} You can also click "Switch to Offline Demo Mode" to test without the backend.`,
-          { duration: 6000 },
-        );
-      } else {
-        toast.error(message || "Registration failed. Please review your details and try again.");
-      }
+      toast.error(message || "Registration failed. Please review your details and try again.");
     } finally {
       setLoading(false);
     }
@@ -313,14 +283,7 @@ function RegisterPage() {
       void navigate({ to: "/dashboard" });
     } catch (err) {
       const { message } = toApiError(err);
-      if (isNetworkError(err)) {
-        toast.error(
-          `${message ?? "Could not reach the server."} You can also click "Switch to Offline Demo Mode" to test without the backend.`,
-          { duration: 6000 },
-        );
-      } else {
-        toast.error(message || "Registration failed. Please review your details and try again.");
-      }
+      toast.error(message || "Registration failed. Please review your details and try again.");
     } finally {
       setLoading(false);
     }
@@ -816,44 +779,6 @@ function RegisterPage() {
             </Link>
           </div>
         </div>
-      </div>
-
-      {/* ── Subtle Low-Profile Live Connection Status in Bottom-Right Corner ── */}
-      <div className="fixed bottom-3 right-3 z-30 flex items-center gap-1.5 rounded-full border border-border/40 bg-background/50 backdrop-blur-md px-2.5 py-1 text-[11px] text-muted-foreground/60 opacity-40 hover:opacity-100 transition-opacity shadow-xs">
-        <span
-          className={cn(
-            "h-1.5 w-1.5 rounded-full",
-            DATA_MODE === "mock"
-              ? "bg-amber-500/80"
-              : serverStatus === "online"
-                ? "bg-emerald-500 ring-2 ring-emerald-500/20"
-                : serverStatus === "checking"
-                  ? "bg-blue-500 animate-pulse"
-                  : "bg-amber-500/80",
-          )}
-        />
-        <span className="text-[10px]">
-          {DATA_MODE === "mock"
-            ? "Demo Mode"
-            : serverStatus === "online"
-              ? "Live API"
-              : serverStatus === "checking"
-                ? "Checking..."
-                : "Offline"}
-        </span>
-        <button
-          type="button"
-          onClick={() => {
-            const next = DATA_MODE === "api" ? "mock" : "api";
-            setDataMode(next);
-            toast.info(`Switched to ${next === "api" ? "Live API Mode" : "Offline Demo Mode"}`);
-          }}
-          className="ml-0.5 text-muted-foreground/40 hover:text-foreground cursor-pointer transition-colors"
-          title="Switch API / Demo Mode"
-          aria-label="Switch API / Demo Mode"
-        >
-          <RefreshCw className="h-2.5 w-2.5" />
-        </button>
       </div>
     </div>
   );

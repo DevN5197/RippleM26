@@ -1,37 +1,30 @@
 /**
  * Runtime configuration.
- *
- * VITE_DATA_MODE: "mock" (default, fully local demo data) or "api" (live backend).
- * VITE_API_BASE_URL: base URL of the FastAPI backend, e.g. https://api.example.com
+ * Hard-locked to Live API mode ("api") connecting to the FastAPI backend.
  */
 
-function resolveDataMode(): "mock" | "api" {
-  if (typeof window !== "undefined") {
-    try {
-      const stored = localStorage.getItem("ripple_data_mode");
-      if (stored === "mock" || stored === "api") {
-        return stored;
-      }
-    } catch {
-      // Storage might be unavailable
-    }
+if (typeof window !== "undefined") {
+  try {
+    localStorage.removeItem("ripple_data_mode");
+  } catch {
+    // Storage might be restricted
   }
-  return import.meta.env["VITE_DATA_MODE"] === "api" ? "api" : "mock";
 }
 
-export const DATA_MODE: "mock" | "api" = resolveDataMode();
+// In test runner (Vitest), fallback to mock store so unit test suites execute without live backend.
+// In browser runtime (dev & prod), hard-locked to live API mode ("api").
+export const DATA_MODE: "api" | "mock" =
+  typeof import.meta !== "undefined" && import.meta.env?.MODE === "test" ? "mock" : "api";
 
-export function setDataMode(mode: "mock" | "api"): void {
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.setItem("ripple_data_mode", mode);
-    } catch {
-      // ignore
-    }
-    window.location.reload();
-  }
+export function getDataMode(): "api" | "mock" {
+  return typeof import.meta !== "undefined" && import.meta.env?.MODE === "test" ? "mock" : "api";
+}
+
+export function setDataMode(_mode: "api" | "mock"): void {
+  // Hard-locked to live API mode in production; switches are prevented
 }
 
 export const API_BASE_URL: string = import.meta.env["VITE_API_BASE_URL"] || "http://127.0.0.1:8000";
 
-export const IS_DEMO = DATA_MODE === "mock";
+export const IS_DEMO = false;
+

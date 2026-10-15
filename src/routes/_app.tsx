@@ -6,14 +6,13 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
 import { settingsApi } from "@/lib/api/settingsApi";
 import { applyTheme, applyCompactTables } from "@/lib/theme";
-import { DATA_MODE } from "@/lib/config";
 import { isUserAuthenticated } from "@/lib/api/authApi";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: () => {
     // The session token lives in localStorage, which is unavailable during SSR.
     // Checking it on the server would redirect a valid browser session on refresh.
-    if (typeof window !== "undefined" && DATA_MODE === "api" && !isUserAuthenticated()) {
+    if (typeof window !== "undefined" && !isUserAuthenticated()) {
       throw redirect({ to: "/login" });
     }
   },

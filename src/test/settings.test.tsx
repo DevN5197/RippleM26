@@ -183,14 +183,13 @@ describe("Settings UI Components", () => {
     expect(saveBtn).toBeDisabled(); // No changes initially
   });
 
-  it("renders DataPrivacySection with export and reset controls", () => {
+  it("renders DataPrivacySection with export and security controls", () => {
     const onReset = vi.fn();
 
-    render(<DataPrivacySection dataMode="mock" onResetDemoData={onReset} isResetting={false} />);
+    render(<DataPrivacySection dataMode="api" onResetDemoData={onReset} isResetting={false} />);
 
-    expect(screen.getByText("Current Operating Mode")).toBeInTheDocument();
+    expect(screen.getByText("Security & Multi-Tenant Isolation")).toBeInTheDocument();
     expect(screen.getByText("Export to CSV")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Reset Demo Data/i })).toBeInTheDocument();
   });
 
   it("renders AppSettingsSection with theme options and compact mode toggle", async () => {
