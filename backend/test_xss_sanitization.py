@@ -23,10 +23,12 @@ def test_xss_sanitization():
     })
     token = login_resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}", "x-business-id": "biz_1"}
+    import uuid
+    uid = uuid.uuid4().hex[:6]
 
     # Create supplier with XSS injection in name and notes
     sup_resp = client.post("/api/suppliers", json={
-        "name": "Malicious Supplier <script>alert('pwned')</script>",
+        "name": f"Malicious Supplier {uid} <script>alert('pwned')</script>",
         "notes": "Legit notes with <img src=x onerror=alert(document.cookie)> payload",
         "contactName": "Hacker <script>evil()</script>",
     }, headers=headers)
@@ -34,7 +36,7 @@ def test_xss_sanitization():
     sup_data = sup_resp.json()
     assert "<script>" not in sup_data["name"]
     assert "alert('pwned')" not in sup_data["name"]
-    assert sup_data["name"] == "Malicious Supplier"
+    assert sup_data["name"] == f"Malicious Supplier {uid}"
     assert "<img" not in sup_data["notes"]
     assert "onerror=" not in sup_data["notes"]
     assert "<script>" not in sup_data["contactName"]
@@ -43,13 +45,13 @@ def test_xss_sanitization():
 
     print("\n--- TEST 3: Customer Creation XSS Sanitization ---")
     cust_resp = client.post("/api/customers", json={
-        "name": "XSS Customer <script>alert(1)</script>",
+        "name": f"XSS Customer {uid} <script>alert(1)</script>",
         "notes": "<svg onload=alert(1)>Critical customer instructions",
     }, headers=headers)
     assert cust_resp.status_code == 201, f"Failed: {cust_resp.text}"
     cust_data = cust_resp.json()
     assert "<script>" not in cust_data["name"]
-    assert cust_data["name"] == "XSS Customer"
+    assert cust_data["name"] == f"XSS Customer {uid}"
     assert "<svg" not in cust_data["notes"]
     assert "onload=" not in cust_data["notes"]
     assert "Critical customer instructions" in cust_data["notes"]

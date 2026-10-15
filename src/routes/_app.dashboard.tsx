@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Wallet,
@@ -28,7 +28,7 @@ import { MoneyAmount } from "@/components/shared/money-amount";
 import { DateLabel } from "@/components/shared/date-label";
 import { RiskIndicator } from "@/components/shared/risk-indicator";
 import { CashFlowChart } from "@/components/charts/cash-flow-chart";
-import { getStoredBusiness } from "@/lib/api/authApi";
+import { getStoredBusiness, isUserAuthenticated } from "@/lib/api/authApi";
 import { isDemoAccount } from "@/lib/crossPageState";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,36 @@ const summaryQuery = queryOptions({
 });
 
 export const Route = createFileRoute("/_app/dashboard")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(summaryQuery),
+  beforeLoad: ({ location }) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (!token || !isUserAuthenticated()) {
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
+    }
+  },
+  loader: async ({ context, location }) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (!token || !isUserAuthenticated()) {
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
+    }
+    try {
+      return await context.queryClient.ensureQueryData(summaryQuery);
+    } catch {
+      throw redirect({
+        to: "/login",
+        search: { redirect: location.href },
+      });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Overview — Ripple" },

@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { isUserAuthenticated } from "@/lib/api/authApi";
 import {
   Network,
   Share2,
@@ -28,10 +29,39 @@ interface RelationshipsSearchParams {
 }
 
 export const Route = createFileRoute("/_app/relationships")({
+  beforeLoad: ({ location }) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (!token || !isUserAuthenticated()) {
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
+    }
+  },
   validateSearch: (search: Record<string, unknown>): RelationshipsSearchParams => ({
     selectedId: typeof search["selectedId"] === "string" ? search["selectedId"] : undefined,
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(relationshipsQuery),
+  loader: async ({ context, location }) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (!token || !isUserAuthenticated()) {
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
+    }
+    try {
+      return await context.queryClient.ensureQueryData(relationshipsQuery);
+    } catch {
+      throw redirect({
+        to: "/login",
+        search: { redirect: location.href },
+      });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Relationships — Ripple" },

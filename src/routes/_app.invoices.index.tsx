@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { isUserAuthenticated } from "@/lib/api/authApi";
 import {
   queryOptions,
   useSuspenseQuery,
@@ -100,11 +101,38 @@ export const Route = createFileRoute("/_app/invoices/")({
       sortDir,
     };
   },
-  loader: async ({ context }) => {
-    await Promise.all([
-      context.queryClient.ensureQueryData(invoiceSummaryQuery),
-      context.queryClient.ensureQueryData(invoicesListQuery({})),
-    ]);
+  beforeLoad: ({ location }) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (!token || !isUserAuthenticated()) {
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
+    }
+  },
+  loader: async ({ context, location }) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (!token || !isUserAuthenticated()) {
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
+    }
+    try {
+      await Promise.all([
+        context.queryClient.ensureQueryData(invoiceSummaryQuery),
+        context.queryClient.ensureQueryData(invoicesListQuery({})),
+      ]);
+    } catch {
+      throw redirect({
+        to: "/login",
+        search: { redirect: location.href },
+      });
+    }
   },
   head: () => ({
     meta: [

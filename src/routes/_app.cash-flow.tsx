@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { isUserAuthenticated } from "@/lib/api/authApi";
 import { toast } from "sonner";
 import { forecastApi } from "@/lib/api/forecastApi";
 import {
@@ -72,16 +73,43 @@ export const Route = createFileRoute("/_app/cash-flow")({
       threshold,
     };
   },
+  beforeLoad: ({ location }) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (!token || !isUserAuthenticated()) {
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
+    }
+  },
   loader: async ({ context, location }) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (!token || !isUserAuthenticated()) {
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
+    }
     const rawSearch = location.search as CashFlowSearchParams;
     const horizon = rawSearch.horizon ?? 30;
     const scenarioId = rawSearch.scenarioId;
     const threshold = rawSearch.threshold;
 
-    await Promise.all([
-      context.queryClient.ensureQueryData(scenariosQuery),
-      context.queryClient.ensureQueryData(makeForecastQuery(horizon, scenarioId, threshold)),
-    ]);
+    try {
+      await Promise.all([
+        context.queryClient.ensureQueryData(scenariosQuery),
+        context.queryClient.ensureQueryData(makeForecastQuery(horizon, scenarioId, threshold)),
+      ]);
+    } catch {
+      throw redirect({
+        to: "/login",
+        search: { redirect: location.href },
+      });
+    }
   },
   head: () => ({
     meta: [

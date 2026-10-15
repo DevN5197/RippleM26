@@ -9,13 +9,16 @@ import { applyTheme, applyCompactTables } from "@/lib/theme";
 import { isUserAuthenticated } from "@/lib/api/authApi";
 
 export const Route = createFileRoute("/_app")({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     // Check if access_token exists in localStorage and session is valid.
-    // If token is missing or expired, redirect to /login immediately.
+    // If token is missing or expired, redirect to /login immediately with 307.
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("access_token");
       if (!token || !isUserAuthenticated()) {
-        throw redirect({ to: "/login" });
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
       }
     }
   },
