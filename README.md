@@ -120,8 +120,28 @@ python run.py
 > FastAPI server starts at `http://localhost:8000`.
 
 **Terminal 2 — Frontend (Pointing to Live API):**
+
+Configure the frontend to connect to the backend by creating or updating `.env` in the project root:
+
 ```bash
-# In the project root, set DATA_MODE to api:
+# Create or edit .env in project root:
+VITE_DATA_MODE=api
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+> **Configuration Options:**
+> - `VITE_DATA_MODE`: Set to `api` for live FastAPI backend or `mock` for in-memory standalone demo.
+> - `VITE_API_BASE_URL`: Base URL of the running FastAPI server (defaults to `http://127.0.0.1:8000`).
+
+Start the frontend development server:
+```bash
+# Windows (PowerShell):
+$env:VITE_DATA_MODE="api"; $env:VITE_API_BASE_URL="http://127.0.0.1:8000"; npm run dev
+
+# macOS / Linux:
+VITE_DATA_MODE=api VITE_API_BASE_URL=http://127.0.0.1:8000 npm run dev
+
+# Or with .env file configured:
 npm run dev
 ```
 
