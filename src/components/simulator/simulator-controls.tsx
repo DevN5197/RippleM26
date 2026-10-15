@@ -4,13 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -379,21 +372,24 @@ export function SimulatorControlPanel({
             </div>
 
             {/* Horizon */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Forecast horizon</Label>
-              <Select
-                value={String(controls.horizonDays)}
-                onValueChange={(v) => setField("horizonDays", Number(v) as 7 | 14 | 30)}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">7 days</SelectItem>
-                  <SelectItem value="14">14 days</SelectItem>
-                  <SelectItem value="30">30 days</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium">Forecast horizon</Label>
+                <span className="text-xs tabular-nums font-semibold text-foreground">
+                  {controls.horizonDays} days
+                </span>
+              </div>
+              <Slider
+                min={10}
+                max={90}
+                step={1}
+                value={[controls.horizonDays]}
+                onValueChange={([value]) => setField("horizonDays", value ?? 30)}
+                aria-label="Forecast horizon in days"
+              />
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                Simulate cash flow and ripple effects from 10 to 90 days.
+              </p>
             </div>
           </div>
         </div>

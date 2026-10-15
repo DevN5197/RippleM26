@@ -53,6 +53,10 @@ export interface SavedSimulatorScenario {
 // ---------------------------------------------------------------------------
 const savedScenarios: SavedSimulatorScenario[] = [];
 
+function normalizeHorizonDays(horizonDays: number): number {
+  return Math.min(90, Math.max(10, Math.round(horizonDays)));
+}
+
 // ---------------------------------------------------------------------------
 // Core simulation engine (mock)
 // ---------------------------------------------------------------------------
@@ -311,14 +315,20 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
         },
         totalContagionCostPaise: totalContagion,
         trueRippleMarginPaise: 12_500_000 - totalContagion,
-        trueRippleMarginPercent: Math.round(((12_500_000 - totalContagion) / 50_000_000) * 10000) / 100,
+        trueRippleMarginPercent:
+          Math.round(((12_500_000 - totalContagion) / 50_000_000) * 10000) / 100,
         explanation: `Paper Margin of 25% reduced by ₹${(totalContagion / 100).toLocaleString()} in ripple contagion to True Margin of ${Math.round(((12_500_000 - totalContagion) / 50_000_000) * 10000) / 100}%.`,
       }
-    : (controls.customerPaymentDelayDays > 0 || controls.customerPaymentAmountPaise || controls.supplierDeliveryDelayDays > 0 || controls.supplierPaymentAmountPaise)
+    : controls.customerPaymentDelayDays > 0 ||
+        controls.customerPaymentAmountPaise ||
+        controls.supplierDeliveryDelayDays > 0 ||
+        controls.supplierPaymentAmountPaise
       ? {
           revenuePaise: controls.customerPaymentAmountPaise ?? 10_000_000,
           directCogsPaise: controls.supplierPaymentAmountPaise ?? 7_500_000,
-          paperMarginPaise: (controls.customerPaymentAmountPaise ?? 10_000_000) - (controls.supplierPaymentAmountPaise ?? 7_500_000),
+          paperMarginPaise:
+            (controls.customerPaymentAmountPaise ?? 10_000_000) -
+            (controls.supplierPaymentAmountPaise ?? 7_500_000),
           paperMarginPercent: 25.0,
           contagionDays: effectiveContagionDays,
           breakdown: {
@@ -329,8 +339,13 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
             floatFeePaise: 0,
           },
           totalContagionCostPaise: totalContagion,
-          trueRippleMarginPaise: Math.max(0, ((controls.customerPaymentAmountPaise ?? 10_000_000) - (controls.supplierPaymentAmountPaise ?? 7_500_000)) - totalContagion),
-          trueRippleMarginPercent: Math.max(0, 25.0 - (effectiveContagionDays * 1.5)),
+          trueRippleMarginPaise: Math.max(
+            0,
+            (controls.customerPaymentAmountPaise ?? 10_000_000) -
+              (controls.supplierPaymentAmountPaise ?? 7_500_000) -
+              totalContagion,
+          ),
+          trueRippleMarginPercent: Math.max(0, 25.0 - effectiveContagionDays * 1.5),
           explanation: `Simulated scenario evaluated with contagion impact of ₹${(totalContagion / 100).toLocaleString()}.`,
         }
       : {
@@ -510,12 +525,16 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
 
   const finalRecommendations = isDemo
     ? recommendations
-    : (controls.customerPaymentDelayDays === 0 && controls.supplierDeliveryDelayDays === 0 && !controls.customerPaymentAmountPaise && !controls.supplierPaymentAmountPaise)
+    : controls.customerPaymentDelayDays === 0 &&
+        controls.supplierDeliveryDelayDays === 0 &&
+        !controls.customerPaymentAmountPaise &&
+        !controls.supplierPaymentAmountPaise
       ? [
           {
             id: "rec_onboarding",
             title: "Add Invoices & Commitments",
-            rationale: "Record customer invoices and supplier purchase orders in the Ledger to track real-time Ripple risk.",
+            rationale:
+              "Record customer invoices and supplier purchase orders in the Ledger to track real-time Ripple risk.",
             priority: "medium" as const,
             impactPaise: 0,
             rescueType: "none" as const,
@@ -729,13 +748,17 @@ export const simulatorApi = {
    * API mode: delegates to POST /api/simulator/simulate.
    */
   async simulate(controls: SimulatorControls): Promise<SimulatorResult> {
+    const normalizedControls = {
+      ...controls,
+      horizonDays: normalizeHorizonDays(controls.horizonDays),
+    };
     if (DATA_MODE === "mock") {
       await delay(700);
-      return runMockSimulation(controls);
+      return runMockSimulation(normalizedControls);
     }
     return httpRequest<SimulatorResult>("/api/simulator/simulate", {
       method: "POST",
-      body: controls,
+      body: normalizedControls,
     });
   },
 
@@ -743,13 +766,17 @@ export const simulatorApi = {
    * Run isolated Chaos Stress-Test (+5-day shock)
    */
   async runChaosStressTest(controls: SimulatorControls): Promise<ChaosStressTestResult> {
+    const normalizedControls = {
+      ...controls,
+      horizonDays: normalizeHorizonDays(controls.horizonDays),
+    };
     if (DATA_MODE === "mock") {
       await delay(500);
-      const baseline = await runMockSimulation(controls);
+      const baseline = await runMockSimulation(normalizedControls);
       const stressedControls = {
-        ...controls,
-        customerPaymentDelayDays: controls.customerPaymentDelayDays + 5,
-        supplierDeliveryDelayDays: controls.supplierDeliveryDelayDays + 5,
+        ...normalizedControls,
+        customerPaymentDelayDays: normalizedControls.customerPaymentDelayDays + 5,
+        supplierDeliveryDelayDays: normalizedControls.supplierDeliveryDelayDays + 5,
       };
       const stressedResult = await runMockSimulation(stressedControls);
       return {
@@ -810,7 +837,7 @@ export const simulatorApi = {
     }
     return httpRequest<ChaosStressTestResult>("/api/simulator/chaos-test", {
       method: "POST",
-      body: controls,
+      body: normalizedControls,
     });
   },
 

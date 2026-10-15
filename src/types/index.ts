@@ -857,7 +857,8 @@ export interface SimulatorControls {
   customerPaymentAmountPaise: number | null; // null = unchanged
   supplierPaymentAmountPaise: number | null; // null = unchanged
   orderQuantityMultiplier: number; // 1.0 = unchanged
-  horizonDays: 7 | 14 | 30;
+  /** Forecast duration, inclusive of 10–90 days. */
+  horizonDays: number;
 }
 
 export interface DependencyImpact {

@@ -73,6 +73,16 @@ export function getStorageKey(businessId?: string): string {
   return "rupi_simulator_shared_state";
 }
 
+function normalizeStoredState(state: SharedSimulatorState): SharedSimulatorState {
+  return {
+    ...state,
+    controls: {
+      ...state.controls,
+      horizonDays: Math.min(90, Math.max(10, Math.round(state.controls.horizonDays ?? 30))),
+    },
+  };
+}
+
 function getInitialState(): SharedSimulatorState {
   if (typeof window !== "undefined") {
     try {
@@ -80,7 +90,7 @@ function getInitialState(): SharedSimulatorState {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed && parsed.controls) {
-          return parsed;
+          return normalizeStoredState(parsed as SharedSimulatorState);
         }
       }
     } catch {
@@ -147,7 +157,7 @@ export function syncSimulatorStoreWithBusiness(businessId?: string, businessName
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed && parsed.controls) {
-          currentState = parsed;
+          currentState = normalizeStoredState(parsed as SharedSimulatorState);
           notify();
           return;
         }
@@ -197,14 +207,19 @@ export const simulatorStore = {
     };
   },
 
-  setControls(controls: SimulatorControls, preset: SimulatorPreset = "custom", presetLabel?: string) {
+  setControls(
+    controls: SimulatorControls,
+    preset: SimulatorPreset = "custom",
+    presetLabel?: string,
+  ) {
     let label = presetLabel;
     if (!label) {
       if (preset === "flagship") label = "Apex Flagship (+16d)";
       else if (preset === "baseline") label = "Baseline";
       else if (preset === "custom_17d") label = "Custom +17d Delay";
       else if (preset === "chaos") label = "Chaos Stress-Test (+5d)";
-      else label = `Custom (${controls.customerPaymentDelayDays}d payment / ${controls.supplierDeliveryDelayDays}d delivery)`;
+      else
+        label = `Custom (${controls.customerPaymentDelayDays}d payment / ${controls.supplierDeliveryDelayDays}d delivery)`;
     }
 
     currentState = {
@@ -228,7 +243,11 @@ export const simulatorStore = {
     currentState = {
       ...currentState,
       chaosResult,
-      preset: chaosResult ? "chaos" : currentState.preset === "chaos" ? "baseline" : currentState.preset,
+      preset: chaosResult
+        ? "chaos"
+        : currentState.preset === "chaos"
+          ? "baseline"
+          : currentState.preset,
       presetLabel: chaosResult ? "Chaos Stress-Test (+5d)" : currentState.presetLabel,
     };
     notify();

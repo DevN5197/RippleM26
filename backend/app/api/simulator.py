@@ -19,6 +19,11 @@ from app.services.simulation import (
 
 router = APIRouter(tags=["simulator"])
 
+def _validate_horizon(controls: dict) -> None:
+    horizon = controls.get("horizonDays", 30)
+    if not isinstance(horizon, int) or isinstance(horizon, bool) or not 10 <= horizon <= 90:
+        raise HTTPException(status_code=422, detail="horizonDays must be a whole number from 10 to 90.")
+
 def _get_active_rescues(business_id: str, db: Session) -> list[dict]:
     records = db.query(ScenarioRescue).filter(
         ScenarioRescue.business_id == business_id,
@@ -52,6 +57,8 @@ def simulate(
     """
     Authoritative simulation endpoint evaluating controls and active rescues.
     """
+    _validate_horizon(controls)
+
     events = db.query(CashFlowEvent).filter(CashFlowEvent.business_id == business.id).all()
     opening_cash = business.opening_cash_paise or 15_000_000 # default ₹1,50,000 for scenario
     rescues = _get_active_rescues(business.id, db)
@@ -67,6 +74,7 @@ def chaos_stress_test(
     Chaos Stress-Test: Applies isolated +5-day delay to evaluate resilience,
     identifying the most fragile single point of failure under stress.
     """
+    _validate_horizon(controls)
     events = db.query(CashFlowEvent).filter(CashFlowEvent.business_id == business.id).all()
     opening_cash = business.opening_cash_paise or 15_000_000
     rescues = _get_active_rescues(business.id, db)
