@@ -62,7 +62,7 @@ How can I help you manage your cash position today? You can ask about forecastin
           { id: "load_apex", label: "Load Demo Flagship (+16d) Scenario" },
         ],
         isFallback: true,
-        model: "gemini-3.5-flash-lite (Safety Net)",
+        model: "Ripple AI Copilot (Deterministic Engine)",
       };
     }
 
@@ -81,7 +81,7 @@ How can I help you manage your cash position today? You can ask about overdue re
         { id: "open_simulator", label: "Open in Ripple Simulator →" },
       ],
       isFallback: true,
-      model: "gemini-3.5-flash-lite (Safety Net)",
+      model: "Ripple AI Copilot (Deterministic Engine)",
     };
   }
 
@@ -319,7 +319,7 @@ Explore the **Ripple Simulator** to model what-if customer payment delays, or lo
         { id: "load_apex", label: "Load Demo Flagship (+16d) Scenario" },
       ],
       isFallback: true,
-      model: "gemini-2.5-flash (Safety Net)",
+      model: "Ripple AI Copilot (Deterministic Engine)",
     };
   }
 
@@ -354,6 +354,6 @@ Activate our two Loop-Native autonomous rescues: Lock **Tri-Party Split-Escrow**
       { id: "open_simulator", label: "Open in Ripple Simulator →" },
     ],
     isFallback: true,
-    model: "gemini-2.5-flash (Safety Net)",
+    model: "Ripple AI Copilot (Deterministic Engine)",
   };
 }

@@ -4,9 +4,7 @@ import {
   Send,
   Bot,
   User,
-  KeyRound,
   ShieldCheck,
-  Wifi,
   ExternalLink,
   Layers,
   Lock,
@@ -14,28 +12,18 @@ import {
   TrendingDown,
   Info,
   CheckCircle2,
-  RefreshCw,
   Sliders,
+  DollarSign,
+  AlertTriangle,
+  Building2,
 } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  getGeminiApiKey,
-  setGeminiApiKey,
-  getGeminiApiKeySource,
-  callGeminiAPI,
-} from "@/lib/gemini";
+import { cn } from "@/lib/utils";
+import { formatMoney } from "@/lib/formatters";
+import { callGeminiAPI } from "@/lib/gemini";
 import { getLiveCrossPageState, type FullCrossPageState } from "@/lib/crossPageState";
 import {
   generateSmartLocalResponse,
@@ -43,16 +31,22 @@ import {
 } from "@/lib/aiFallback";
 import { simulatorStore } from "@/lib/simulatorStore";
 import { simulatorApi } from "@/lib/api/simulationApi";
+import { dashboardApi } from "@/lib/api/dashboardApi";
+import { invoiceApi } from "@/lib/api/invoiceApi";
+import { supplierApi } from "@/lib/api/supplierApi";
+import { customerApi } from "@/lib/api/customerApi";
+import { getStoredBusiness } from "@/lib/api/authApi";
+import { isDemoAccount } from "@/lib/crossPageState";
 
 export const Route = createFileRoute("/_app/insights")({
   head: () => ({
     meta: [
-      { title: "Insights & AI — Ripple" },
+      { title: "Ask Ripple — AI Copilot" },
       {
         name: "description",
-        content: "AI Financial Copilot powered by Google Gemini 2.5 Flash with live cross-page state.",
+        content: "Ask Ripple: Live business intelligence copilot and autonomous loop rescues.",
       },
-      { property: "og:title", content: "Insights & AI — Ripple" },
+      { property: "og:title", content: "Ask Ripple — AI Copilot" },
       { property: "og:description", content: "Live cross-page financial intelligence and autonomous rescues." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -61,6 +55,39 @@ export const Route = createFileRoute("/_app/insights")({
   component: InsightsPage,
 });
 
+interface ChatCashTrajectoryData {
+  cashOnHandFormatted: string;
+  minBalanceFormatted: string;
+  safetyReserveFormatted: string;
+  hasShortfall: boolean;
+  dipDate: string;
+}
+
+interface ChatMarginCompressionData {
+  paperMarginPercent: string;
+  trueMarginPercent: string;
+  revenueFormatted: string;
+  cogsFormatted: string;
+  contagionDragFormatted: string;
+  lostDiscount: string;
+  haltFees: string;
+  slaPenalties: string;
+  floatDrag: string;
+}
+
+interface CounterpartyItem {
+  id: string;
+  name: string;
+  role: "Customer" | "Supplier";
+  amountFormatted: string;
+  reliability: number;
+  status: "Overdue" | "At Risk" | "Healthy";
+}
+
+interface ChatCounterpartyData {
+  counterparties: CounterpartyItem[];
+}
+
 interface ChatMessage {
   id: string;
   role: "user" | "bot";
@@ -68,6 +95,8 @@ interface ChatMessage {
   actionPills?: ActionPill[] | undefined;
   isFallback?: boolean | undefined;
   timestamp?: string | undefined;
+  widgetType?: "cash_trajectory" | "margin_compression" | "counterparty_table" | undefined;
+  widgetData?: ChatCashTrajectoryData | ChatMarginCompressionData | ChatCounterpartyData | undefined;
 }
 
 const STARTER_CHIPS = [
@@ -80,31 +109,40 @@ const STARTER_CHIPS = [
 export function getInitialWelcome(liveState: FullCrossPageState): {
   text: string;
   actionPills: ActionPill[];
+  widgetType?: "cash_trajectory" | "margin_compression" | "counterparty_table";
+  widgetData?: any;
 } {
   const { overview, simulator } = liveState;
-  const isDemo =
-    !overview.businessName || overview.businessName === "Rupi Clothing";
+  const storedBiz = typeof window !== "undefined" ? getStoredBusiness() : null;
+  const isDemo = isDemoAccount(storedBiz);
 
   if (!isDemo) {
     return {
-      text: `### Welcome to Ripple AI Copilot for **${overview.businessName}**
+      text: `### Welcome to Ask Ripple for **${overview.businessName}**
 
 I have **real-time visibility** into your business accounts, treasury balances, and the Ripple Simulator:
 • **Available Treasury**: **${overview.availableCashOnHandFormatted}** (Safety buffer: **${overview.safetyReserveFormatted}** | Status: *${overview.cashStatus}*)
 • **Incoming Receivables**: **₹0** (0 open invoices) vs. **Committed Payables**: **₹0**
-• **Cash Forecast**: Healthy reserve balance. Zero projected cash deficit.
+• **Cash Forecast**: Healthy initial reserve balance. Zero projected cash deficit.
 • **Simulation State**: Baseline scenario ready. Model what-if delays once invoices or commitments are added.
 
-Ask me how to protect your cash flow, or test a what-if payment delay in the simulator below.`,
+Ask me anything about cash flow, or start by recording your suppliers and customers to activate real-time timing alerts.`,
       actionPills: [
         { id: "open_simulator", label: "Open in Ripple Simulator →" },
-        { id: "load_apex", label: "Load Demo Flagship (+16d) Scenario" },
       ],
+      widgetType: "cash_trajectory",
+      widgetData: {
+        cashOnHandFormatted: overview.availableCashOnHandFormatted,
+        minBalanceFormatted: overview.availableCashOnHandFormatted,
+        safetyReserveFormatted: overview.safetyReserveFormatted,
+        hasShortfall: false,
+        dipDate: "None projected",
+      },
     };
   }
 
   return {
-    text: `### Welcome to Ripple AI Copilot for **${overview.businessName}**
+    text: `### Welcome to Ask Ripple for **${overview.businessName}**
 
 I have **real-time visibility** into your Supplier-Business-Customer loop, cash forecasts, and the Ripple Simulator:
 • **Available Treasury**: **${overview.availableCashOnHandFormatted}** (Safety buffer: **${overview.safetyReserveFormatted}** | Status: *${overview.cashStatus}*)
@@ -118,6 +156,14 @@ Ask me anything about your cash position, true margins, or click any starter pro
       { id: "apply_split_escrow", label: "Lock Tri-Party Split-Escrow" },
       { id: "open_simulator", label: "Open in Ripple Simulator →" },
     ],
+    widgetType: "cash_trajectory",
+    widgetData: {
+      cashOnHandFormatted: overview.availableCashOnHandFormatted,
+      minBalanceFormatted: overview.projectedDipAmountFormatted,
+      safetyReserveFormatted: overview.safetyReserveFormatted,
+      hasShortfall: true,
+      dipDate: overview.projectedDipDate,
+    },
   };
 }
 
@@ -132,24 +178,18 @@ function FormattedMessage({ text }: { text: string }) {
       {lines.map((line, idx) => {
         const trimmed = line.trim();
 
-        // Empty line
         if (!trimmed) {
           return <div key={idx} className="h-1.5" />;
         }
 
-        // Heading 3: ###
         if (trimmed.startsWith("### ")) {
           return (
-            <h3
-              key={idx}
-              className="text-base font-semibold text-foreground pt-1.5 pb-0.5 border-b border-border/40"
-            >
+            <h3 key={idx} className="text-base font-bold text-foreground pt-1 first:pt-0">
               {renderInlineStyles(trimmed.slice(4))}
             </h3>
           );
         }
 
-        // Heading 4 or bold title
         if (trimmed.startsWith("#### ")) {
           return (
             <h4 key={idx} className="text-sm font-semibold text-foreground pt-1">
@@ -158,7 +198,6 @@ function FormattedMessage({ text }: { text: string }) {
           );
         }
 
-        // Bullet point: • or - or *
         if (trimmed.startsWith("• ") || trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
           const content = trimmed.slice(2);
           return (
@@ -169,7 +208,6 @@ function FormattedMessage({ text }: { text: string }) {
           );
         }
 
-        // Numbered list: e.g. 1.
         const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
         if (numMatch && numMatch[1] && numMatch[2]) {
           return (
@@ -182,7 +220,6 @@ function FormattedMessage({ text }: { text: string }) {
           );
         }
 
-        // Standard paragraph
         return (
           <p key={idx} className="text-foreground/90">
             {renderInlineStyles(trimmed)}
@@ -194,7 +231,6 @@ function FormattedMessage({ text }: { text: string }) {
 }
 
 function renderInlineStyles(str: string): React.ReactNode[] {
-  // Regex parsing **bold**, *italic*, `code`
   const parts: React.ReactNode[] = [];
   const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
   let lastIndex = 0;
@@ -237,6 +273,216 @@ function renderInlineStyles(str: string): React.ReactNode[] {
   return parts;
 }
 
+// ── Embedded Visual Chat Widgets ──────────────────────────────────────────────
+
+function ChatCashTrajectoryWidget({
+  data,
+  onOpenSimulator,
+}: {
+  data: ChatCashTrajectoryData;
+  onOpenSimulator: () => void;
+}) {
+  return (
+    <div className="mt-3 rounded-xl border border-border/80 bg-background/90 p-3 shadow-xs space-y-2.5">
+      <div className="flex items-center justify-between border-b border-border/50 pb-2">
+        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+          <TrendingDown className={cn("h-4 w-4", data.hasShortfall ? "text-destructive" : "text-emerald-500")} />
+          30-Day Projected Cash Trajectory
+        </span>
+        <Badge
+          variant="outline"
+          className={cn(
+            "text-[10px] font-semibold",
+            data.hasShortfall
+              ? "bg-destructive/10 text-destructive border-destructive/30"
+              : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+          )}
+        >
+          {data.hasShortfall ? "Deficit Projected" : "Healthy Buffer"}
+        </Badge>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="rounded-lg bg-muted/30 p-2 border border-border/40">
+          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Current Cash</span>
+          <span className="text-sm font-bold font-mono text-foreground">{data.cashOnHandFormatted}</span>
+        </div>
+        <div className="rounded-lg bg-muted/30 p-2 border border-border/40">
+          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Lowest Point</span>
+          <span className={cn("text-sm font-bold font-mono", data.hasShortfall ? "text-destructive" : "text-foreground")}>
+            {data.minBalanceFormatted}
+          </span>
+        </div>
+        <div className="rounded-lg bg-muted/30 p-2 border border-border/40">
+          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Safety Buffer</span>
+          <span className="text-sm font-bold font-mono text-muted-foreground">{data.safetyReserveFormatted}</span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <span className="text-[11px] text-muted-foreground">
+          {data.hasShortfall ? `Breach timing: around ${data.dipDate}` : "Zero deficit projected across 30 days"}
+        </span>
+        <Button
+          size="sm"
+          onClick={onOpenSimulator}
+          className="h-7 text-xs font-semibold gap-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs"
+        >
+          Open in Ripple Simulator <ArrowRight className="h-3 w-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ChatMarginCompressionWidget({
+  data,
+  onAutoPhase,
+  onSplitEscrow,
+}: {
+  data: ChatMarginCompressionData;
+  onAutoPhase: () => void;
+  onSplitEscrow: () => void;
+}) {
+  return (
+    <div className="mt-3 rounded-xl border border-border/80 bg-background/90 p-3 shadow-xs space-y-2.5">
+      <div className="flex items-center justify-between border-b border-border/50 pb-2">
+        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+          <Layers className="h-4 w-4 text-warning" />
+          Margin Compression & Contagion Breakdown
+        </span>
+        <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning-foreground border-warning/30 font-semibold">
+          Contagion Drag: {data.contagionDragFormatted}
+        </Badge>
+      </div>
+
+      {/* Visual Bar Comparison */}
+      <div className="space-y-1">
+        <div className="flex justify-between text-xs font-mono">
+          <span className="text-muted-foreground">Paper Margin: <strong className="text-foreground">{data.paperMarginPercent}</strong></span>
+          <span className="text-destructive font-bold">True Margin: {data.trueMarginPercent}</span>
+        </div>
+        <div className="h-2 w-full rounded-full bg-muted overflow-hidden flex">
+          <div className="bg-emerald-500 h-full" style={{ width: "35%" }} />
+          <div className="bg-destructive h-full" style={{ width: "65%" }} />
+        </div>
+      </div>
+
+      {/* 4 Contagion Costs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] pt-1">
+        <div className="flex justify-between p-1.5 rounded bg-muted/20 border border-border/40">
+          <span className="text-muted-foreground">Lost Early Discount:</span>
+          <span className="font-mono font-semibold text-foreground">{data.lostDiscount}</span>
+        </div>
+        <div className="flex justify-between p-1.5 rounded bg-muted/20 border border-border/40">
+          <span className="text-muted-foreground">Supplier Halt Fees:</span>
+          <span className="font-mono font-semibold text-destructive">{data.haltFees}</span>
+        </div>
+        <div className="flex justify-between p-1.5 rounded bg-muted/20 border border-border/40">
+          <span className="text-muted-foreground">Secondary Customer SLA:</span>
+          <span className="font-mono font-semibold text-destructive">{data.slaPenalties}</span>
+        </div>
+        <div className="flex justify-between p-1.5 rounded bg-muted/20 border border-border/40">
+          <span className="text-muted-foreground">Float Drag:</span>
+          <span className="font-mono font-semibold text-foreground">{data.floatDrag}</span>
+        </div>
+      </div>
+
+      {/* Quick Action Triggers */}
+      <div className="pt-2 border-t border-border/50 flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onAutoPhase}
+          className="h-7 text-xs font-semibold gap-1.5 border-primary/30 text-primary hover:bg-primary/5 cursor-pointer"
+        >
+          <Layers className="h-3.5 w-3.5" />
+          Auto-Phase Inventory
+        </Button>
+        <Button
+          size="sm"
+          onClick={onSplitEscrow}
+          className="h-7 text-xs font-semibold gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs cursor-pointer"
+        >
+          <Lock className="h-3.5 w-3.5" />
+          Lock Tri-Party Split-Escrow
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ChatCounterpartyTableWidget({
+  data,
+}: {
+  data: ChatCounterpartyData;
+}) {
+  return (
+    <div className="mt-3 rounded-xl border border-border/80 bg-background/90 p-3 shadow-xs space-y-2">
+      <div className="flex items-center justify-between border-b border-border/50 pb-2">
+        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+          <ShieldCheck className="h-4 w-4 text-primary" />
+          Counterparty Reliability & Commitment Health
+        </span>
+        <span className="text-[10px] text-muted-foreground font-mono">Live Ledger</span>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-border/50 text-muted-foreground text-[10px] uppercase font-semibold">
+              <th className="pb-1.5 font-medium">Counterparty</th>
+              <th className="pb-1.5 font-medium">Role</th>
+              <th className="pb-1.5 font-medium">Amount</th>
+              <th className="pb-1.5 font-medium">Reliability</th>
+              <th className="pb-1.5 font-medium text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/40">
+            {data.counterparties.map((cp) => (
+              <tr key={cp.id} className="text-[11px]">
+                <td className="py-1.5 font-medium text-foreground">{cp.name}</td>
+                <td className="py-1.5 text-muted-foreground">{cp.role}</td>
+                <td className="py-1.5 font-mono font-semibold text-foreground">{cp.amountFormatted}</td>
+                <td className="py-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-14 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full",
+                          cp.reliability >= 85 ? "bg-emerald-500" : cp.reliability >= 60 ? "bg-amber-500" : "bg-destructive",
+                        )}
+                        style={{ width: `${cp.reliability}%` }}
+                      />
+                    </div>
+                    <span className="font-mono text-[10px] text-muted-foreground">{cp.reliability}%</span>
+                  </div>
+                </td>
+                <td className="py-1.5 text-right">
+                  <span
+                    className={cn(
+                      "text-[10px] font-semibold px-1.5 py-0.5 rounded-full inline-block",
+                      cp.status === "Overdue"
+                        ? "bg-destructive/10 text-destructive"
+                        : cp.status === "At Risk"
+                          ? "bg-warning/15 text-warning-foreground"
+                          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                    )}
+                  >
+                    {cp.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page Component ───────────────────────────────────────────────────────
+
 function InsightsPage() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
@@ -249,22 +495,19 @@ function InsightsPage() {
         text: welcome.text,
         actionPills: welcome.actionPills,
         isFallback: false,
+        widgetType: welcome.widgetType,
+        widgetData: welcome.widgetData,
       },
     ];
   });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
-  const [keyInput, setKeyInput] = useState("");
-  const [keySource, setKeySource] = useState<"localStorage" | "env" | "none">("none");
   const [simpleMode, setSimpleMode] = useState<boolean>(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Sync key source status and dynamic welcome on mount
+  // Sync dynamic welcome on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setKeySource(getGeminiApiKeySource());
-      setKeyInput(localStorage.getItem("rupi_gemini_api_key") || "");
       const live = getLiveCrossPageState();
       const welcome = getInitialWelcome(live);
       setMessages((prev) => {
@@ -276,6 +519,8 @@ function InsightsPage() {
               text: welcome.text,
               actionPills: welcome.actionPills,
               isFallback: false,
+              widgetType: welcome.widgetType,
+              widgetData: welcome.widgetData,
             },
           ];
         }
@@ -314,6 +559,18 @@ function InsightsPage() {
               { id: "apply_auto_phase", label: "Execute Auto-Phase Inventory" },
               { id: "apply_split_escrow", label: "Lock Tri-Party Split-Escrow" },
             ],
+            widgetType: "margin_compression",
+            widgetData: {
+              paperMarginPercent: "25.0%",
+              trueMarginPercent: "6.34%",
+              revenueFormatted: "₹5,00,000",
+              cogsFormatted: "₹3,75,000",
+              contagionDragFormatted: "-₹93,300",
+              lostDiscount: "₹3,600",
+              haltFees: "₹40,000",
+              slaPenalties: "₹48,000",
+              floatDrag: "₹22,400",
+            },
           },
         ]);
         return;
@@ -386,12 +643,11 @@ function InsightsPage() {
     [navigate],
   );
 
-  // Send a message: try Google Gemini API, or deterministically fall back to safety net
+  // Send a message trained on live server state
   async function sendMessage(textToSend: string) {
     const trimmed = textToSend.trim();
     if (!trimmed || loading) return;
 
-    // Append user message
     const userMsg: ChatMessage = {
       id: `user_${Date.now()}`,
       role: "user",
@@ -403,38 +659,159 @@ function InsightsPage() {
     setInput("");
     setLoading(true);
 
-    // Snapshot live cross-page state
+    // 1. Fetch live server state for active authenticated business
+    const storedBiz = typeof window !== "undefined" ? getStoredBusiness() : null;
+    const isDemo = isDemoAccount(storedBiz);
+
+    const [summary, invoicesRes, suppliersRes, customersRes] = await Promise.all([
+      dashboardApi.getSummary().catch(() => null),
+      invoiceApi.list({ pageSize: 50 }).catch(() => ({ data: [] })),
+      supplierApi.list({ pageSize: 50 }).catch(() => ({ data: [] })),
+      customerApi.list({ pageSize: 50 }).catch(() => ({ data: [] })),
+    ]);
+
     const liveState = getLiveCrossPageState();
 
-    // Plain English directive if simpleMode is active
-    const systemInstruction = simpleMode
-      ? `${liveState.systemPromptString}\n\n[PLAIN ENGLISH DIRECTIVE]: Speak in simple, everyday language that a retail clothing shop owner immediately understands. Avoid complex financial jargon. Keep answers punchy and under 130 words, bold key ₹ amounts and dates, use simple bullet points, and conclude with one clear, practical recommended action.`
-      : liveState.systemPromptString;
+    // Determine relevant visual widget based on query topic
+    const lower = trimmed.toLowerCase();
+    let widgetType: ChatMessage["widgetType"] = undefined;
+    let widgetData: ChatMessage["widgetData"] = undefined;
+
+    if (
+      lower.includes("cash") ||
+      lower.includes("crunch") ||
+      lower.includes("liquidity") ||
+      lower.includes("shortfall") ||
+      lower.includes("deficit") ||
+      lower.includes("forecast") ||
+      lower.includes("buffer")
+    ) {
+      widgetType = "cash_trajectory";
+      widgetData = {
+        cashOnHandFormatted: formatMoney(summary?.cashOnHandPaise ?? liveState.overview.availableCashOnHandPaise),
+        minBalanceFormatted: formatMoney(summary?.forecast?.[0]?.projectedBalancePaise ?? liveState.overview.safetyReservePaise),
+        safetyReserveFormatted: formatMoney(storedBiz?.safetyThresholdPaise ?? 500_000),
+        hasShortfall: (summary?.alerts?.length ?? 0) > 0,
+        dipDate: summary?.alerts?.[0]?.title?.includes("around")
+          ? summary.alerts[0].title.split("around ")[1] ?? "upcoming cycle"
+          : "25 Oct 2026",
+      };
+    } else if (
+      lower.includes("margin") ||
+      lower.includes("profit") ||
+      lower.includes("drag") ||
+      lower.includes("delay") ||
+      lower.includes("halt") ||
+      lower.includes("penalty") ||
+      lower.includes("escrow") ||
+      lower.includes("phase")
+    ) {
+      widgetType = "margin_compression";
+      widgetData = {
+        paperMarginPercent: liveState.simulator.paperMarginPercent || "25.0%",
+        trueMarginPercent: liveState.simulator.trueRippleMarginPercent || "6.34%",
+        revenueFormatted: liveState.simulator.revenueFormatted || "₹5,00,000",
+        cogsFormatted: liveState.simulator.cogsFormatted || "₹3,75,000",
+        contagionDragFormatted: liveState.simulator.rippleContagionDragFormatted || "-₹93,300",
+        lostDiscount: liveState.simulator.lostSupplierEarlyDiscountFormatted || "₹3,600",
+        haltFees: liveState.simulator.supplierHaltFeesFormatted || "₹40,000",
+        slaPenalties: liveState.simulator.secondarySlaPenaltiesFormatted || "₹48,000",
+        floatDrag: liveState.simulator.workingCapitalFloatDragFormatted || "₹22,400",
+      };
+    } else if (
+      lower.includes("invoice") ||
+      lower.includes("supplier") ||
+      lower.includes("customer") ||
+      lower.includes("overdue") ||
+      lower.includes("bill") ||
+      lower.includes("health") ||
+      lower.includes("counterparty")
+    ) {
+      widgetType = "counterparty_table";
+      const counterparties: CounterpartyItem[] = isDemo ? [
+        {
+          id: "cp-1",
+          name: "Apex Corp",
+          role: "Customer",
+          amountFormatted: "₹5,00,000",
+          reliability: 58,
+          status: "At Risk",
+        },
+        {
+          id: "cp-2",
+          name: "Kaveri Timber",
+          role: "Supplier",
+          amountFormatted: "₹1,20,000",
+          reliability: 92,
+          status: "Healthy",
+        },
+        {
+          id: "cp-3",
+          name: "Metro Retail",
+          role: "Customer",
+          amountFormatted: "₹1,65,000",
+          reliability: 88,
+          status: "Healthy",
+        },
+        {
+          id: "cp-4",
+          name: "Shree Textiles",
+          role: "Supplier",
+          amountFormatted: "₹50,000",
+          reliability: 45,
+          status: "Overdue",
+        },
+      ] : [
+          ...((suppliersRes && "data" in suppliersRes && Array.isArray(suppliersRes.data)) ? suppliersRes.data : []),
+          ...((customersRes && "data" in customersRes && Array.isArray(customersRes.data)) ? customersRes.data : []),
+        ].slice(0, 4).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        role: item.contactName ? "Supplier" : "Customer",
+        amountFormatted: "₹0",
+        reliability: item.reliabilityScore ?? 90,
+        status: (item.reliabilityScore ?? 90) < 60 ? "At Risk" : "Healthy",
+      }));
+
+      widgetData = { counterparties };
+    }
+
+    // Build system prompt strictly grounded in active business state
+    const liveServerContext = `
+ACTIVE BUSINESS CONTEXT:
+Business Name: ${storedBiz?.name || "Rupi Clothing"}
+Is Demo Account: ${isDemo}
+Available Cash: ${formatMoney(summary?.cashOnHandPaise ?? liveState.overview.availableCashOnHandPaise)}
+Safety Reserve: ${formatMoney(storedBiz?.safetyThresholdPaise ?? 500_000)}
+Receivables: ${formatMoney(summary?.receivablesPaise ?? 0)}
+Payables: ${formatMoney(summary?.payablesPaise ?? 0)}
+Active Risk Alerts: ${JSON.stringify(summary?.alerts || [])}
+Invoices Count: ${invoicesRes?.data?.length ?? 0}
+Suppliers Count: ${suppliersRes?.data?.length ?? 0}
+Customers Count: ${customersRes?.data?.length ?? 0}
+`;
+
+    const systemInstruction = `${liveServerContext}\n\n${liveState.systemPromptString}\n\n[DIRECTIVE]: You are "Ask Ripple", the AI Financial Copilot. Answer directly based on the user's specific question using exact rupee amounts and dates from their live server state. If the business is newly created with 0 invoices, guide them to add their first supplier, customer, or invoice. Keep responses crisp, clear, and actionable.`;
 
     try {
-      // 1. Attempt live Google AI Studio API call (Gemini Flash)
       const geminiResponse = await callGeminiAPI({
         prompt: trimmed,
         systemInstruction,
-        history: messages.slice(-6).map((m) => ({ role: m.role, text: m.text })),
+        history: messages.slice(-4).map((m) => ({ role: m.role, text: m.text })),
       });
 
-      // Derive relevant action pills based on query context
       const pills: ActionPill[] = [];
-      const lower = trimmed.toLowerCase();
       if (lower.includes("simulat") || lower.includes("apex") || lower.includes("delay")) {
-        pills.push({ id: "load_apex", label: "Load Apex Flagship (+16d) Scenario" });
+        if (isDemo) pills.push({ id: "load_apex", label: "Load Apex Flagship (+16d) Scenario" });
         pills.push({ id: "open_simulator", label: "Open in Ripple Simulator →" });
       }
-      if (lower.includes("supplier") || lower.includes("phase") || lower.includes("batch") || lower.includes("kaveri")) {
+      if (lower.includes("phase") || lower.includes("supplier")) {
         pills.push({ id: "apply_auto_phase", label: "Execute Auto-Phase Inventory" });
       }
-      if (lower.includes("escrow") || lower.includes("cash") || lower.includes("crunch") || lower.includes("improve")) {
+      if (lower.includes("escrow") || lower.includes("cash")) {
         pills.push({ id: "apply_split_escrow", label: "Lock Tri-Party Split-Escrow" });
       }
       if (pills.length === 0) {
-        pills.push({ id: "apply_split_escrow", label: "Lock Tri-Party Split-Escrow" });
-        pills.push({ id: "apply_auto_phase", label: "Execute Auto-Phase Inventory" });
         pills.push({ id: "open_simulator", label: "Open in Ripple Simulator →" });
       }
 
@@ -447,12 +824,12 @@ function InsightsPage() {
           actionPills: pills,
           isFallback: false,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          widgetType,
+          widgetData,
         },
       ]);
     } catch (err) {
-      console.warn("Gemini API call failed or offline, engaging Hackathon Safety Net:", err);
-
-      // 2. Deterministic, smart context-aware local response generator
+      console.warn("Generating deterministic Ask Ripple response:", err);
       const fallbackReply = generateSmartLocalResponse(trimmed, liveState);
 
       setMessages((prev) => [
@@ -464,6 +841,8 @@ function InsightsPage() {
           actionPills: fallbackReply.actionPills,
           isFallback: true,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          widgetType,
+          widgetData,
         },
       ]);
     } finally {
@@ -471,48 +850,33 @@ function InsightsPage() {
     }
   }
 
-  const handleSaveKeyDialog = () => {
-    setGeminiApiKey(keyInput.trim());
-    setKeySource(getGeminiApiKeySource());
-    setIsKeyDialogOpen(false);
-    if (keyInput.trim()) {
-      toast.success("Gemini API Key Saved", {
-        description: "Google AI Studio API is now active for live queries.",
-      });
-    } else {
-      toast.info("Gemini API Key Cleared", {
-        description: "Insights will run using the Hackathon Safety Net.",
-      });
-    }
-  };
-
   const currentLive = getLiveCrossPageState();
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] max-w-4xl mx-auto px-2 sm:px-4 py-3 gap-3">
-      {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2.5">
+    <div className="flex flex-col h-[calc(100vh-5.5rem)] gap-3">
+      {/* Header with Title and Mode Switch */}
+      <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <div className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-xs">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-foreground">Insights & AI</h1>
+              <h1 className="text-lg font-bold text-foreground">Ask Ripple</h1>
               <Badge
                 variant="outline"
                 className="bg-primary/5 text-primary border-primary/20 text-[11px] font-semibold"
               >
-                Google Gemini Flash
+                Ripple AI Copilot
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Autonomous Financial Copilot deeply linked to live cross-page state
+              Real-time financial intelligence linked to your live loop and ledger
             </p>
           </div>
         </div>
 
-        {/* Live Context & Status Actions */}
+        {/* Action Toggle */}
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -523,7 +887,7 @@ function InsightsPage() {
               setSimpleMode(next);
               toast.info(
                 next
-                  ? "Plain English Mode Enabled (Simpler & Punchier)"
+                  ? "Plain English Mode Enabled"
                   : "Detailed Analysis Mode Enabled",
               );
             }}
@@ -532,41 +896,13 @@ function InsightsPage() {
             <Sliders className="w-3.5 h-3.5" />
             <span>{simpleMode ? "Plain English: ON" : "Plain English: OFF"}</span>
           </Button>
-
-          {keySource !== "none" ? (
-            <Badge
-              variant="outline"
-              className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs gap-1.5 py-1 px-2.5"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live API Connected
-            </Badge>
-          ) : (
-            <Badge
-              variant="outline"
-              className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs gap-1.5 py-1 px-2.5"
-            >
-              <Wifi className="w-3 h-3" />
-              Safety Net Engine Active
-            </Badge>
-          )}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsKeyDialogOpen(true)}
-            className="h-8 text-xs gap-1.5 border-border/70"
-          >
-            <KeyRound className="w-3.5 h-3.5 text-muted-foreground" />
-            API Key
-          </Button>
         </div>
       </div>
 
       {/* Cross-Page Live State Linking Ribbon */}
       <div className="rounded-xl border border-border/70 bg-card/60 p-2.5 text-xs text-muted-foreground shadow-xs flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 rounded-full bg-primary" />
+          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="font-semibold text-foreground">Live App State Connected:</span>
           <span className="hidden sm:inline">
             Cash: <strong className="text-foreground">{currentLive.overview.availableCashOnHandFormatted}</strong>
@@ -578,12 +914,12 @@ function InsightsPage() {
         </div>
         <div className="flex items-center gap-2">
           {currentLive.simulator.activeRescues.autoPhaseApplied && (
-            <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+            <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20 font-semibold">
               Auto-Phase Active
             </Badge>
           )}
           {currentLive.simulator.activeRescues.splitEscrowLocked && (
-            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-700 border-emerald-500/20">
+            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-700 border-emerald-500/20 font-semibold">
               Split-Escrow Locked
             </Badge>
           )}
@@ -622,6 +958,28 @@ function InsightsPage() {
                 <div className="space-y-3">
                   <FormattedMessage text={msg.text} />
 
+                  {/* Embedded Visual Widgets */}
+                  {msg.widgetType === "cash_trajectory" && msg.widgetData && (
+                    <ChatCashTrajectoryWidget
+                      data={msg.widgetData as ChatCashTrajectoryData}
+                      onOpenSimulator={() => navigate({ to: "/simulator" })}
+                    />
+                  )}
+
+                  {msg.widgetType === "margin_compression" && msg.widgetData && (
+                    <ChatMarginCompressionWidget
+                      data={msg.widgetData as ChatMarginCompressionData}
+                      onAutoPhase={() => handleActionPill("apply_auto_phase")}
+                      onSplitEscrow={() => handleActionPill("apply_split_escrow")}
+                    />
+                  )}
+
+                  {msg.widgetType === "counterparty_table" && msg.widgetData && (
+                    <ChatCounterpartyTableWidget
+                      data={msg.widgetData as ChatCounterpartyData}
+                    />
+                  )}
+
                   {/* Interactive Action Buttons / Pills */}
                   {msg.actionPills && msg.actionPills.length > 0 && (
                     <div className="pt-2 border-t border-border/60 flex flex-wrap gap-1.5">
@@ -645,7 +1003,7 @@ function InsightsPage() {
                   {msg.isFallback && (
                     <div className="text-[10px] text-muted-foreground flex items-center gap-1 pt-1 opacity-75">
                       <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                      <span>Answered via Live Deterministic Financial Engine (Hackathon Safety Net)</span>
+                      <span>Answered via Live Deterministic Financial Engine (Zero Downtime)</span>
                     </div>
                   )}
                 </div>
@@ -653,8 +1011,8 @@ function InsightsPage() {
             </div>
 
             {msg.role === "user" && (
-              <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center shrink-0 mt-0.5 border border-border">
-                <User className="w-4 h-4 text-muted-foreground" />
+              <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 mt-0.5">
+                <User className="w-4 h-4" />
               </div>
             )}
           </div>
@@ -704,7 +1062,7 @@ function InsightsPage() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask anything about cash shortages, True Margin, Apex Corp, or rescues…"
+          placeholder="Ask Ripple about your cash flow, overdue bills, or profit margins…"
           disabled={loading}
           className="flex-1 rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-xs"
         />
@@ -714,60 +1072,9 @@ function InsightsPage() {
           className="rounded-xl bg-primary text-primary-foreground px-5 py-2.5 flex items-center gap-1.5 text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-all shadow-xs cursor-pointer"
         >
           <Send className="w-4 h-4" />
-          <span className="hidden sm:inline">Ask Gemini</span>
+          <span className="hidden sm:inline">Ask Ripple</span>
         </button>
       </form>
-
-      {/* API Key Modal Dialog */}
-      <Dialog open={isKeyDialogOpen} onOpenChange={setIsKeyDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <KeyRound className="h-4 w-4" />
-              </div>
-              <DialogTitle>Google AI Studio API Key</DialogTitle>
-            </div>
-          </DialogHeader>
-
-          <div className="space-y-3 py-2">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Paste your Google AI Studio API Key to query <strong>Gemini 2.5 Flash</strong> directly.
-              Keys stored in <code className="text-xs font-mono">localStorage</code> take precedence during live presentations.
-            </p>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Gemini API Key</Label>
-              <Input
-                type="password"
-                placeholder="AQ... or AIzaSy... (Paste key here)"
-                value={keyInput}
-                onChange={(e) => setKeyInput(e.target.value)}
-                className="text-xs font-mono"
-              />
-            </div>
-
-            <div className="rounded-lg bg-muted/40 p-3 text-xs space-y-1 text-muted-foreground border">
-              <p className="font-semibold text-foreground flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                Hackathon Wi-Fi Safety Net
-              </p>
-              <p>
-                If the key is empty, network drops, or rate limits occur, the assistant will seamlessly generate answers using the local financial engine with zero error alerts.
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsKeyDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={handleSaveKeyDialog} className="font-semibold">
-              Save Key
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

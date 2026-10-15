@@ -69,7 +69,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
             currency="INR",
             opening_cash_paise=1_000_000, # ₹10,000 opening cash
             safety_threshold_paise=500_000, # ₹5,000 threshold
-            industry="Apparel retail",
+            industry="Apparel Manufacturing & Retail (The Supplier-Business-Customer Loop)",
             owner_name="Demo Owner",
             owner_email="owner@rupiclothing.in",
             phone="+91 98200 54321",
@@ -84,6 +84,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
     else:
         existing_biz.opening_cash_paise = 1_000_000
         existing_biz.safety_threshold_paise = 500_000
+        existing_biz.industry = "Apparel Manufacturing & Retail (The Supplier-Business-Customer Loop)"
 
     # 3. Membership
     mem = db.query(BusinessMembership).filter(
@@ -115,7 +116,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
             reliability_score=86,
             status="active",
             lead_time_days=4,
-            notes="Primary cotton yarn and greige fabric mill. High fabric consistency, requires advance before cutting.",
+            notes="UPFRONT PAYMENT REQUIREMENT: Mandates 14% upfront advance deposit (₹5,000) before yarn dyeing begins, plus delivery balance (₹30,000) before releasing fabric. Arrival strictly gates Cotton Kurti cutting for customer order #CO-1.",
             created_at=dp(90),
             updated_at=dp(2),
         ),
@@ -133,7 +134,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
             reliability_score=92,
             status="active",
             lead_time_days=11,
-            notes="Supplies premium European linen and rugged denim. Very dependable on-time delivery track record.",
+            notes="DELIVERY-GATED COMMITMENT: Supplies European linen and rugged denim. Payment due Net 45. Restock arrival on Day 11 is required to start assembly for customer Style Mart order #CO-2.",
             created_at=dp(120),
             updated_at=d(0),
         ),
@@ -151,7 +152,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
             reliability_score=71,
             status="active",
             lead_time_days=7,
-            notes="Artisanal natural vat dyeing and silk embroidery. Delays occur frequently in peak monsoon season.",
+            notes="UNRELIABLE CASH-ON-DELIVERY SUPPLIER: Requires full payment at pickup. Erratic delivery lead times (reliability 71%) create upstream timing contagion across downstream customer delivery commitments.",
             created_at=dp(60),
             updated_at=dp(3),
         ),
@@ -191,7 +192,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
             credit_terms_days=15,
             outstanding_paise=800_000,
             status="active",
-            notes="Premium retail boutique client. Orders quarterly seasonal collections. Pays punctually on Net 15.",
+            notes="DEFERRED CUSTOMER PAYMENT (NET-15): Receives finished Kurtis on Day 6, but contractually pays 15 days later on Day 21. The 17-day timing lag after Day 4 supplier payment creates an artificial cash deficit.",
             created_at=dp(180),
             updated_at=dp(5),
         ),
@@ -207,7 +208,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
             credit_terms_days=30,
             outstanding_paise=1_450_000,
             status="active",
-            notes="Multi-brand high street outlet. Larger volume wholesale purchases, but occasionally pushes payment 5-10 days past terms.",
+            notes="DEFERRED CUSTOMER PAYMENT (NET-30): Fast-casual apparel chain. Receives order #CO-2 on Day 9; scheduled payment Day 39. Past invoice INV-1999 (₹1,300) is 5 days overdue, locking working capital.",
             created_at=dp(240),
             updated_at=d(0),
         ),
@@ -223,7 +224,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
             credit_terms_days=7,
             outstanding_paise=0,
             status="active",
-            notes="Consignment partner for artisan silk and block prints. Very fast turnaround.",
+            notes="Consignment partner for artisan silk and block prints. Prompt turnaround upon delivery.",
             created_at=dp(90),
             updated_at=dp(10),
         ),
@@ -258,7 +259,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
             unit_price_paise=800_000, # ₹8,000
             reorder_point=15,
             category="Womenswear",
-            description="Hand-embroidered pure cotton kurti crafted with Surat greige yarn.",
+            description="100% handspun cotton kurti. Raw fabric delivery from Shree Textiles (PO-1) on Day 4 strictly gates batch cutting for Urban Threads order #CO-1 (Day 6).",
             unit_of_measure="pieces",
             preferred_supplier_id="sup_1",
             currency="INR",
@@ -274,7 +275,7 @@ def seed_rupi_clothing(db: Session, overwrite: bool = False):
             unit_price_paise=1_320_000,
             reorder_point=12,
             category="Outerwear",
-            description="14oz rigid denim jacket washed and dyed in Bhiwandi.",
+            description="Tailored rugged denim jacket. Assembly depends on Mehta Fabrics denim delivery to fulfill Style Mart order #CO-2.",
             unit_of_measure="pieces",
             preferred_supplier_id="sup_2",
             currency="INR",

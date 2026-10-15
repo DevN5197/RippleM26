@@ -69,11 +69,15 @@ export interface FullCrossPageState {
   systemPromptString: string;
 }
 
+export function isDemoAccount(biz?: { id?: string; name?: string } | null): boolean {
+  return biz?.id === "biz_1" || biz?.name === "Rupi Clothing";
+}
+
 export function getLiveCrossPageState(): FullCrossPageState {
   const sim = simulatorStore.getState();
 
   const storedBiz = typeof window !== "undefined" ? getStoredBusiness() : null;
-  const isDemo = !storedBiz || storedBiz.name === "Rupi Clothing" || storedBiz.id === "biz_1";
+  const isDemo = isDemoAccount(storedBiz) || (!storedBiz && typeof window !== "undefined" && !localStorage.getItem("ripple_auth_user"));
 
   // 1. Live Business Overview state
   let overview: LiveBusinessOverviewState;

@@ -117,6 +117,32 @@ function SimulatorPage() {
     [],
   );
 
+  // Auto-Reset Ripple Simulator on page switch (mount and cleanup)
+  useEffect(() => {
+    const resetToCleanBaseline = () => {
+      const cleanBaseline: SimulatorControls = {
+        supplierDeliveryDelayDays: 0,
+        customerPaymentDelayDays: 0,
+        customerPaymentAmountPaise: null,
+        supplierPaymentAmountPaise: null,
+        orderQuantityMultiplier: 1.0,
+        horizonDays: 30,
+      };
+      setControlsState(cleanBaseline);
+      simulatorStore.setControls(cleanBaseline, "baseline", "Normal Baseline");
+      simulatorStore.revertRescues();
+      simulatorStore.setChaosResult(null);
+      setChaosResult(null);
+      void simulatorApi.revertAllRescues().catch(() => {});
+    };
+
+    resetToCleanBaseline();
+
+    return () => {
+      resetToCleanBaseline();
+    };
+  }, []);
+
   // Subscribe to external store changes (e.g. from Insights AI chat)
   useEffect(() => {
     const unsub = simulatorStore.subscribe((state) => {

@@ -33,7 +33,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
           ? `${db.suppliers[0].paymentTermsDays}d terms`
           : "30d terms",
         workflowSignificance:
-          "Key fabric mill supplying raw cotton fabric for kurti manufacturing. Reliability score 86%.",
+          "Key fabric mill supplying raw cotton fabric. Mandates 14% upfront advance deposit and balance on delivery before releasing inventory. Reliability score 86%.",
         nextMilestone: "PO-1 replenishment delivery on Day 4",
       },
     },
@@ -55,7 +55,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         cashImpactPaise: -500_000,
         actualDate: db.payments.find((p) => p.id === "pay_1")?.completedDate,
         workflowSignificance:
-          "Upfront 14% deposit required by Shree Textiles before batch dyeing and cutting initiates.",
+          "Upfront Advance Requirement: 14% deposit (₹5,000) required by Shree Textiles before yarn dyeing and cutting can begin.",
         nextMilestone: "Order fulfillment and delivery to central warehouse",
       },
     },
@@ -78,7 +78,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         expectedDate: db.purchaseOrders[0]?.expectedDeliveryDate,
         actualDate: db.purchaseOrders[0]?.orderDate,
         workflowSignificance:
-          "Procurement order for 100 units to restock depleting warehouse inventory before weekend wholesale demand.",
+          "Upstream Procurement Commitment: 100 units of raw materials needed to fulfill pending downstream customer order #CO-1.",
         nextMilestone: "Physical delivery at Mumbai warehouse on Day 4",
       },
     },
@@ -98,7 +98,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         quantity: 100,
         expectedDate: db.inventory[0]?.expectedRestockDate,
         workflowSignificance:
-          "Arrival of 100 Cotton Kurtis. A delivery delay halts fulfillment of the Day 6 customer order.",
+          "Inventory Timing Dependency: Arrival of 100 Cotton Kurtis on Day 4. If this delivery slips, customer order #CO-1 faces immediate stockout.",
         nextMilestone: "Stock added to available inventory for picking",
       },
     },
@@ -119,7 +119,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         riskDescription:
           "Currently 12 units on hand, below the 25-unit safety threshold. Replenishment needed to support Day 6 sales.",
         workflowSignificance:
-          "Warehouse inventory level. Stock buffer is critically thin until Day 4 delivery is logged.",
+          "Inventory Buffer: 12 units on hand, 10 units reserved for Urban Threads. Only 2 unreserved units remain until Day 4 delivery is logged.",
         nextMilestone: "Day 6 dispatch of 10 units to Urban Threads",
       },
     },
@@ -141,7 +141,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         cashImpactPaise: -3_000_000,
         riskSeverity: "critical",
         workflowSignificance:
-          "Balance payment due upon delivery on Day 4. Combined with Day 5 rent, triggers negative cash balance.",
+          "Supplier Delivery Commitment: Balance payment due upon delivery on Day 4. Precedes customer payment by 17 days, precipitating Day 5 shortfall.",
         nextMilestone: "Cash shortfall risk around Day 5",
       },
     },
@@ -159,7 +159,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         partnerType: "customer",
         expectedDate: "15d payment terms",
         workflowSignificance:
-          "Boutique apparel stockist in Bandra, Mumbai. High-value repeat client with 15-day credit terms.",
+          "Downstream Customer Partner: Operates on Net-15 credit terms — receives finished goods on Day 6, but delays payment until Day 21.",
         nextMilestone: "Delivery and billing of Order #CO-1 on Day 6",
       },
     },
@@ -181,7 +181,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         quantity: 10,
         expectedDate: db.customerOrders[0]?.deliveryDate,
         workflowSignificance:
-          "Confirmed wholesale order. Requires available stock from Day 4 delivery before packing.",
+          "Customer Order Commitment: Confirmed wholesale order for 10 units. Strictly dependent on Day 4 raw material arrival before dispatch on Day 6.",
         nextMilestone: "Issuance of Invoice INV-2001 on Day 6",
       },
     },
@@ -201,7 +201,8 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         expectedDate: db.invoices[0]?.dueDate,
         actualDate: db.invoices[0]?.issueDate,
         lagDays: 15,
-        workflowSignificance: "Net 15-day receivable invoice issued on shipment. Due date Day 21.",
+        workflowSignificance:
+          "Expected Customer Payment: Net 15-day receivable invoice issued on shipment (Day 6). Due date Day 21.",
         nextMilestone: "Expected bank collection of ₹8,000 on Day 21",
       },
     },
@@ -222,7 +223,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         cashDirection: "incoming",
         cashImpactPaise: 800_000,
         workflowSignificance:
-          "Inflow closing the Kurti operating cycle. The 17-day lag between Day 4 outflow and Day 21 inflow causes the shortfall.",
+          "Deferred Customer Collection: Inflow of ₹8,000 on Day 21. The 17-day timing lag between Day 4 supplier outflow and Day 21 customer inflow causes the cash shortfall.",
         nextMilestone: "Working capital restored",
       },
     },
@@ -244,7 +245,7 @@ export function buildRelationshipGraph(): RelationshipGraphData {
         cashDirection: "outgoing",
         cashImpactPaise: -3_000_000,
         workflowSignificance:
-          "Critical cash-flow risk: Outflow on Day 4 happens 17 days before matching receipt on Day 21.",
+          "The Supplier-Customer Timing Gap: Paying ₹30,000 to Shree Textiles on Day 4 plus ₹12,000 rent on Day 5 triggers a -₹2,500 deficit before Urban Threads pays on Day 21.",
         nextMilestone: "Request 7-day payment extension on PO-1 balance",
       },
     },

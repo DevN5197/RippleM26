@@ -335,7 +335,7 @@ function RegisterPage() {
       <div className="relative flex flex-1 items-center justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto">
         <div className="pointer-events-none absolute -right-20 top-1/4 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
 
-        <div className="w-full max-w-md space-y-6 my-auto">
+        <div className="w-full max-w-xl space-y-7 my-auto p-8 sm:p-10 rounded-2xl shadow-2xl border border-border/80 bg-card/95 backdrop-blur-md">
           {/* Header */}
           <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/20 lg:hidden mb-3">

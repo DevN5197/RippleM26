@@ -150,7 +150,7 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
           <div className="mt-0.5 flex items-baseline gap-1">
             <span
               className={cn(
-                "text-base sm:text-lg font-bold font-mono tabular-nums",
+                "text-2xl sm:text-3xl font-bold font-mono tabular-nums",
                 hasShortfall ? "text-destructive" : "text-foreground",
               )}
             >
@@ -180,7 +180,7 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
           </p>
           <p
             className={cn(
-              "mt-0.5 text-base sm:text-lg font-bold font-mono tabular-nums",
+              "mt-0.5 text-2xl sm:text-3xl font-bold font-mono tabular-nums",
               scenarioMinPaise < 0
                 ? "text-destructive"
                 : isBelowThreshold
@@ -203,7 +203,7 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
           </p>
           <p
             className={cn(
-              "mt-0.5 text-base sm:text-lg font-bold font-mono tabular-nums",
+              "mt-0.5 text-2xl sm:text-3xl font-bold font-mono tabular-nums",
               totalContagionLoss > 0 ? "text-destructive" : "text-foreground",
             )}
           >
@@ -219,7 +219,7 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Delayed Orders
           </p>
-          <p className="mt-0.5 text-base sm:text-lg font-bold font-mono tabular-nums text-foreground">
+          <p className="mt-0.5 text-2xl sm:text-3xl font-bold font-mono tabular-nums text-foreground">
             {affectedDependencies.length > 0 ? affectedDependencies.length : (hasShortfall ? 2 : 0)}
           </p>
           <p className="text-[10px] text-muted-foreground truncate">
@@ -534,12 +534,24 @@ export function SimulatorEventTimeline({
               1-Click Rescue Applied: ₹0 cash deficit & ~25% profit protected!
             </span>
           </div>
-          <Badge
-            variant="outline"
-            className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] font-semibold"
-          >
-            {result.hasAutoPhaseRescue ? "Auto-Phased" : "Split-Escrow Locked"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] font-semibold"
+            >
+              {result.hasAutoPhaseRescue ? "Auto-Phased" : "Split-Escrow Locked"}
+            </Badge>
+            {onRevertRescues && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRevertRescues}
+                className="h-6 text-[10px] px-2.5 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 font-semibold cursor-pointer"
+              >
+                Disable / Revert Rescue
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
@@ -572,10 +584,10 @@ export function SimulatorEventTimeline({
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                      <span className="text-xs font-bold text-foreground">
+                      <span className="text-sm sm:text-base font-semibold text-foreground">
                         {node.counterparty}
                       </span>
-                      <span className="text-[11px] text-muted-foreground font-mono">
+                      <span className="text-xs text-muted-foreground font-mono">
                         ({node.label})
                       </span>
 
@@ -612,11 +624,24 @@ export function SimulatorEventTimeline({
                         </Badge>
                       )}
 
-                      {/* Rescued status badge */}
+                      {/* Rescued status badge & Revert Button */}
                       {isRescuedSupplier && (
-                        <Badge className="bg-emerald-600 text-white text-[10px] font-semibold">
-                          ✓ Protected: Safety buffer preserved & 24.8% profit saved!
-                        </Badge>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge className="bg-emerald-600 text-white text-[10px] font-semibold">
+                            ✓ Protected: Safety buffer preserved & 24.8% profit saved!
+                          </Badge>
+                          {onRevertRescues && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={onRevertRescues}
+                              className="h-6 text-[10px] px-2.5 border-red-400 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 font-semibold cursor-pointer"
+                            >
+                              Disable / Revert Rescue
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -660,8 +685,8 @@ export function SimulatorEventTimeline({
                 {/* 1-Click Rescue Buttons on Supplier Commitment Row */}
                 {isSupplierNode && !hasActiveRescue && (
                   <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-primary flex items-center gap-1">
-                      <Sparkles className="h-3.5 w-3.5" />
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4" />
                       Choose 1-Click Rescue:
                     </p>
                     <div className="grid grid-cols-1 gap-2">
@@ -670,21 +695,21 @@ export function SimulatorEventTimeline({
                         <button
                           type="button"
                           onClick={() => onAutoPhaseClick(node)}
-                          className="w-full text-left p-2.5 rounded-lg border-2 border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary transition-all group/btn shadow-xs cursor-pointer"
+                          className="w-full text-left p-3 rounded-lg border-2 border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary transition-all group/btn shadow-xs cursor-pointer"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-semibold text-xs text-primary flex items-center gap-1.5">
+                            <span className="font-semibold text-sm text-primary flex items-center gap-1.5">
                               <Layers className="h-4 w-4" />
                               Split Order into 2 Batches (Auto-Phase)
                             </span>
                             <Badge
                               variant="outline"
-                              className="text-[10px] bg-primary/10 text-primary border-primary/20"
+                              className="text-xs font-semibold bg-primary/10 text-primary border-primary/20 px-2 py-0.5"
                             >
                               1-Click Fix
                             </Badge>
                           </div>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Pay ₹1L now using safe cash + ₹20k after customer pays
                           </p>
                           <span className="sr-only">Auto-Phase Inventory</span>
@@ -696,21 +721,21 @@ export function SimulatorEventTimeline({
                         <button
                           type="button"
                           onClick={() => onSplitEscrowClick(node)}
-                          className="w-full text-left p-2.5 rounded-lg border-2 border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary transition-all group/btn shadow-xs cursor-pointer"
+                          className="w-full text-left p-3 rounded-lg border-2 border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary transition-all group/btn shadow-xs cursor-pointer"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-semibold text-xs text-primary flex items-center gap-1.5">
+                            <span className="font-semibold text-sm text-primary flex items-center gap-1.5">
                               <Lock className="h-4 w-4" />
                               Pay Supplier Using Customer Invoice (Split-Escrow)
                             </span>
                             <Badge
                               variant="outline"
-                              className="text-[10px] bg-primary/10 text-primary border-primary/20"
+                              className="text-xs font-semibold bg-primary/10 text-primary border-primary/20 px-2 py-0.5"
                             >
                               Zero Cash
                             </Badge>
                           </div>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Unlock raw materials today with ₹0 cash from your bank
                           </p>
                           <span className="sr-only">Lock Tri-Party Split-Escrow</span>

@@ -153,23 +153,22 @@ function LoginPage() {
         {/* Subtle background glow */}
         <div className="pointer-events-none absolute -right-20 top-1/4 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
 
-        <div className="w-full max-w-md space-y-6 my-auto">
+        <div className="w-full max-w-xl space-y-7 my-auto p-8 sm:p-10 rounded-2xl shadow-2xl border border-border/80 bg-card/95 backdrop-blur-md">
           {/* Header Mobile / Right */}
           <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/20 lg:hidden mb-3">
               <Waves className="h-6 w-6 text-primary-foreground" aria-hidden />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
               Sign In to Your Business
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-base text-muted-foreground">
               Coordination cockpit for cash flow, suppliers, and customer orders
             </p>
           </div>
 
-
           {/* ── 1-Click Instant Demo Login (Prominent & Glowing) ── */}
-          <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-indigo-500/10 to-primary/5 p-4 shadow-md shadow-primary/5 space-y-2.5">
+          <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-indigo-500/10 to-primary/5 p-5 shadow-md shadow-primary/5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
                 <Sparkles className="h-4 w-4" />
@@ -187,7 +186,7 @@ function LoginPage() {
               type="button"
               onClick={handleInstantDemoLogin}
               disabled={loading}
-              className="w-full h-11 text-sm font-semibold shadow-md shadow-primary/25 transition-all hover:scale-[1.01]"
+              className="w-full h-12 text-base font-semibold rounded-xl shadow-md shadow-primary/25 transition-all hover:scale-[1.01]"
             >
               {demoProgress ? (
                 <div className="flex items-center gap-2">
@@ -210,7 +209,7 @@ function LoginPage() {
               <div className="w-full border-t border-border/80" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-muted-foreground font-medium">
+              <span className="bg-card px-3 text-muted-foreground font-medium">
                 Or sign in with email
               </span>
             </div>
@@ -218,8 +217,8 @@ function LoginPage() {
 
           {/* Standard Sign-In Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs font-medium text-foreground">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-semibold text-foreground">
                 Email address
               </Label>
               <Input
@@ -231,13 +230,13 @@ function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
-                className="h-10 text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                className="h-12 text-base px-4 rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-primary"
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-xs font-medium text-foreground">
+                <Label htmlFor="password" className="text-sm font-semibold text-foreground">
                   Password
                 </Label>
               </div>
@@ -250,14 +249,14 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
-                className="h-10 text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                className="h-12 text-base px-4 rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-primary"
               />
             </div>
 
             <Button
               type="submit"
               variant="outline"
-              className="h-10 w-full font-medium shadow-xs border-border/80 hover:bg-muted/50"
+              className="h-12 w-full text-base font-semibold rounded-xl shadow-xs border-border/80 hover:bg-muted/50"
               disabled={loading}
             >
               {loading && !demoProgress ? (

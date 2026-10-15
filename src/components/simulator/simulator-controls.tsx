@@ -20,6 +20,8 @@ import { formatMoney } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { SimulatorControls } from "@/lib/api/simulationApi";
 import type { ChaosStressTestResult } from "@/types";
+import { getStoredBusiness } from "@/lib/api/authApi";
+import { isDemoAccount } from "@/lib/crossPageState";
 
 interface SimulatorControlsProps {
   controls: SimulatorControls;
@@ -60,6 +62,9 @@ export function SimulatorControlPanel({
   const isFlagship = controls.customerPaymentDelayDays === 16 && !chaosStressTestResult?.isStressTestActive;
   const isBaseline = controls.customerPaymentDelayDays === 0 && !chaosStressTestResult?.isStressTestActive;
 
+  const storedBiz = typeof window !== "undefined" ? getStoredBusiness() : null;
+  const isDemo = isDemoAccount(storedBiz);
+
   return (
     <Card className="shadow-xs border-border/70 bg-card rounded-xl overflow-hidden">
       <CardContent className="p-3 sm:p-4 space-y-3">
@@ -82,40 +87,51 @@ export function SimulatorControlPanel({
             >
               Normal Baseline
             </Button>
-            <Button
-              type="button"
-              variant={isFlagship ? "default" : "outline"}
-              size="sm"
-              onClick={() => onSelectPreset?.("flagship")}
-              className={cn(
-                "h-8 text-xs font-medium transition-all",
-                isFlagship
-                  ? "shadow-xs bg-primary text-primary-foreground font-semibold"
-                  : "border-border/70 text-foreground hover:border-primary/40",
-              )}
-            >
-              Apex Flagship (+16d Delay)
-            </Button>
+            {isDemo && (
+              <Button
+                type="button"
+                variant={isFlagship ? "default" : "outline"}
+                size="sm"
+                onClick={() => onSelectPreset?.("flagship")}
+                className={cn(
+                  "h-8 text-xs font-medium transition-all",
+                  isFlagship
+                    ? "shadow-xs bg-primary text-primary-foreground font-semibold"
+                    : "border-border/70 text-foreground hover:border-primary/40",
+                )}
+              >
+                Apex Flagship (+16d Delay)
+              </Button>
+            )}
 
-            {onChaosStressTest && (
+            {chaosStressTestResult?.isStressTestActive ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onExitChaosStressTest}
+                className="h-8 text-xs font-semibold transition-colors border-red-400 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40 gap-1.5 shadow-xs"
+              >
+                <X className="h-3.5 w-3.5" />
+                <span>Disable Stress-Test</span>
+                <span className="sr-only">Run Chaos Stress-Test (+5d)</span>
+              </Button>
+            ) : onChaosStressTest ? (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={onChaosStressTest}
                 disabled={isRunning || isChaosTesting}
-                className={cn(
-                  "h-8 text-xs font-medium transition-colors border-purple-200 text-purple-700 hover:bg-purple-50",
-                  chaosStressTestResult?.isStressTestActive && "bg-purple-100 font-bold border-purple-400",
-                )}
+                className="h-8 text-xs font-medium transition-colors border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950/40"
               >
-                <Zap className="h-3.5 w-3.5 mr-1 fill-purple-600 text-purple-600" aria-hidden />
+                <Zap className="h-3.5 w-3.5 mr-1 fill-purple-600 text-purple-600 dark:fill-purple-400 dark:text-purple-400" aria-hidden />
                 <span>
                   {isChaosTesting ? "Calculating Shock…" : "Chaos Stress-Test (+5d Shock)"}
                 </span>
                 <span className="sr-only">Run Chaos Stress-Test (+5d)</span>
               </Button>
-            )}
+            ) : null}
 
             <Button
               variant="ghost"
@@ -208,13 +224,14 @@ export function SimulatorControlPanel({
               </div>
               {onExitChaosStressTest && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={onExitChaosStressTest}
-                  className="h-6 px-2 text-xs text-purple-700 hover:text-purple-900 hover:bg-purple-100/60 font-medium"
+                  className="h-7 px-3 text-xs border-red-400 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40 font-semibold gap-1.5 shadow-xs"
                 >
-                  <X className="h-3 w-3 mr-1" />
-                  Exit
+                  <X className="h-3.5 w-3.5" />
+                  <span>Disable Stress-Test</span>
+                  <span className="sr-only">Exit</span>
                 </Button>
               )}
             </div>

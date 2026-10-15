@@ -28,6 +28,8 @@ import { MoneyAmount } from "@/components/shared/money-amount";
 import { DateLabel } from "@/components/shared/date-label";
 import { RiskIndicator } from "@/components/shared/risk-indicator";
 import { CashFlowChart } from "@/components/charts/cash-flow-chart";
+import { getStoredBusiness } from "@/lib/api/authApi";
+import { isDemoAccount } from "@/lib/crossPageState";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -157,6 +159,9 @@ function DashboardPage() {
       : "No payment bottlenecks or reserve breaches projected over the next 30 days.";
 
   const [detailsExpanded, setDetailsExpanded] = useState(false);
+
+  const storedBiz = typeof window !== "undefined" ? getStoredBusiness() : null;
+  const isDemo = isDemoAccount(storedBiz);
 
   return (
     <div className="space-y-6">
@@ -318,28 +323,47 @@ function DashboardPage() {
                 #1 Urgent Action Needed
               </span>
               <Badge className="bg-amber-600 text-white text-[10px] uppercase font-bold shadow-xs">
-                Action Required
+                {hasRisk ? "Action Required" : "Healthy"}
               </Badge>
             </div>
             <CardTitle className="text-sm font-semibold mt-1 text-foreground leading-snug">
               {hasRisk
-                ? "Cash drops to -₹2,500 on 25 Oct because Shop Lease is due 11 days before Urban Threads pays ₹8,000"
+                ? isDemo
+                  ? "Cash drops to -₹2,500 on 25 Oct because Shop Lease is due 11 days before Urban Threads pays ₹8,000"
+                  : primaryRiskTitle
                 : "Cash flows are balanced. No immediate action required."}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-1">
             <p className="text-[11px] text-muted-foreground leading-relaxed mb-2.5">
-              A timing mismatch between incoming receipts and committed lease payments creates a temporary deficit.
+              {hasRisk
+                ? isDemo
+                  ? "A timing mismatch between incoming receipts and committed lease payments creates a temporary deficit."
+                  : primaryRiskDescription
+                : "No cash reserve breaches detected. Add invoices and purchase orders to monitor real-time cycle health."}
             </p>
-            <Button
-              size="sm"
-              asChild
-              className="w-full gap-1.5 font-medium shadow-xs h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/95"
-            >
-              <Link to="/simulator">
-                Fix Timing in Ripple Simulator →
-              </Link>
-            </Button>
+            {hasRisk ? (
+              <Button
+                size="sm"
+                asChild
+                className="w-full gap-1.5 font-medium shadow-xs h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/95"
+              >
+                <Link to="/simulator">
+                  Fix Timing in Ripple Simulator →
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                asChild
+                className="w-full gap-1.5 font-medium shadow-xs h-8 text-xs"
+              >
+                <Link to="/invoices">
+                  Create Invoice or Bill →
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

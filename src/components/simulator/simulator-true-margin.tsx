@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/formatters";
 import {
   TrendingDown,
@@ -11,6 +12,9 @@ import {
   ChevronDown,
   ChevronUp,
   Percent,
+  SlidersHorizontal,
+  Calculator,
+  Microscope,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TrueMarginData } from "@/types";
@@ -20,7 +24,7 @@ interface SimulatorTrueMarginCardProps {
 }
 
 export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps) {
-  const [isBreakdownOpen, setIsBreakdownOpen] = useState(true);
+  const [detailedMode, setDetailedMode] = useState(false);
 
   const {
     revenuePaise,
@@ -54,22 +58,34 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
               </CardDescription>
             </div>
           </div>
-          <Badge
-            variant="outline"
-            className={
-              isNegative
-                ? "bg-destructive/10 text-destructive border-destructive/20 font-semibold text-xs"
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant={detailedMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => setDetailedMode((v) => !v)}
+              className="h-7 px-2.5 text-xs font-semibold gap-1.5 shadow-xs"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span>Detailed Analysis Mode: {detailedMode ? "ON" : "OFF"}</span>
+            </Button>
+            <Badge
+              variant="outline"
+              className={
+                isNegative
+                  ? "bg-destructive/10 text-destructive border-destructive/20 font-semibold text-xs"
+                  : isSevere
+                    ? "bg-warning/15 text-warning-foreground border-warning/30 font-semibold text-xs"
+                    : "bg-success/10 text-success border-success/30 font-semibold text-xs"
+              }
+            >
+              {isNegative
+                ? "Negative Margin Risk"
                 : isSevere
-                  ? "bg-warning/15 text-warning-foreground border-warning/30 font-semibold text-xs"
-                  : "bg-success/10 text-success border-success/30 font-semibold text-xs"
-            }
-          >
-            {isNegative
-              ? "Negative Margin Risk"
-              : isSevere
-                ? "Profit Eaten by Delays"
-                : "Healthy Margin"}
-          </Badge>
+                  ? "Profit Eaten by Delays"
+                  : "Healthy Margin"}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3.5 px-4 sm:px-5 pb-4">
@@ -220,6 +236,65 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
             )}
           </div>
         </div>
+
+        {/* Detailed Analysis Mode: Deep Mathematical Derivations & Penalty Rates */}
+        {detailedMode && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3.5 space-y-3 text-xs">
+            <div className="flex items-center gap-2 text-primary font-semibold border-b border-primary/20 pb-2">
+              <Calculator className="h-4 w-4" />
+              <span>Mathematical Formulations & Contagion Derivations</span>
+            </div>
+
+            {/* Formulas */}
+            <div className="space-y-1.5 font-mono text-[11px] bg-background/80 p-2.5 rounded border border-border/60">
+              <p className="text-foreground">
+                <strong>1. Paper Margin</strong> = Revenue ({formatMoney(revenuePaise)}) − Direct COGS ({formatMoney(directCogsPaise)}) = <strong>{formatMoney(paperMarginPaise)} ({paperMarginPercent}%)</strong>
+              </p>
+              <p className="text-destructive">
+                <strong>2. Contagion Loss</strong> = Lost Discount ({formatMoney(breakdown.lostDiscountPaise)}) + Halt Fees ({formatMoney(breakdown.supplierHaltFeesPaise)}) + Secondary SLA ({formatMoney(breakdown.slaPenaltiesPaise)}) + Float Drag ({formatMoney(breakdown.workingCapitalDragPaise)}) = <strong>-{formatMoney(totalContagionCostPaise)}</strong>
+              </p>
+              <p className="text-primary font-bold">
+                <strong>3. True Ripple Margin</strong> = Paper Margin − Contagion Loss = <strong>{formatMoney(trueRippleMarginPaise)} ({trueRippleMarginPercent}%)</strong>
+              </p>
+            </div>
+
+            {/* Exact Penalty Rates */}
+            <div className="space-y-1">
+              <p className="font-semibold text-foreground text-[11px] uppercase tracking-wider flex items-center gap-1">
+                <Microscope className="h-3.5 w-3.5 text-primary" />
+                Active Penalty Rate Breakdown:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="p-2 rounded bg-background/60 border border-border/50">
+                  <span className="font-medium text-foreground">Supplier Halt Fee:</span>
+                  <p className="text-muted-foreground mt-0.5">₹2,500/day Supplier Halt penalty begins Day 18 upon liquidity shortfall.</p>
+                </div>
+                <div className="p-2 rounded bg-background/60 border border-border/50">
+                  <span className="font-medium text-foreground">Secondary Customer SLA:</span>
+                  <p className="text-muted-foreground mt-0.5">₹3,000/day Secondary SLA breach penalty on delayed Metro Retail fulfillment.</p>
+                </div>
+                <div className="p-2 rounded bg-background/60 border border-border/50">
+                  <span className="font-medium text-foreground">Float Drag Rate:</span>
+                  <p className="text-muted-foreground mt-0.5">₹1,400/day Working-Capital Float Drag due to idle WIP and cash conversion gap.</p>
+                </div>
+                <div className="p-2 rounded bg-background/60 border border-border/50">
+                  <span className="font-medium text-foreground">Lost Early Discount:</span>
+                  <p className="text-muted-foreground mt-0.5">3% cash discount lost (₹3,600) due to inability to pay supplier on Day 18.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Keystone Multiplier Derivation */}
+            <div className="p-2.5 rounded bg-background/60 border border-border/50 text-[11px] space-y-1">
+              <span className="font-semibold text-foreground">Node-by-Node Fragility Multiplier Derivation:</span>
+              <p className="text-muted-foreground leading-relaxed">
+                • <strong>Apex Corp (INV-APEX)</strong>: ₹4,00,000 late payment exposes ₹80,00,000 downstream order commitments = <strong className="text-destructive">20.0x Keystone Fragility Multiplier</strong>.
+                <br />
+                • <strong>Kaveri Timber (PO-1)</strong>: ₹1,20,000 commitment halts ₹1,65,000 Metro Retail order = <strong className="text-amber-600 dark:text-amber-400">1.38x Contagion Multiplier</strong>.
+              </p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

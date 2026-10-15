@@ -39,7 +39,7 @@ export const business: Business = {
   currency: "INR",
   openingCashPaise: 1_000_000, // ₹10,000
   safetyThresholdPaise: 500_000, // ₹5,000 safety threshold
-  industry: "Apparel retail",
+  industry: "Apparel Manufacturing & Retail (The Supplier-Business-Customer Loop)",
   ownerName: "Demo Owner",
   ownerEmail: "owner@rupiclothing.in",
   phone: "+91 98200 54321",
@@ -81,7 +81,7 @@ export const suppliers: Supplier[] = [
     status: "active",
     leadTimeDays: 4,
     notes:
-      "Primary cotton yarn and greige fabric mill. High fabric consistency, requires advance before cutting.",
+      "UPFRONT PAYMENT REQUIREMENT: Mandates 14% upfront advance deposit (₹5,000) before yarn dyeing begins, plus delivery balance (₹30,000) before releasing fabric. Arrival strictly gates Cotton Kurti cutting for customer order #CO-1.",
     createdAt: dp(90),
     updatedAt: dp(2),
   },
@@ -100,7 +100,7 @@ export const suppliers: Supplier[] = [
     status: "active",
     leadTimeDays: 11,
     notes:
-      "Supplies premium European linen and rugged denim. Very dependable on-time delivery track record.",
+      "DELIVERY-GATED COMMITMENT: Supplies European linen and rugged denim. Payment due Net 45. Restock arrival on Day 11 is required to start assembly for customer Style Mart order #CO-2.",
     createdAt: dp(120),
     updatedAt: d(0),
   },
@@ -119,7 +119,7 @@ export const suppliers: Supplier[] = [
     status: "active",
     leadTimeDays: 7,
     notes:
-      "Artisanal natural vat dyeing and silk embroidery. Delays occur frequently in peak monsoon season.",
+      "UNRELIABLE CASH-ON-DELIVERY SUPPLIER: Requires full payment at pickup. Erratic delivery lead times (reliability 71%) create upstream timing contagion across downstream customer delivery commitments.",
     createdAt: dp(60),
     updatedAt: dp(3),
   },
@@ -138,7 +138,7 @@ export const suppliers: Supplier[] = [
     status: "archived",
     leadTimeDays: 14,
     notes:
-      "Former handloom Maheshwari silk partner. Transitioned to local cooperative in late 2025.",
+      "Former handloom Maheshwari silk partner. Transitioned to local cooperative in late 2025. Preserved for historical financial records.",
     createdAt: dp(365),
     updatedAt: dp(40),
   },
@@ -157,7 +157,8 @@ export const customers: Customer[] = [
     creditTermsDays: 15,
     outstandingPaise: 800_000, // ₹8,000 invoice
     status: "active",
-    notes: "Premier multi-designer boutique in central Bengaluru. Prefers net-15 terms.",
+    notes:
+      "DEFERRED CUSTOMER PAYMENT (NET-15): Receives finished Kurtis on Day 6, but contractually pays 15 days later on Day 21. The 17-day timing lag after Day 4 supplier payment creates an artificial cash deficit.",
   },
   {
     id: "cus_2",
@@ -171,7 +172,8 @@ export const customers: Customer[] = [
     creditTermsDays: 30,
     outstandingPaise: 1_450_000,
     status: "active",
-    notes: "High-volume fast casual retailer with seasonal collections.",
+    notes:
+      "DEFERRED CUSTOMER PAYMENT (NET-30): Fast-casual apparel chain. Receives order #CO-2 on Day 9; scheduled payment Day 39. Past invoice INV-1999 (₹1,300) is 5 days overdue, locking working capital.",
   },
   {
     id: "cus_3",
@@ -185,7 +187,8 @@ export const customers: Customer[] = [
     creditTermsDays: 30,
     outstandingPaise: 0,
     status: "active",
-    notes: "Flagship concept store in Central Delhi with perfect prompt payment record.",
+    notes:
+      "Flagship concept store in Central Delhi with 100% prompt settlement record upon receiving goods. Ideal candidate for early invoice discounting.",
   },
   {
     id: "cus_4",
@@ -225,7 +228,7 @@ export const products: Product[] = [
     name: "Cotton Kurti",
     category: "Kurtis & Tunics",
     description:
-      "Breathable 100% handspun cotton kurti with traditional block print and side slits.",
+      "100% handspun cotton kurti. Raw fabric delivery from Shree Textiles (PO-1) on Day 4 strictly gates batch cutting for Urban Threads order #CO-1 (Day 6).",
     unitOfMeasure: "pieces",
     preferredSupplierId: "sup_1",
     currency: "INR",
@@ -240,7 +243,7 @@ export const products: Product[] = [
     name: "Denim Jacket",
     category: "Outerwear",
     description:
-      "Tailored rugged denim jacket with antiqued brass buttons and reinforced stitching.",
+      "Tailored rugged denim jacket. Assembly depends on Mehta Fabrics denim delivery to fulfill Style Mart order #CO-2.",
     unitOfMeasure: "pieces",
     preferredSupplierId: "sup_2",
     currency: "INR",
@@ -363,7 +366,8 @@ export const purchaseOrders: PurchaseOrder[] = [
     expectedDeliveryDate: d(4),
     paymentTermsDays: 30,
     paymentDueDate: d(34),
-    notes: "100% fine cotton yarn dyed kurtis with standard pre-shrink wash.",
+    notes:
+      "SUPPLIER UPFRONT COMMITMENT: ₹5,000 advance paid on Day -2 to begin spinning. Remaining balance ₹30,000 due Day 4 upon delivery before fabric is released. Gating inventory for Urban Threads order #CO-1.",
     receivedQuantity: 0,
   },
   {
@@ -390,7 +394,7 @@ export const purchaseOrders: PurchaseOrder[] = [
     expectedDeliveryDate: d(11),
     paymentTermsDays: 45,
     paymentDueDate: d(56),
-    notes: "Pure linen premium shirts with pearl buttons.",
+    notes: "Linen shirt lot from Mehta Fabrics. Net 45 payment terms. Restock arrival on Day 11 gates Style Mart collection.",
     receivedQuantity: 0,
   },
   {
@@ -417,7 +421,7 @@ export const purchaseOrders: PurchaseOrder[] = [
     expectedDeliveryDate: d(3),
     paymentTermsDays: 15,
     paymentDueDate: d(18),
-    notes: "Silk embroidered collection with zari borders.",
+    notes: "Silk embroidered collection with natural dye. ₹2,000 advance deposit paid; ₹6,000 balance due on Day 18.",
     receivedQuantity: 0,
   },
 ];
@@ -552,6 +556,8 @@ export const invoices: Invoice[] = [
     status: "sent",
     issueDate: d(6),
     dueDate: d(21), // expected payment Day 21
+    notes:
+      "CUSTOMER CREDIT LAG (NET-15): Finished kurtis delivered Day 6; customer pays 15 days later on Day 21. Arrival is 17 days after Day 4 supplier payment, creating the cash shortfall.",
   },
   {
     id: "inv_2002",
@@ -564,6 +570,8 @@ export const invoices: Invoice[] = [
     status: "sent",
     issueDate: d(9),
     dueDate: d(39),
+    notes:
+      "CUSTOMER CREDIT LAG (NET-30): Wholesale denim jackets delivered Day 9; payment due Day 39. Managing terms independently exposes working capital to buyer delays.",
   },
   {
     id: "inv_1998",
@@ -586,7 +594,8 @@ export const invoices: Invoice[] = [
     status: "overdue",
     issueDate: dp(35),
     dueDate: dp(5), // 5 days overdue (1-7 days bucket)
-    notes: "Follow up required; credit terms net-30 elapsed.",
+    notes:
+      "OVERDUE RECEIVABLE: Style Mart invoice is 5 days overdue. Uncollected customer cash strains ability to fund upcoming supplier obligations.",
   },
   {
     id: "inv_1995",
@@ -660,7 +669,8 @@ export const invoices: Invoice[] = [
     status: "partially_paid",
     issueDate: dp(2),
     dueDate: d(34),
-    notes: "Cotton Kurti bulk fabric lot. Advance settled; balance net-30 upon delivery.",
+    notes:
+      "OUTGOING SUPPLIER COMMITMENT: ₹30,000 delivery balance owed to Shree Textiles. Must be paid before raw cotton lot is released to production floor.",
   },
   {
     id: "inv_bill_102",
@@ -874,7 +884,7 @@ export const cashFlowEvents: CashFlowEvent[] = [
   {
     id: "cfe_1",
     type: "supplier_payment",
-    label: "Advance to Shree Textiles (PO-1)",
+    label: "Supplier Upfront Advance — Shree Textiles (PO-1)",
     counterpartyName: "Shree Textiles",
     direction: "outgoing",
     amountPaise: 500_000,
@@ -882,6 +892,7 @@ export const cashFlowEvents: CashFlowEvent[] = [
     relatedPurchaseOrderId: "po_1",
     isProjected: false,
     status: "completed",
+    riskNote: "Supplier upfront deposit required before yarn spinning commences",
   },
   {
     id: "cfe_today",
@@ -899,7 +910,7 @@ export const cashFlowEvents: CashFlowEvent[] = [
   {
     id: "cfe_2",
     type: "supplier_payment",
-    label: "Balance to Shree Textiles (PO-1 delivery)",
+    label: "Supplier Delivery Commitment — Shree Textiles (PO-1)",
     counterpartyName: "Shree Textiles",
     direction: "outgoing",
     amountPaise: 3_000_000,
@@ -907,24 +918,26 @@ export const cashFlowEvents: CashFlowEvent[] = [
     relatedPurchaseOrderId: "po_1",
     isProjected: true,
     status: "scheduled",
-    riskNote: "Critical outflow triggering cash deficit",
+    riskNote:
+      "TIMING SHORTFALL: ₹30,000 delivery settlement due Day 4 before inventory is released. Precedes customer payment by 17 days.",
   },
   {
     id: "cfe_4",
     type: "rent",
-    label: "Retail showroom rent",
+    label: "Retail Showroom Rent (Fixed Commitment)",
     counterpartyName: "Metro Commercial Properties",
     direction: "outgoing",
     amountPaise: 1_200_000,
     date: d(5),
     isProjected: true,
     status: "scheduled",
-    riskNote: "Fixed non-negotiable monthly commitment",
+    riskNote:
+      "Fixed operating commitment due Day 5. Combined with supplier balance, creates ₹2,500 cash shortfall.",
   },
   {
     id: "cfe_5",
     type: "customer_payment",
-    label: "Style Mart — INV-1999 (overdue recovery)",
+    label: "Style Mart — INV-1999 (Overdue Customer Recovery)",
     counterpartyName: "Style Mart",
     direction: "incoming",
     amountPaise: 130_000,
@@ -932,7 +945,8 @@ export const cashFlowEvents: CashFlowEvent[] = [
     relatedInvoiceId: "inv_1999",
     isProjected: true,
     status: "overdue",
-    riskNote: "5 days overdue, follow-up payment promised",
+    riskNote:
+      "Deferred customer payment: 5 days overdue under Net-30 terms, trapping working capital",
   },
   {
     id: "cfe_7",
@@ -983,7 +997,7 @@ export const cashFlowEvents: CashFlowEvent[] = [
   {
     id: "cfe_3",
     type: "customer_payment",
-    label: "Urban Threads — INV-2001",
+    label: "Expected Customer Payment — Urban Threads (INV-2001)",
     counterpartyName: "Urban Threads Boutique",
     direction: "incoming",
     amountPaise: 800_000,
@@ -991,6 +1005,8 @@ export const cashFlowEvents: CashFlowEvent[] = [
     relatedInvoiceId: "inv_2001",
     isProjected: true,
     status: "scheduled",
+    riskNote:
+      "Customer receives goods Day 6 but pays Day 21 (Net-15 terms). Too late to fund Day 4 supplier commitment.",
   },
   {
     id: "cfe_11",
@@ -1163,8 +1179,9 @@ export const cashFlowEvents: CashFlowEvent[] = [
 export const simulationScenarios: SimulationScenario[] = [
   {
     id: "sim_shree_delay",
-    name: "Extend Shree Textiles PO-1 by 7 Days",
-    description: "Move the ₹30,000 balance payment from Day 4 to Day 11 on net-7 terms.",
+    name: "Coordinate Supplier Obligation: Auto-Phase Shree Textiles (+7d)",
+    description:
+      "Align outgoing supplier payment with business operating cycle: Shift ₹30,000 balance from Day 4 to Day 11 on agreed phased terms, eliminating the Day 5 cash deficit.",
     targetEventId: "cfe_2",
     changeType: "delay_payment",
     changeMagnitude: 7,
@@ -1172,9 +1189,9 @@ export const simulationScenarios: SimulationScenario[] = [
   },
   {
     id: "sim_urban_discount",
-    name: "Accelerate Urban Threads Collection (-11 Days)",
+    name: "Coordinate Customer Inflow: Prompt Payment Early Discount (-11d)",
     description:
-      "Offer 2% prompt-payment discount on INV-2001 (₹8,000) to collect on Day 10 instead of Day 21.",
+      "Accelerate incoming customer payment: Offer Urban Threads a 2% prompt discount on INV-2001 to collect ₹7,840 on Day 10 instead of Day 21, closing the 17-day timing gap.",
     targetEventId: "cfe_3",
     changeType: "advance_payment",
     changeMagnitude: -11,
@@ -1182,9 +1199,9 @@ export const simulationScenarios: SimulationScenario[] = [
   },
   {
     id: "sim_stylemart_delay",
-    name: "Style Mart Delayed Payment (+30 Days)",
+    name: "Contagion Stress-Test: Customer Payment Delay (+30d)",
     description:
-      "Stress test scenario where Style Mart defers INV-2002 (₹13,200) by an additional 30 days.",
+      "Downstream shock propagation: Simulates Style Mart delaying INV-2002 by 30 days. Traces how independent customer delays propagate upstream into supplier payment breaches.",
     targetEventId: "cfe_6",
     changeType: "delay_payment",
     changeMagnitude: 30,
@@ -1372,13 +1389,13 @@ export function buildDetailedForecast(
       let assumptionsText = "";
       if (scenario.id === "sim_shree_delay") {
         assumptionsText =
-          "Shree Textiles approves a 7-day payment delay on PO-1 delivery balance. Eliminates immediate Day 5 cash deficit.";
+          "Coordinating with Shree Textiles to shift the ₹30,000 delivery balance to Day 11. Eliminates immediate Day 5 cash deficit while protecting raw fabric flow.";
       } else if (scenario.id === "sim_urban_discount") {
         assumptionsText =
-          "Urban Threads accepts a 2% early-settlement incentive (₹160 discount), accelerating ₹7,840 net inflow to Day 10.";
+          "Coordinating with Urban Threads: A 2% early-settlement incentive (₹160 discount) pulls forward ₹7,840 net cash inflow to Day 10, closing the 17-day timing gap.";
       } else if (scenario.id === "sim_stylemart_delay") {
         assumptionsText =
-          "Stress test simulating extended buyer delay: Style Mart defers INV-2002 payment by 30 days.";
+          "Contagion Stress-Test: Style Mart defers INV-2002 by 30 days. Traces how uncoordinated customer delays propagate upstream to jeopardize supplier obligations.";
       }
 
       scenarioData = {
@@ -1439,9 +1456,9 @@ export const riskAlerts: RiskAlert[] = [
   {
     id: "risk_1",
     severity: "critical",
-    title: "Cash shortfall around Day 5",
+    title: "Supplier-Customer Timing Gap: Cash Shortfall on Day 5",
     description:
-      "Paying the ₹30,000 balance to Shree Textiles on delivery (Day 4) plus shop rent (Day 5) pushes projected cash below zero before INV-2001 is paid on Day 21.",
+      "THE TIMING GAP: Supplier Shree Textiles requires ₹30,000 on delivery (Day 4) plus ₹12,000 showroom rent (Day 5), while customer Urban Threads pays their ₹8,000 invoice 15 days later on Day 21. Managing these relationships independently creates an artificial cash deficit of -₹2,500.",
     relatedEntityId: "po_1",
     relatedEntityType: "purchase_order",
     createdAt: d(0),
@@ -1450,9 +1467,9 @@ export const riskAlerts: RiskAlert[] = [
   {
     id: "risk_2",
     severity: "warning",
-    title: "INV-1999 is 5 days overdue",
+    title: "Deferred Customer Payment: Style Mart INV-1999 Overdue by 5 Days",
     description:
-      "Style Mart owes ₹1,300 that was due 5 days ago. A follow-up reminder is recommended.",
+      "Customer credit lag: Style Mart received goods 35 days ago but has not settled ₹1,300. Uncoordinated customer delays trap working capital needed for upcoming supplier obligations.",
     relatedEntityId: "inv_1999",
     relatedEntityType: "invoice",
     createdAt: d(0),
@@ -1461,9 +1478,9 @@ export const riskAlerts: RiskAlert[] = [
   {
     id: "risk_3",
     severity: "warning",
-    title: "Cotton Kurti below reorder point",
+    title: "Inventory Timing Dependency: PO-1 Delivery Gates Urban Threads Order",
     description:
-      "Only 12 units on hand against a reorder point of 25. The 100-unit replenishment arrives Day 4 — a delivery delay would risk stockouts for the Day 6 sale.",
+      "Inventory prerequisite: Only 12 Cotton Kurtis on hand (10 reserved). If Shree Textiles delays delivery past Day 4, customer order #CO-1 cannot ship on Day 6, causing stockout penalties.",
     relatedEntityId: "prd_1",
     relatedEntityType: "product",
     createdAt: d(0),
@@ -1472,10 +1489,10 @@ export const riskAlerts: RiskAlert[] = [
   {
     id: "risk_4",
     severity: "info",
-    title: "Khan Dye House reliability dipping",
+    title: "Supplier Upfront Requirement: Advance Before Inventory",
     description:
-      "Reliability score of 71 is the lowest among your suppliers. Consider confirming lead times before the next dye order.",
-    relatedEntityId: "sup_3",
+      "Commitment exposure: Shree Textiles requires advance deposits before weaving starts. Independent management exposes operating cash to sudden supplier credit term changes.",
+    relatedEntityId: "sup_1",
     relatedEntityType: "supplier",
     createdAt: d(0),
     acknowledged: true,
@@ -1485,27 +1502,27 @@ export const riskAlerts: RiskAlert[] = [
 export const recommendations: Recommendation[] = [
   {
     id: "rec_1",
-    title: "Request a 7-day extension on the Shree Textiles balance",
+    title: "Coordinate Outgoing Commitment: Auto-Phase Shree Textiles Balance (+7d)",
     rationale:
-      "Moving the ₹30,000 payment from Day 4 to Day 11 keeps projected cash positive until INV-2001 lands on Day 21.",
+      "Negotiate shifting the ₹30,000 payment from Day 4 to Day 11. Aligns the outgoing supplier obligation closer to downstream customer collections, preventing the Day 5 cash shortfall.",
     impactPaise: 3_000_000,
     priority: "high",
     relatedEntityId: "po_1",
   },
   {
     id: "rec_2",
-    title: "Send a payment reminder to Style Mart",
+    title: "Coordinate Incoming Payment: Offer 2% Early-Payment Discount to Urban Threads (-11d)",
     rationale:
-      "INV-1999 (₹1,300) is 5 days overdue. Early reminders typically halve late-payment duration.",
-    impactPaise: 130_000,
-    priority: "medium",
-    relatedEntityId: "inv_1999",
+      "Incentivize Urban Threads to settle invoice INV-2001 on Day 10 instead of Day 21. Pulling forward ₹7,840 closes the 17-day timing gap and covers operating expenses without debt.",
+    impactPaise: 800_000,
+    priority: "high",
+    relatedEntityId: "inv_2001",
   },
   {
     id: "rec_3",
-    title: "Offer Urban Threads a 2% early-payment discount",
+    title: "Synchronize Loop via Split-Escrow: Route Customer Receivable to Supplier PO",
     rationale:
-      "Collecting INV-2001 on Day 10 instead of Day 21 would fully cover the Day 4–5 outflows and remove the shortfall.",
+      "Link Urban Threads' incoming customer receivable directly to Shree Textiles' raw material procurement, coordinating incoming and outgoing obligations automatically.",
     impactPaise: 800_000,
     priority: "high",
     relatedEntityId: "inv_2001",

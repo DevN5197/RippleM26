@@ -135,8 +135,8 @@ export function SimulatorChart({
 
   return (
     <div className="space-y-2">
-      {/* Chart Canvas: compact 260px height for zero-scroll cockpit */}
-      <div className="h-[250px] sm:h-[260px] w-full" role="img" aria-label={ariaLabel}>
+      {/* Chart Canvas: enlarged 360-390px height for clear projection visibility */}
+      <div className="h-[360px] sm:h-[390px] w-full" role="img" aria-label={ariaLabel}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 8, right: 12, left: -4, bottom: 0 }}>
             <defs>
@@ -160,7 +160,7 @@ export function SimulatorChart({
             <XAxis
               dataKey="date"
               tickFormatter={(iso: string) => format(parseISO(iso), "d MMM")}
-              tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+              tick={{ fontSize: 13, fill: "var(--color-muted-foreground)" }}
               tickLine={false}
               axisLine={false}
               minTickGap={32}
@@ -168,10 +168,10 @@ export function SimulatorChart({
 
             <YAxis
               tickFormatter={(v: number) => formatMoneyCompact(Math.round(v * 100))}
-              tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+              tick={{ fontSize: 13, fill: "var(--color-muted-foreground)" }}
               tickLine={false}
               axisLine={false}
-              width={56}
+              width={64}
               domain={[minValue - padding, maxValue + padding]}
             />
 
@@ -203,9 +203,9 @@ export function SimulatorChart({
               label={{
                 value: "₹5,000 Safety Buffer",
                 position: "insideTopRight",
-                fontSize: 10,
+                fontSize: 11,
                 fill: "var(--color-muted-foreground)",
-                fontWeight: 500,
+                fontWeight: 600,
               }}
             />
 
@@ -215,7 +215,7 @@ export function SimulatorChart({
                 dataKey="baseline"
                 name="baseline"
                 stroke="var(--color-primary)"
-                strokeWidth={1.5}
+                strokeWidth={3}
                 fill="url(#sim-baselineFill)"
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0, fill: "var(--color-primary)" }}
@@ -228,7 +228,7 @@ export function SimulatorChart({
                 dataKey="scenario"
                 name="scenario"
                 stroke="var(--color-warning)"
-                strokeWidth={2}
+                strokeWidth={3}
                 strokeDasharray={view === "scenario" ? undefined : "5 3"}
                 fill="url(#sim-scenarioFill)"
                 dot={false}
