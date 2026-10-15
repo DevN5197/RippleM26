@@ -42,6 +42,12 @@ import type {
   ChaosStressTestResult,
 } from "@/types";
 
+import {
+  simulatorStore,
+  DEFAULT_CONTROLS,
+  FLAGSHIP_CONTROLS,
+} from "@/lib/simulatorStore";
+
 // ─── Validation ───────────────────────────────────────────────────────────────
 
 interface SimulatorSearchParams {
@@ -78,17 +84,6 @@ export const Route = createFileRoute("/_app/simulator")({
   ),
 });
 
-// ─── Default controls ─────────────────────────────────────────────────────────
-
-const DEFAULT_CONTROLS: SimulatorControls = {
-  supplierDeliveryDelayDays: 0,
-  customerPaymentDelayDays: 0,
-  customerPaymentAmountPaise: null, // null = use seed default
-  supplierPaymentAmountPaise: null,
-  orderQuantityMultiplier: 1.0,
-  horizonDays: 30,
-};
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function SimulatorPage() {
@@ -99,15 +94,45 @@ function SimulatorPage() {
   const [initCustomerRupees, setInitCustomerRupees] = useState("8000");
   const [initSupplierRupees, setInitSupplierRupees] = useState("5000");
 
-  const [controls, setControls] = useState<SimulatorControls>(DEFAULT_CONTROLS);
-  const [result, setResult] = useState<SimulatorResult | null>(null);
+  const [controls, setControlsState] = useState<SimulatorControls>(
+    () => simulatorStore.getState().controls,
+  );
+  const [result, setResult] = useState<SimulatorResult | null>(
+    () => simulatorStore.getState().result,
+  );
   const [error, setError] = useState<string | null>(null);
   const [chartView, setChartView] = useState<ChartView>("both");
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [scenarioName, setScenarioName] = useState("");
 
+  const setControls = useCallback(
+    (c: SimulatorControls | ((prev: SimulatorControls) => SimulatorControls)) => {
+      setControlsState((prev) => {
+        const next = typeof c === "function" ? c(prev) : c;
+        simulatorStore.setControls(next);
+        return next;
+      });
+    },
+    [],
+  );
+
+  // Subscribe to external store changes (e.g. from Insights AI chat)
+  useEffect(() => {
+    const unsub = simulatorStore.subscribe((state) => {
+      setControlsState((prev) => {
+        if (JSON.stringify(prev) !== JSON.stringify(state.controls)) {
+          return state.controls;
+        }
+        return prev;
+      });
+    });
+    return unsub;
+  }, []);
+
   // ── Features A, C, D states ──
-  const [chaosResult, setChaosResult] = useState<ChaosStressTestResult | null>(null);
+  const [chaosResult, setChaosResult] = useState<ChaosStressTestResult | null>(
+    () => simulatorStore.getState().chaosResult,
+  );
   const [inspectNode, setInspectNode] = useState<SimulatorTimelineNode | null>(null);
   const [isInspectOpen, setIsInspectOpen] = useState(false);
   const [autoPhasePreview, setAutoPhasePreview] = useState<AutoPhasePreview | null>(null);
@@ -120,11 +145,13 @@ function SimulatorPage() {
     mutationFn: (c: SimulatorControls) => simulatorApi.simulate(c),
     onSuccess: (data) => {
       setResult(data);
+      simulatorStore.setResult(data);
       setError(null);
     },
     onError: (err: Error) => {
       setError(err.message);
       setResult(null);
+      simulatorStore.setResult(null);
       toast.error("Simulation failed", { description: err.message });
     },
   });
@@ -134,8 +161,10 @@ function SimulatorPage() {
     mutationFn: () => simulatorApi.runChaosStressTest(controls),
     onSuccess: (data) => {
       setChaosResult(data);
+      simulatorStore.setChaosResult(data);
       if (data.stressedResult) {
         setResult(data.stressedResult);
+        simulatorStore.setResult(data.stressedResult);
       }
       toast.success("Chaos Stress-Test Applied (+5d shock)", {
         description: `Most fragile node identified: ${data.mostFragileNodeLabel} (${data.mostFragileMultiplier}x multiplier)`,
@@ -148,6 +177,7 @@ function SimulatorPage() {
 
   const handleExitChaos = useCallback(() => {
     setChaosResult(null);
+    simulatorStore.setChaosResult(null);
     runMutation.mutate(controls);
     toast.info("Returned to baseline scenario");
   }, [controls, runMutation]);
@@ -181,6 +211,7 @@ function SimulatorPage() {
     onSuccess: () => {
       setIsAutoPhaseOpen(false);
       setIsInspectOpen(false);
+      simulatorStore.applyAutoPhase();
       runMutation.mutate(controls);
       void queryClient.invalidateQueries({ queryKey: ["simulator"] });
       toast.success("Auto-Phase Inventory Applied", {
@@ -222,6 +253,7 @@ function SimulatorPage() {
     onSuccess: () => {
       setIsSplitEscrowOpen(false);
       setIsInspectOpen(false);
+      simulatorStore.applySplitEscrow();
       runMutation.mutate(controls);
       void queryClient.invalidateQueries({ queryKey: ["simulator"] });
       toast.success("Tri-Party Split-Escrow Locked", {
@@ -238,6 +270,7 @@ function SimulatorPage() {
   const revertRescuesMutation = useMutation({
     mutationFn: () => simulatorApi.revertAllRescues(),
     onSuccess: () => {
+      simulatorStore.revertRescues();
       runMutation.mutate(controls);
       void queryClient.invalidateQueries({ queryKey: ["simulator"] });
       toast.info("Scenario rescues reverted to baseline");
@@ -248,27 +281,27 @@ function SimulatorPage() {
   });
 
   // ── Preset Handler ──
-  const handleSelectPreset = useCallback((preset: "flagship" | "baseline") => {
-    if (preset === "flagship") {
-      setControls({
-        supplierDeliveryDelayDays: 0,
-        customerPaymentDelayDays: 16,
-        customerPaymentAmountPaise: 50_000_000, // ₹5,00,000 Apex Corp
-        supplierPaymentAmountPaise: 12_000_000, // ₹1,20,000 Kaveri Timber
-        orderQuantityMultiplier: 1.0,
-        horizonDays: 30,
-      });
-      setChaosResult(null);
-      toast.info("Loaded Apex Corp Flagship Scenario", {
-        description:
-          "₹5L Customer Receivable delayed +16d (Day 31); ₹1.2L Kaveri Timber payable Day 18.",
-      });
-    } else {
-      setControls(DEFAULT_CONTROLS);
-      setChaosResult(null);
-      toast.info("Reset to Baseline Scenario");
-    }
-  }, []);
+  const handleSelectPreset = useCallback(
+    (preset: "flagship" | "baseline") => {
+      if (preset === "flagship") {
+        const flagship = { ...FLAGSHIP_CONTROLS };
+        setControls(flagship);
+        simulatorStore.loadPreset("flagship");
+        setChaosResult(null);
+        toast.info("Loaded Apex Corp Flagship Scenario", {
+          description:
+            "₹5L Customer Receivable delayed +16d (Day 31); ₹1.2L Kaveri Timber payable Day 18.",
+        });
+      } else {
+        const base = { ...DEFAULT_CONTROLS };
+        setControls(base);
+        simulatorStore.loadPreset("baseline");
+        setChaosResult(null);
+        toast.info("Reset to Baseline Scenario");
+      }
+    },
+    [setControls],
+  );
 
   const handleInspectNode = useCallback((node: SimulatorTimelineNode) => {
     setInspectNode(node);

@@ -55,7 +55,7 @@ def simulate(
     events = db.query(CashFlowEvent).filter(CashFlowEvent.business_id == business.id).all()
     opening_cash = business.opening_cash_paise or 15_000_000 # default ₹1,50,000 for scenario
     rescues = _get_active_rescues(business.id, db)
-    return run_simulation(events, opening_cash, controls, rescues=rescues)
+    return run_simulation(events, opening_cash, controls, rescues=rescues, business=business)
 
 @router.post("/api/simulator/chaos-test")
 def chaos_stress_test(
@@ -70,7 +70,7 @@ def chaos_stress_test(
     events = db.query(CashFlowEvent).filter(CashFlowEvent.business_id == business.id).all()
     opening_cash = business.opening_cash_paise or 15_000_000
     rescues = _get_active_rescues(business.id, db)
-    stress_result = run_chaos_stress_test(events, opening_cash, controls, rescues=rescues)
+    stress_result = run_chaos_stress_test(events, opening_cash, controls, rescues=rescues, business=business)
 
     # Persist the stress test run audit
     stress_record = ScenarioStressTest(

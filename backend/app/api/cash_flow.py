@@ -77,7 +77,7 @@ def simulate(
 ):
     events = db.query(CashFlowEvent).filter(CashFlowEvent.business_id == business.id).all()
     opening_cash = business.opening_cash_paise or 1_000_000
-    result = run_simulation(events, opening_cash, controls)
+    result = run_simulation(events, opening_cash, controls, business=business)
     return result
 
 @router.post("/api/scenarios")

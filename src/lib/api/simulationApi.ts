@@ -4,6 +4,7 @@ import { db, delay, nextId } from "@/mocks/store";
 import { buildForecast, cashFlowEvents as seedEvents } from "@/mocks/data";
 import { toISODate } from "@/lib/formatters";
 import { addDays } from "date-fns";
+import { getStoredBusiness } from "@/lib/api/authApi";
 import type {
   SimulationScenario,
   SimulationResult,
@@ -288,117 +289,239 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
   const floatDrag = effectiveContagionDays * 140_000;
   const totalContagion = lostDiscount + haltFees + slaPenalties + floatDrag;
 
-  const mockTrueMargin = {
-    revenuePaise: 50_000_000,
-    directCogsPaise: 37_500_000,
-    paperMarginPaise: 12_500_000,
-    paperMarginPercent: 25.0,
-    contagionDays: effectiveContagionDays,
-    breakdown: {
-      lostDiscountPaise: lostDiscount,
-      supplierHaltFeesPaise: haltFees,
-      slaPenaltiesPaise: slaPenalties,
-      workingCapitalDragPaise: floatDrag,
-      floatFeePaise: 0,
-    },
-    totalContagionCostPaise: totalContagion,
-    trueRippleMarginPaise: 12_500_000 - totalContagion,
-    trueRippleMarginPercent: Math.round(((12_500_000 - totalContagion) / 50_000_000) * 10000) / 100,
-    explanation: `Paper Margin of 25% reduced by ₹${(totalContagion / 100).toLocaleString()} in ripple contagion to True Margin of ${Math.round(((12_500_000 - totalContagion) / 50_000_000) * 10000) / 100}%.`,
+  const currentBiz = typeof window !== "undefined" ? getStoredBusiness() : null;
+  const isDemo = !currentBiz || currentBiz.name === "Rupi Clothing" || currentBiz.id === "biz_1";
+  const bizName = currentBiz?.name || "Rupi Clothing";
+  const openingCashPaise = currentBiz?.openingCashPaise ?? 15_000_000;
+  const safetyBufferPaise = currentBiz?.safetyThresholdPaise ?? 5_000_000;
+
+  const mockTrueMargin = isDemo
+    ? {
+        revenuePaise: 50_000_000,
+        directCogsPaise: 37_500_000,
+        paperMarginPaise: 12_500_000,
+        paperMarginPercent: 25.0,
+        contagionDays: effectiveContagionDays,
+        breakdown: {
+          lostDiscountPaise: lostDiscount,
+          supplierHaltFeesPaise: haltFees,
+          slaPenaltiesPaise: slaPenalties,
+          workingCapitalDragPaise: floatDrag,
+          floatFeePaise: 0,
+        },
+        totalContagionCostPaise: totalContagion,
+        trueRippleMarginPaise: 12_500_000 - totalContagion,
+        trueRippleMarginPercent: Math.round(((12_500_000 - totalContagion) / 50_000_000) * 10000) / 100,
+        explanation: `Paper Margin of 25% reduced by ₹${(totalContagion / 100).toLocaleString()} in ripple contagion to True Margin of ${Math.round(((12_500_000 - totalContagion) / 50_000_000) * 10000) / 100}%.`,
+      }
+    : (controls.customerPaymentDelayDays > 0 || controls.customerPaymentAmountPaise || controls.supplierDeliveryDelayDays > 0 || controls.supplierPaymentAmountPaise)
+      ? {
+          revenuePaise: controls.customerPaymentAmountPaise ?? 10_000_000,
+          directCogsPaise: controls.supplierPaymentAmountPaise ?? 7_500_000,
+          paperMarginPaise: (controls.customerPaymentAmountPaise ?? 10_000_000) - (controls.supplierPaymentAmountPaise ?? 7_500_000),
+          paperMarginPercent: 25.0,
+          contagionDays: effectiveContagionDays,
+          breakdown: {
+            lostDiscountPaise: lostDiscount,
+            supplierHaltFeesPaise: haltFees,
+            slaPenaltiesPaise: slaPenalties,
+            workingCapitalDragPaise: floatDrag,
+            floatFeePaise: 0,
+          },
+          totalContagionCostPaise: totalContagion,
+          trueRippleMarginPaise: Math.max(0, ((controls.customerPaymentAmountPaise ?? 10_000_000) - (controls.supplierPaymentAmountPaise ?? 7_500_000)) - totalContagion),
+          trueRippleMarginPercent: Math.max(0, 25.0 - (effectiveContagionDays * 1.5)),
+          explanation: `Simulated scenario evaluated with contagion impact of ₹${(totalContagion / 100).toLocaleString()}.`,
+        }
+      : {
+          revenuePaise: 0,
+          directCogsPaise: 0,
+          paperMarginPaise: 0,
+          paperMarginPercent: 0.0,
+          contagionDays: 0,
+          breakdown: {
+            lostDiscountPaise: 0,
+            supplierHaltFeesPaise: 0,
+            slaPenaltiesPaise: 0,
+            workingCapitalDragPaise: 0,
+            floatFeePaise: 0,
+          },
+          totalContagionCostPaise: 0,
+          trueRippleMarginPaise: 0,
+          trueRippleMarginPercent: 0.0,
+          explanation: `Ready for ${bizName}. Add invoices in the Ledger or test hypothetical payment delays in the Ripple Simulator.`,
+        };
+
+  const openingNode: SimulatorTimelineNode = {
+    id: "node_opening_cash",
+    label: "Opening Cash Reserve",
+    type: "cash_reserve",
+    dayLabel: "Day 0",
+    date: new Date().toISOString().slice(0, 10),
+    amountPaise: openingCashPaise,
+    direction: "balance",
+    status: "completed",
+    counterparty: `${bizName} Treasury`,
+    description: `Initial usable balance with ₹${Math.round(safetyBufferPaise / 100).toLocaleString("en-IN")} protected safety buffer.`,
   };
 
-  const mockTimelineNodes: SimulatorTimelineNode[] = [
-    {
-      id: "node_opening_cash",
-      label: "Opening Cash Reserve",
-      type: "cash_reserve",
-      dayLabel: "Day 0",
-      date: new Date().toISOString().slice(0, 10),
-      amountPaise: 15_000_000,
-      direction: "balance",
-      status: "completed",
-      counterparty: "Rupi Clothing Treasury",
-      description: "Initial usable balance with ₹50,000 protected safety buffer.",
-    },
-    {
-      id: "node_apex_corp",
-      label: "Apex Corp — Customer Invoice #INV-APEX",
-      type: "customer_receivable",
-      dayLabel: `Day ${15 + controls.customerPaymentDelayDays}`,
-      date: new Date(Date.now() + (15 + controls.customerPaymentDelayDays) * 86400000)
-        .toISOString()
-        .slice(0, 10),
-      amountPaise: controls.customerPaymentAmountPaise ?? 50_000_000,
-      direction: "incoming",
-      status: controls.customerPaymentDelayDays > 0 ? "delayed" : "upcoming",
-      counterparty: "Apex Corp",
-      description: "Customer receivable protecting downstream supply chain fulfillment.",
-      fragility: {
-        nodeId: "node_apex_corp",
-        invoiceAmountPaise: 4_000_000,
-        downstreamValueAtRiskPaise: 80_000_000,
-        multiplier: 20.0,
-        isKeystone: true,
-        badgeText: "Ripple Risk: 20.0x (Critical Keystone)",
-        badgeVariant: "destructive",
-        exposedOrders: ["Metro Retail Wholesale Order #MR-2026", "Central Distribution Lot #4"],
+  let mockTimelineNodes: SimulatorTimelineNode[];
+
+  if (isDemo) {
+    mockTimelineNodes = [
+      openingNode,
+      {
+        id: "node_apex_corp",
+        label: "Apex Corp — Customer Invoice #INV-APEX",
+        type: "customer_receivable",
+        dayLabel: `Day ${15 + controls.customerPaymentDelayDays}`,
+        date: new Date(Date.now() + (15 + controls.customerPaymentDelayDays) * 86400000)
+          .toISOString()
+          .slice(0, 10),
+        amountPaise: controls.customerPaymentAmountPaise ?? 50_000_000,
+        direction: "incoming",
+        status: controls.customerPaymentDelayDays > 0 ? "delayed" : "upcoming",
+        counterparty: "Apex Corp",
+        description: "Customer receivable protecting downstream supply chain fulfillment.",
+        fragility: {
+          nodeId: "node_apex_corp",
+          invoiceAmountPaise: 4_000_000,
+          downstreamValueAtRiskPaise: 80_000_000,
+          multiplier: 20.0,
+          isKeystone: true,
+          badgeText: "Ripple Risk: 20.0x (Critical Keystone)",
+          badgeVariant: "destructive",
+          exposedOrders: ["Metro Retail Wholesale Order #MR-2026", "Central Distribution Lot #4"],
+        },
+        margin: mockTrueMargin,
       },
-      margin: mockTrueMargin,
-    },
-    {
-      id: "node_kaveri_timber",
-      label: "Kaveri Timber — Supplier Commitment",
-      type: "supplier_payable",
-      dayLabel: `Day ${18 + controls.supplierDeliveryDelayDays}`,
-      date: new Date(Date.now() + (18 + controls.supplierDeliveryDelayDays) * 86400000)
-        .toISOString()
-        .slice(0, 10),
-      amountPaise: controls.supplierPaymentAmountPaise ?? 12_000_000,
-      direction: "outgoing",
-      status: controls.supplierDeliveryDelayDays > 0 ? "delayed" : "upcoming",
-      counterparty: "Kaveri Timber",
-      description: "Supplier procurement commitment of ₹1,20,000 for raw materials.",
-      fragility: {
-        nodeId: "node_kaveri_timber",
-        invoiceAmountPaise: 12_000_000,
-        downstreamValueAtRiskPaise: 16_500_000,
-        multiplier: 1.4,
-        isKeystone: false,
-        badgeText: "Ripple Risk: 1.4x",
-        badgeVariant: "outline",
-        exposedOrders: ["Metro Retail Wholesale Order #MR-2026"],
+      {
+        id: "node_kaveri_timber",
+        label: "Kaveri Timber — Supplier Commitment",
+        type: "supplier_payable",
+        dayLabel: `Day ${18 + controls.supplierDeliveryDelayDays}`,
+        date: new Date(Date.now() + (18 + controls.supplierDeliveryDelayDays) * 86400000)
+          .toISOString()
+          .slice(0, 10),
+        amountPaise: controls.supplierPaymentAmountPaise ?? 12_000_000,
+        direction: "outgoing",
+        status: controls.supplierDeliveryDelayDays > 0 ? "delayed" : "upcoming",
+        counterparty: "Kaveri Timber",
+        description: "Supplier procurement commitment of ₹1,20,000 for raw materials.",
+        fragility: {
+          nodeId: "node_kaveri_timber",
+          invoiceAmountPaise: 12_000_000,
+          downstreamValueAtRiskPaise: 16_500_000,
+          multiplier: 1.4,
+          isKeystone: false,
+          badgeText: "Ripple Risk: 1.4x",
+          badgeVariant: "outline",
+          exposedOrders: ["Metro Retail Wholesale Order #MR-2026"],
+        },
+        isEligibleForAutoPhase: true,
+        isEligibleForSplitEscrow: true,
       },
-      isEligibleForAutoPhase: true,
-      isEligibleForSplitEscrow: true,
-    },
-    {
-      id: "node_metro_retail",
-      label: "Metro Retail — Wholesale Order #MR-2026",
-      type: "downstream_fulfillment",
-      dayLabel: `Day ${22 + controls.supplierDeliveryDelayDays}`,
-      date: new Date(Date.now() + (22 + controls.supplierDeliveryDelayDays) * 86400000)
-        .toISOString()
-        .slice(0, 10),
-      amountPaise: 16_500_000,
-      direction: "incoming",
-      status: effectiveContagionDays > 0 ? "at_risk" : "active",
-      counterparty: "Metro Retail",
-      description:
-        effectiveContagionDays > 0
-          ? "Exposed to secondary SLA delay penalty."
-          : "Inventory gate unlocked.",
-      fragility: {
-        nodeId: "node_metro_retail",
-        invoiceAmountPaise: 16_500_000,
-        downstreamValueAtRiskPaise: 16_500_000,
-        multiplier: 1.0,
-        isKeystone: false,
-        badgeText: "Fulfillment Gate",
-        badgeVariant: "outline",
-        exposedOrders: ["Direct Customer Delivery"],
+      {
+        id: "node_metro_retail",
+        label: "Metro Retail — Wholesale Order #MR-2026",
+        type: "downstream_fulfillment",
+        dayLabel: `Day ${22 + controls.supplierDeliveryDelayDays}`,
+        date: new Date(Date.now() + (22 + controls.supplierDeliveryDelayDays) * 86400000)
+          .toISOString()
+          .slice(0, 10),
+        amountPaise: 16_500_000,
+        direction: "incoming",
+        status: effectiveContagionDays > 0 ? "at_risk" : "active",
+        counterparty: "Metro Retail",
+        description:
+          effectiveContagionDays > 0
+            ? "Exposed to secondary SLA delay penalty."
+            : "Inventory gate unlocked.",
+        fragility: {
+          nodeId: "node_metro_retail",
+          invoiceAmountPaise: 16_500_000,
+          downstreamValueAtRiskPaise: 16_500_000,
+          multiplier: 1.0,
+          isKeystone: false,
+          badgeText: "Fulfillment Gate",
+          badgeVariant: "outline",
+          exposedOrders: ["Direct Customer Delivery"],
+        },
       },
-    },
-  ];
+    ];
+  } else {
+    // Non-demo registered account
+    mockTimelineNodes = [openingNode];
+    if (controls.customerPaymentAmountPaise || controls.customerPaymentDelayDays > 0) {
+      const simAmt = controls.customerPaymentAmountPaise ?? 10_000_000;
+      mockTimelineNodes.push({
+        id: "node_sim_customer",
+        label: "Simulated Customer Receivable",
+        type: "customer_receivable",
+        dayLabel: `Day ${15 + controls.customerPaymentDelayDays}`,
+        date: new Date(Date.now() + (15 + controls.customerPaymentDelayDays) * 86400000)
+          .toISOString()
+          .slice(0, 10),
+        amountPaise: simAmt,
+        direction: "incoming",
+        status: controls.customerPaymentDelayDays > 0 ? "delayed" : "upcoming",
+        counterparty: "Simulated Customer",
+        description: `Hypothetical customer receivable ${controls.customerPaymentDelayDays > 0 ? `(delayed +${controls.customerPaymentDelayDays}d)` : "on schedule"}.`,
+        fragility: {
+          nodeId: "node_sim_customer",
+          invoiceAmountPaise: simAmt,
+          downstreamValueAtRiskPaise: simAmt,
+          multiplier: 1.0,
+          isKeystone: false,
+          badgeText: "Simulated Inflow",
+          badgeVariant: "outline",
+          exposedOrders: [],
+        },
+      });
+    }
+    if (controls.supplierPaymentAmountPaise || controls.supplierDeliveryDelayDays > 0) {
+      const simAmt = controls.supplierPaymentAmountPaise ?? 5_000_000;
+      mockTimelineNodes.push({
+        id: "node_sim_supplier",
+        label: "Simulated Supplier Commitment",
+        type: "supplier_payable",
+        dayLabel: `Day ${18 + controls.supplierDeliveryDelayDays}`,
+        date: new Date(Date.now() + (18 + controls.supplierDeliveryDelayDays) * 86400000)
+          .toISOString()
+          .slice(0, 10),
+        amountPaise: simAmt,
+        direction: "outgoing",
+        status: controls.supplierDeliveryDelayDays > 0 ? "delayed" : "upcoming",
+        counterparty: "Simulated Supplier",
+        description: `Hypothetical supplier commitment ${controls.supplierDeliveryDelayDays > 0 ? `(delayed +${controls.supplierDeliveryDelayDays}d)` : "on schedule"}.`,
+        fragility: {
+          nodeId: "node_sim_supplier",
+          invoiceAmountPaise: simAmt,
+          downstreamValueAtRiskPaise: simAmt,
+          multiplier: 1.0,
+          isKeystone: false,
+          badgeText: "Simulated Outflow",
+          badgeVariant: "outline",
+          exposedOrders: [],
+        },
+      });
+    }
+  }
+
+  const finalRecommendations = isDemo
+    ? recommendations
+    : (controls.customerPaymentDelayDays === 0 && controls.supplierDeliveryDelayDays === 0 && !controls.customerPaymentAmountPaise && !controls.supplierPaymentAmountPaise)
+      ? [
+          {
+            id: "rec_onboarding",
+            title: "Add Invoices & Commitments",
+            rationale: "Record customer invoices and supplier purchase orders in the Ledger to track real-time Ripple risk.",
+            priority: "medium" as const,
+            impactPaise: 0,
+            rescueType: "none" as const,
+          },
+        ]
+      : recommendations;
 
   return {
     baselinePoints,
@@ -412,7 +535,7 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
     shortfallPaise,
     affectedDependencies: affectedDeps,
     rippleScore,
-    recommendations,
+    recommendations: finalRecommendations,
     trueMargin: mockTrueMargin,
     timelineNodes: mockTimelineNodes,
   };

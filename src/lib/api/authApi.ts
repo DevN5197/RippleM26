@@ -48,6 +48,8 @@ export function getStoredBusiness(): BusinessSummary | null {
   }
 }
 
+import { syncSimulatorStoreWithBusiness } from "@/lib/simulatorStore";
+
 export function setStoredSession(session: AuthSession | null): void {
   if (typeof window === "undefined") return;
   if (session) {
@@ -55,11 +57,13 @@ export function setStoredSession(session: AuthSession | null): void {
     setActiveBusinessId(session.business.id);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(session.user));
     localStorage.setItem(AUTH_BIZ_KEY, JSON.stringify(session.business));
+    syncSimulatorStoreWithBusiness(session.business.id, session.business.name);
   } else {
     setAuthToken(null);
     setActiveBusinessId(null);
     localStorage.removeItem(AUTH_USER_KEY);
     localStorage.removeItem(AUTH_BIZ_KEY);
+    syncSimulatorStoreWithBusiness();
   }
 }
 
@@ -133,6 +137,17 @@ export const authApi = {
   ): Promise<AuthSession> {
     if (DATA_MODE === "mock") {
       await delay(300);
+      db.business = {
+        ...db.business,
+        id: "biz_registered",
+        name: businessName,
+        currency: "INR",
+        openingCashPaise: 1_000_000,
+        safetyThresholdPaise: 500_000,
+      };
+      db.invoices = [];
+      db.payments = [];
+      db.cashFlowEvents = [];
       const session: AuthSession = {
         token: "demo_mock_jwt_token",
         user: {

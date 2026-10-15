@@ -229,9 +229,10 @@ def run_simulation(
     opening_cash_paise: int,
     controls: dict[str, Any],
     rescues: list[dict[str, Any]] | None = None,
+    business: Any | None = None,
 ) -> dict[str, Any]:
     """
-    Central autoritative financial simulation engine.
+    Central authoritative financial simulation engine.
     Computes cash flows, fragility multipliers, contagion costs, true margins,
     applies active rescues (Auto-Phase & Split-Escrow), and builds chronological timeline nodes.
     """
@@ -242,6 +243,11 @@ def run_simulation(
     cust_amt = controls.get("customerPaymentAmountPaise")
     sup_amt = controls.get("supplierPaymentAmountPaise")
     order_mult = controls.get("orderQuantityMultiplier", 1.0)
+
+    biz_id = getattr(business, "id", None)
+    biz_name = getattr(business, "name", None) or "Rupi Clothing"
+    safety_paise = getattr(business, "safety_threshold_paise", None) or 5_000_000
+    is_demo = (biz_id == "biz_1" or biz_name == "Rupi Clothing" or business is None)
 
     # Active rescue checks
     is_auto_phase = any(r.get("rescue_type") == "auto_phase" and r.get("status") != "reverted" for r in rescues)
@@ -254,9 +260,6 @@ def run_simulation(
     simulated_events: list[CashFlowEvent] = []
     affected_dependencies = []
 
-    # Map scenario dates: Node 1 Apex Corp originally scheduled Day 15; delayed by cust_delay (default +16 -> Day 31)
-    # Node 2 Kaveri Timber scheduled Day 18
-    # Node 3 Metro Retail scheduled Day 22
     today = date.today()
     node1_date_str = to_iso_date(today + timedelta(days=15 + cust_delay))
     node2_date_str = to_iso_date(today + timedelta(days=18 + sup_delay))
@@ -343,7 +346,7 @@ def run_simulation(
         batch2_date = to_iso_date(today + timedelta(days=15 + cust_delay + 1))
         batch2_ev = CashFlowEvent(
             id="ev_autophase_batch2",
-            business_id="biz_1",
+            business_id=biz_id or "biz_1",
             type="supplier_payment",
             label="Kaveri Timber — Auto-Phased Batch 2",
             direction="outgoing",
@@ -365,153 +368,290 @@ def run_simulation(
     settlement_day = 15 + cust_delay
     contagion_days = max(0, settlement_day - 18) if not (is_auto_phase or is_split_escrow) else 0
 
-    true_margin = calculate_true_margin(
-        revenue_paise=50_000_000,
-        direct_cogs_paise=37_500_000,
-        contagion_days=contagion_days,
-        is_split_escrow=is_split_escrow,
-        is_auto_phase=is_auto_phase,
-    )
+    if is_demo:
+        true_margin = calculate_true_margin(
+            revenue_paise=50_000_000,
+            direct_cogs_paise=37_500_000,
+            contagion_days=contagion_days,
+            is_split_escrow=is_split_escrow,
+            is_auto_phase=is_auto_phase,
+        )
+    elif events:
+        total_rev = sum(e.amount_paise for e in events if e.direction == "incoming" or e.type == "customer_payment")
+        total_cogs = sum(e.amount_paise for e in events if e.direction == "outgoing" or e.type == "supplier_payment")
+        rev = total_rev if total_rev > 0 else 10_000_000
+        cogs = total_cogs if total_cogs > 0 else round(rev * 0.75)
+        true_margin = calculate_true_margin(
+            revenue_paise=rev,
+            direct_cogs_paise=cogs,
+            contagion_days=contagion_days,
+            is_split_escrow=is_split_escrow,
+            is_auto_phase=is_auto_phase,
+        )
+    elif cust_amt is not None or sup_amt is not None or cust_delay > 0 or sup_delay > 0:
+        rev = cust_amt or 10_000_000
+        cogs = sup_amt or 7_500_000
+        true_margin = calculate_true_margin(
+            revenue_paise=rev,
+            direct_cogs_paise=cogs,
+            contagion_days=contagion_days,
+            is_split_escrow=is_split_escrow,
+            is_auto_phase=is_auto_phase,
+        )
+    else:
+        true_margin = {
+            "revenuePaise": 0,
+            "directCogsPaise": 0,
+            "paperMarginPaise": 0,
+            "paperMarginPercent": 0.0,
+            "contagionDays": 0,
+            "breakdown": {
+                "lostDiscountPaise": 0,
+                "supplierHaltFeesPaise": 0,
+                "slaPenaltiesPaise": 0,
+                "workingCapitalDragPaise": 0,
+                "floatFeePaise": 0,
+            },
+            "totalContagionCostPaise": 0,
+            "trueRippleMarginPaise": 0,
+            "trueRippleMarginPercent": 0.0,
+            "explanation": f"Ready for {biz_name}. Add invoices in the Ledger or test hypothetical payment delays in the Ripple Simulator.",
+        }
 
     # 5. Fragility analysis on timeline nodes
-    # Node 1: Apex Corp invoice (protects Kaveri Timber commitment and downstream Metro Retail order)
-    # Keystone ratio: ₹40,000 protecting ₹8,00,000 -> 20.0x; Apex Corp ₹5,00,000 protects downstream orders
     downstream_exposed_order_value = 80_000_000 # ₹8,00,000 downstream value at risk
     fragility_node1 = calculate_fragility(
         node_id="node_apex_corp",
-        invoice_or_commitment_paise=4_000_000 if cust_amt is None else cust_amt, # ₹40,000 invoice keystone tranche or configured
+        invoice_or_commitment_paise=4_000_000 if cust_amt is None else cust_amt,
         downstream_order_value_paise=downstream_exposed_order_value,
         exposed_order_labels=["Metro Retail Wholesale Order #MR-2026", "Central Distribution Lot #4"],
     )
 
-    # Node 2: Kaveri Timber supplier commitment
     fragility_node2 = calculate_fragility(
         node_id="node_kaveri_timber",
-        invoice_or_commitment_paise=12_000_000, # ₹1,20,000
-        downstream_order_value_paise=16_500_000, # ₹1,65,000
+        invoice_or_commitment_paise=12_000_000 if sup_amt is None else sup_amt,
+        downstream_order_value_paise=16_500_000,
         exposed_order_labels=["Metro Retail Wholesale Order #MR-2026"],
     )
 
     # 6. Chronological Timeline Nodes
-    timeline_nodes = [
-        {
-            "id": "node_opening_cash",
-            "label": "Opening Cash Reserve",
-            "type": "cash_reserve",
-            "dayLabel": "Day 0",
-            "date": to_iso_date(today),
-            "amountPaise": opening_cash_paise,
-            "direction": "balance",
-            "status": "completed",
-            "counterparty": "Rupi Clothing Treasury",
-            "description": f"Initial usable balance of ₹{(opening_cash_paise/100):,.0f} with ₹50,000 safety buffer.",
-        },
-        {
-            "id": "node_apex_corp",
-            "label": "Apex Corp — Customer Invoice #INV-APEX",
-            "type": "customer_receivable",
-            "dayLabel": f"Day {15 + cust_delay}",
-            "date": node1_date_str,
-            "amountPaise": cust_amt or (37_760_000 if is_split_escrow else 50_000_000),
-            "direction": "incoming",
-            "status": "delayed" if cust_delay > 0 else "upcoming",
-            "counterparty": "Apex Corp",
-            "description": (
-                f"Customer receivable {f'(delayed +{cust_delay}d)' if cust_delay > 0 else 'on schedule'}."
-                + (" Released to escrow for supplier settlement." if is_split_escrow else "")
-            ),
-            "fragility": fragility_node1,
-            "margin": true_margin,
-            "hasBypassArc": is_split_escrow,
-            "bypassTargetId": "node_kaveri_timber",
-        },
-        {
-            "id": "node_kaveri_timber",
-            "label": (
-                "Kaveri Timber — Auto-Phased Batch 1" if is_auto_phase
-                else "Kaveri Timber — Supplier Commitment"
-            ),
-            "type": "supplier_payable",
-            "dayLabel": f"Day {18 + sup_delay}",
-            "date": node2_date_str,
-            "amountPaise": 0 if is_split_escrow else (10_000_000 if is_auto_phase else (sup_amt or 12_000_000)),
-            "direction": "outgoing",
-            "status": "released" if is_split_escrow else ("auto_phased" if is_auto_phase else ("delayed" if sup_delay > 0 else "upcoming")),
-            "counterparty": "Kaveri Timber",
-            "description": (
-                "Released via Split-Escrow funding without ordinary cash outlay." if is_split_escrow
-                else ("Batch 1 settled under available usable free cash." if is_auto_phase
-                      else f"Supplier advance commitment of ₹{((sup_amt or 12_000_000)/100):,.0f}.")
-            ),
-            "fragility": fragility_node2,
-            "isEligibleForAutoPhase": not is_auto_phase and not is_split_escrow,
-            "isEligibleForSplitEscrow": not is_split_escrow,
-        },
-        {
-            "id": "node_metro_retail",
-            "label": "Metro Retail — Wholesale Order #MR-2026",
-            "type": "downstream_fulfillment",
-            "dayLabel": f"Day {22 + max(sup_delay, 0)}",
-            "date": node3_date_str,
-            "amountPaise": 16_500_000,
-            "direction": "incoming",
-            "status": "active" if (is_auto_phase or is_split_escrow or contagion_days == 0) else "at_risk",
-            "counterparty": "Metro Retail",
-            "description": (
-                "Inventory gate unlocked — order fulfillment proceeding on schedule."
-                if (is_auto_phase or is_split_escrow or contagion_days == 0)
-                else f"Exposed to secondary SLA delay penalty (₹3,000/day) due to raw material delivery halt."
-            ),
-            "fragility": {
-                "nodeId": "node_metro_retail",
-                "invoiceAmountPaise": 16_500_000,
-                "downstreamValueAtRiskPaise": 16_500_000,
-                "multiplier": 1.0,
-                "isKeystone": False,
-                "badgeText": "Fulfillment Gate",
-                "badgeVariant": "outline",
-                "exposedOrders": ["Direct Customer Delivery"],
-            },
-        },
-    ]
+    node_opening_cash = {
+        "id": "node_opening_cash",
+        "label": "Opening Cash Reserve",
+        "type": "cash_reserve",
+        "dayLabel": "Day 0",
+        "date": to_iso_date(today),
+        "amountPaise": opening_cash_paise,
+        "direction": "balance",
+        "status": "completed",
+        "counterparty": f"{biz_name} Treasury",
+        "description": f"Initial usable balance of ₹{(opening_cash_paise/100):,.0f} with ₹{(safety_paise/100):,.0f} safety buffer.",
+    }
 
-    if is_auto_phase:
-        batch2_day = 15 + cust_delay + 1
-        timeline_nodes.append({
-            "id": "node_kaveri_timber_batch2",
-            "label": "Kaveri Timber — Auto-Phased Batch 2",
-            "type": "supplier_payable",
-            "dayLabel": f"Day {batch2_day}",
-            "date": to_iso_date(today + timedelta(days=batch2_day)),
-            "amountPaise": 2_000_000,
-            "direction": "outgoing",
-            "status": "scheduled",
-            "counterparty": "Kaveri Timber",
-            "description": "Batch 2 settlement safely funded after Apex Corp customer inflow.",
-            "isAutoPhasedChild": True,
-        })
+    if is_demo:
+        timeline_nodes = [
+            node_opening_cash,
+            {
+                "id": "node_apex_corp",
+                "label": "Apex Corp — Customer Invoice #INV-APEX",
+                "type": "customer_receivable",
+                "dayLabel": f"Day {15 + cust_delay}",
+                "date": node1_date_str,
+                "amountPaise": cust_amt or (37_760_000 if is_split_escrow else 50_000_000),
+                "direction": "incoming",
+                "status": "delayed" if cust_delay > 0 else "upcoming",
+                "counterparty": "Apex Corp",
+                "description": (
+                    f"Customer receivable {f'(delayed +{cust_delay}d)' if cust_delay > 0 else 'on schedule'}."
+                    + (" Released to escrow for supplier settlement." if is_split_escrow else "")
+                ),
+                "fragility": fragility_node1,
+                "margin": true_margin,
+                "hasBypassArc": is_split_escrow,
+                "bypassTargetId": "node_kaveri_timber",
+            },
+            {
+                "id": "node_kaveri_timber",
+                "label": (
+                    "Kaveri Timber — Auto-Phased Batch 1" if is_auto_phase
+                    else "Kaveri Timber — Supplier Commitment"
+                ),
+                "type": "supplier_payable",
+                "dayLabel": f"Day {18 + sup_delay}",
+                "date": node2_date_str,
+                "amountPaise": 0 if is_split_escrow else (10_000_000 if is_auto_phase else (sup_amt or 12_000_000)),
+                "direction": "outgoing",
+                "status": "released" if is_split_escrow else ("auto_phased" if is_auto_phase else ("delayed" if sup_delay > 0 else "upcoming")),
+                "counterparty": "Kaveri Timber",
+                "description": (
+                    "Released via Split-Escrow funding without ordinary cash outlay." if is_split_escrow
+                    else ("Batch 1 settled under available usable free cash." if is_auto_phase
+                          else f"Supplier advance commitment of ₹{((sup_amt or 12_000_000)/100):,.0f}.")
+                ),
+                "fragility": fragility_node2,
+                "isEligibleForAutoPhase": not is_auto_phase and not is_split_escrow,
+                "isEligibleForSplitEscrow": not is_split_escrow,
+            },
+            {
+                "id": "node_metro_retail",
+                "label": "Metro Retail — Wholesale Order #MR-2026",
+                "type": "downstream_fulfillment",
+                "dayLabel": f"Day {22 + max(sup_delay, 0)}",
+                "date": node3_date_str,
+                "amountPaise": 16_500_000,
+                "direction": "incoming",
+                "status": "active" if (is_auto_phase or is_split_escrow or contagion_days == 0) else "at_risk",
+                "counterparty": "Metro Retail",
+                "description": (
+                    "Inventory gate unlocked — order fulfillment proceeding on schedule."
+                    if (is_auto_phase or is_split_escrow or contagion_days == 0)
+                    else f"Exposed to secondary SLA delay penalty (₹3,000/day) due to raw material delivery halt."
+                ),
+                "fragility": {
+                    "nodeId": "node_metro_retail",
+                    "invoiceAmountPaise": 16_500_000,
+                    "downstreamValueAtRiskPaise": 16_500_000,
+                    "multiplier": 1.0,
+                    "isKeystone": False,
+                    "badgeText": "Fulfillment Gate",
+                    "badgeVariant": "outline",
+                    "exposedOrders": ["Direct Customer Delivery"],
+                },
+            },
+        ]
+
+        if is_auto_phase:
+            batch2_day = 15 + cust_delay + 1
+            timeline_nodes.append({
+                "id": "node_kaveri_timber_batch2",
+                "label": "Kaveri Timber — Auto-Phased Batch 2",
+                "type": "supplier_payable",
+                "dayLabel": f"Day {batch2_day}",
+                "date": to_iso_date(today + timedelta(days=batch2_day)),
+                "amountPaise": 2_000_000,
+                "direction": "outgoing",
+                "status": "scheduled",
+                "counterparty": "Kaveri Timber",
+                "description": "Batch 2 settlement safely funded after Apex Corp customer inflow.",
+                "isAutoPhasedChild": True,
+            })
+    else:
+        # Non-demo registered business
+        timeline_nodes = [node_opening_cash]
+        if events:
+            for ev in simulated_events:
+                is_incoming = ev.direction == "incoming" or ev.type in ("customer_payment", "receivable")
+                t_type = "customer_receivable" if is_incoming else "supplier_payable"
+                try:
+                    ev_d = parse_date(ev.date)
+                    day_offset = (ev_d - today).days
+                    day_label = f"Day {max(0, day_offset)}"
+                except Exception:
+                    day_label = "Scheduled"
+
+                timeline_nodes.append({
+                    "id": f"node_{ev.id}",
+                    "label": ev.label,
+                    "type": t_type,
+                    "dayLabel": day_label,
+                    "date": ev.date,
+                    "amountPaise": ev.amount_paise,
+                    "direction": "incoming" if is_incoming else "outgoing",
+                    "status": ev.status or ("upcoming" if day_offset >= 0 else "completed"),
+                    "counterparty": ev.counterparty_name or ("Customer" if is_incoming else "Supplier"),
+                    "description": ev.risk_note or f"{'Customer receivable' if is_incoming else 'Supplier commitment'} scheduled for settlement.",
+                    "fragility": {
+                        "nodeId": f"node_{ev.id}",
+                        "invoiceAmountPaise": ev.amount_paise,
+                        "downstreamValueAtRiskPaise": ev.amount_paise,
+                        "multiplier": 1.0,
+                        "isKeystone": False,
+                        "badgeText": "Direct Obligation",
+                        "badgeVariant": "outline",
+                        "exposedOrders": [],
+                    },
+                })
+        elif cust_amt is not None or sup_amt is not None or cust_delay > 0 or sup_delay > 0:
+            if cust_amt is not None or cust_delay > 0:
+                sim_cust = cust_amt or 10_000_000
+                timeline_nodes.append({
+                    "id": "node_sim_customer",
+                    "label": "Simulated Customer Receivable",
+                    "type": "customer_receivable",
+                    "dayLabel": f"Day {15 + cust_delay}",
+                    "date": node1_date_str,
+                    "amountPaise": sim_cust,
+                    "direction": "incoming",
+                    "status": "delayed" if cust_delay > 0 else "upcoming",
+                    "counterparty": "Simulated Customer",
+                    "description": f"Hypothetical customer receivable {f'(delayed +{cust_delay}d)' if cust_delay > 0 else 'on schedule'}.",
+                    "fragility": {
+                        "nodeId": "node_sim_customer",
+                        "invoiceAmountPaise": sim_cust,
+                        "downstreamValueAtRiskPaise": sim_cust,
+                        "multiplier": 1.0,
+                        "isKeystone": False,
+                        "badgeText": "Simulated Inflow",
+                        "badgeVariant": "outline",
+                        "exposedOrders": [],
+                    },
+                })
+            if sup_amt is not None or sup_delay > 0:
+                sim_sup = sup_amt or 5_000_000
+                timeline_nodes.append({
+                    "id": "node_sim_supplier",
+                    "label": "Simulated Supplier Commitment",
+                    "type": "supplier_payable",
+                    "dayLabel": f"Day {18 + sup_delay}",
+                    "date": node2_date_str,
+                    "amountPaise": sim_sup,
+                    "direction": "outgoing",
+                    "status": "delayed" if sup_delay > 0 else "upcoming",
+                    "counterparty": "Simulated Supplier",
+                    "description": f"Hypothetical supplier commitment {f'(delayed +{sup_delay}d)' if sup_delay > 0 else 'on schedule'}.",
+                    "fragility": {
+                        "nodeId": "node_sim_supplier",
+                        "invoiceAmountPaise": sim_sup,
+                        "downstreamValueAtRiskPaise": sim_sup,
+                        "multiplier": 1.0,
+                        "isKeystone": False,
+                        "badgeText": "Simulated Outflow",
+                        "badgeVariant": "outline",
+                        "exposedOrders": [],
+                    },
+                })
 
     # Sort chronological timeline nodes by date / day
     timeline_nodes.sort(key=lambda n: n.get("date", ""))
 
     # 7. Recommendations
     recommendations = []
-    if not (is_auto_phase or is_split_escrow) and contagion_days > 0:
+    if is_demo:
+        if not (is_auto_phase or is_split_escrow) and contagion_days > 0:
+            recommendations.append({
+                "id": "rec_autophase",
+                "title": "Apply Auto-Phase Inventory Rescue",
+                "rationale": f"Split Kaveri Timber order into ₹1,00,000 now and ₹20,000 on Day {settlement_day + 1} to prevent buffer breach and halt fees.",
+                "priority": "high",
+                "impactPaise": true_margin["breakdown"]["supplierHaltFeesPaise"] + true_margin["breakdown"]["slaPenaltiesPaise"],
+                "rescueType": "auto_phase",
+            })
+            recommendations.append({
+                "id": "rec_split_escrow",
+                "title": "Lock Tri-Party Split-Escrow Facility",
+                "rationale": f"Route Apex Corp receivable (₹5,00,000) to fund Kaveri Timber obligation with zero day-18 business cash outlay.",
+                "priority": "high",
+                "impactPaise": true_margin["totalContagionCostPaise"] - 240_000,
+                "rescueType": "split_escrow",
+            })
+    elif not events and cust_amt is None and sup_amt is None and cust_delay == 0 and sup_delay == 0:
         recommendations.append({
-            "id": "rec_autophase",
-            "title": "Apply Auto-Phase Inventory Rescue",
-            "rationale": f"Split Kaveri Timber order into ₹1,00,000 now and ₹20,000 on Day {settlement_day + 1} to prevent buffer breach and halt fees.",
-            "priority": "high",
-            "impactPaise": true_margin["breakdown"]["supplierHaltFeesPaise"] + true_margin["breakdown"]["slaPenaltiesPaise"],
-            "rescueType": "auto_phase",
-        })
-        recommendations.append({
-            "id": "rec_split_escrow",
-            "title": "Lock Tri-Party Split-Escrow Facility",
-            "rationale": f"Route Apex Corp receivable (₹5,00,000) to fund Kaveri Timber obligation with zero day-18 business cash outlay.",
-            "priority": "high",
-            "impactPaise": true_margin["totalContagionCostPaise"] - 240_000,
-            "rescueType": "split_escrow",
+            "id": "rec_onboarding",
+            "title": "Add Invoices & Commitments",
+            "rationale": "Record customer invoices and supplier purchase orders in the Ledger to track real-time Ripple risk.",
+            "priority": "medium",
+            "impactPaise": 0,
+            "rescueType": "none",
         })
 
     # 8. Ripple score calculation
@@ -554,6 +694,7 @@ def run_chaos_stress_test(
     opening_cash_paise: int,
     controls: dict[str, Any],
     rescues: list[dict[str, Any]] | None = None,
+    business: Any | None = None,
 ) -> dict[str, Any]:
     """
     Chaos Stress-Test Engine:
@@ -563,28 +704,26 @@ def run_chaos_stress_test(
       4. Identifies most fragile node under stress and highlights it in purple.
       5. Computes delta comparison between baseline and stressed results.
     """
-    baseline_result = run_simulation(events, opening_cash_paise, controls, rescues)
+    baseline_result = run_simulation(events, opening_cash_paise, controls, rescues, business=business)
 
     # Isolated +5-day stressed controls
     stressed_controls = dict(controls)
     stressed_controls["customerPaymentDelayDays"] = stressed_controls.get("customerPaymentDelayDays", 0) + 5
     stressed_controls["supplierDeliveryDelayDays"] = stressed_controls.get("supplierDeliveryDelayDays", 0) + 5
 
-    stressed_result = run_simulation(events, opening_cash_paise, stressed_controls, rescues)
+    stressed_result = run_simulation(events, opening_cash_paise, stressed_controls, rescues, business=business)
 
     # Identify most fragile node under stress
-    # Node 1 Apex Corp or Node 2 Kaveri Timber with highest fragility
     most_fragile_node = max(
         stressed_result["timelineNodes"],
         key=lambda n: n.get("fragility", {}).get("multiplier", 0.0) if n.get("fragility") else 0.0,
+        default=None,
     )
 
-    # Tag the most fragile node for purple UI highlighting
-    for node in stressed_result["timelineNodes"]:
-        if node["id"] == most_fragile_node["id"]:
-            node["isMostFragileUnderStress"] = True
-            node["stressHighlightColor"] = "#8b5cf6" # Purple
-            node["stressBadge"] = "MOST FRAGILE UNDER STRESS"
+    if most_fragile_node:
+        most_fragile_node["isMostFragileUnderStress"] = True
+        most_fragile_node["stressHighlightColor"] = "#8b5cf6" # Purple
+        most_fragile_node["stressBadge"] = "MOST FRAGILE UNDER STRESS"
 
     # Compute deltas
     baseline_min = baseline_result["scenarioMinPaise"]
@@ -593,6 +732,10 @@ def run_chaos_stress_test(
     newly_affected_count = max(0, len(stressed_result["affectedDependencies"]) - len(baseline_result["affectedDependencies"]))
     endangered_value_delta = max(0, stressed_result["trueMargin"]["totalContagionCostPaise"] - baseline_result["trueMargin"]["totalContagionCostPaise"])
 
+    most_fragile_id = most_fragile_node["id"] if most_fragile_node else "node_opening_cash"
+    most_fragile_label = most_fragile_node["label"] if most_fragile_node else "Opening Cash Reserve"
+    most_fragile_mult = most_fragile_node.get("fragility", {}).get("multiplier", 1.0) if most_fragile_node else 1.0
+
     return {
         "isStressTestActive": True,
         "baselineMinCashPaise": baseline_min,
@@ -600,16 +743,16 @@ def run_chaos_stress_test(
         "additionalShortfallPaise": additional_shortfall,
         "newlyAffectedNodesCount": newly_affected_count if newly_affected_count > 0 else 1,
         "newlyEndangeredOrderValuePaise": endangered_value_delta,
-        "mostFragileNodeBefore": "node_apex_corp",
-        "mostFragileNodeAfter": most_fragile_node["id"],
-        "mostFragileNodeLabel": most_fragile_node["label"],
-        "mostFragileMultiplier": most_fragile_node.get("fragility", {}).get("multiplier", 20.0),
+        "mostFragileNodeBefore": baseline_result["timelineNodes"][1]["id"] if len(baseline_result["timelineNodes"]) > 1 else "node_opening_cash",
+        "mostFragileNodeAfter": most_fragile_id,
+        "mostFragileNodeLabel": most_fragile_label,
+        "mostFragileMultiplier": most_fragile_mult,
         "baselineTrueMargin": baseline_result["trueMargin"],
         "stressedTrueMargin": stressed_result["trueMargin"],
         "stressedResult": stressed_result,
         "summary": (
             f"+5-day Chaos Stress Test reduced minimum liquidity by ₹{(additional_shortfall/100):,.0f}. "
-            f"Most fragile single point of failure under stress: {most_fragile_node['label']} "
-            f"({most_fragile_node.get('fragility', {}).get('multiplier', 20.0)}x multiplier)."
+            f"Most fragile single point of failure under stress: {most_fragile_label} "
+            f"({most_fragile_mult}x multiplier)."
         ),
     }

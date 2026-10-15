@@ -26,6 +26,8 @@ import { cn } from "@/lib/utils";
 import type { SimulatorResult } from "@/lib/api/simulationApi";
 import type { SimulatorTimelineNode } from "@/types";
 import { SimulatorTrueMarginCard } from "./simulator-true-margin";
+import { isCurrentBusinessDemo } from "@/lib/simulatorStore";
+import { getStoredBusiness } from "@/lib/api/authApi";
 
 interface SimulatorResultsProps {
   result: SimulatorResult;
@@ -477,8 +479,12 @@ export function SimulatorEventTimeline({
     setExpandedId((prev) => (prev === nodeId ? null : nodeId));
   };
 
+  const isDemo = isCurrentBusinessDemo();
+  const storedBiz = typeof window !== "undefined" ? getStoredBusiness() : null;
+  const bizName = storedBiz?.name || "Your Business";
+
   // Use authoritative timelineNodes if provided, else construct sensible defaults
-  const nodes: SimulatorTimelineNode[] = result.timelineNodes ?? [
+  const nodes: SimulatorTimelineNode[] = result.timelineNodes ?? (isDemo ? [
     {
       id: "node-apex",
       label: "Apex Corp (INV-2001)",
@@ -527,7 +533,20 @@ export function SimulatorEventTimeline({
       counterparty: "Metro Retail",
       description: "Downstream order blocked if timber from Kaveri Timber is halted.",
     },
-  ];
+  ] : [
+    {
+      id: "node_opening_cash",
+      label: "Opening Cash Reserve",
+      type: "cash_reserve",
+      dayLabel: "Day 0",
+      date: new Date().toISOString().slice(0, 10),
+      amountPaise: storedBiz?.openingCashPaise ?? 1_000_000,
+      direction: "balance",
+      status: "completed",
+      counterparty: `${bizName} Treasury`,
+      description: `Initial usable balance with ₹${Math.round((storedBiz?.safetyThresholdPaise ?? 500_000) / 100).toLocaleString("en-IN")} safety buffer.`,
+    },
+  ]);
 
   const hasActiveRescue = result.hasAutoPhaseRescue || result.hasSplitEscrowRescue;
 
@@ -584,8 +603,14 @@ export function SimulatorEventTimeline({
             <Lock className="h-4 w-4 text-primary shrink-0" />
             <span>Tri-Party Split-Escrow Bypass Active:</span>
             <span className="text-muted-foreground font-normal">
-              Apex Corp Receivable (Day 31) directly satisfies Kaveri Timber (PO-1) on Day 18.
-              Ordinary Day 18 business cash outflow is ₹0.
+              {(() => {
+                const srcNode = nodes.find((n) => n.hasBypassArc);
+                const targetNode = nodes.find((n) => n.id === srcNode?.bypassTargetId);
+                if (srcNode && targetNode) {
+                  return `${srcNode.counterparty} Receivable (${srcNode.dayLabel}) directly satisfies ${targetNode.counterparty} (${targetNode.dayLabel}). Ordinary business cash outflow is ₹0.`;
+                }
+                return "Customer receivable directly satisfies supplier commitment with zero ordinary business cash outflow.";
+              })()}
             </span>
           </div>
           <Badge
