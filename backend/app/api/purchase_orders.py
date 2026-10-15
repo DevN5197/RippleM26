@@ -13,6 +13,7 @@ from app.models.invoice import Invoice
 from app.models.payment import Payment
 from app.models.cash_flow import CashFlowEvent
 from app.services.financial import to_iso_date
+from app.services.sanitization import sanitize_payload
 
 router = APIRouter(prefix="/api/purchase-orders", tags=["purchase-orders"])
 
@@ -126,6 +127,7 @@ def create_purchase_order(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     supplier_id = payload.get("supplierId")
     line_items = payload.get("lineItems", [])
 

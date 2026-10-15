@@ -10,6 +10,7 @@ from app.models.order import CustomerOrder
 from app.models.invoice import Invoice
 from app.models.payment import Payment
 from app.services.financial import enrich_customer, get_customer_summary, to_iso_date
+from app.services.sanitization import sanitize_payload
 
 router = APIRouter(prefix="/api/customers", tags=["customers"])
 
@@ -175,6 +176,7 @@ def create_customer(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     name = payload.get("name", "").strip()
     if not name:
         raise HTTPException(status_code=400, detail="Customer name is required")
@@ -207,6 +209,7 @@ def update_customer(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     customer = db.query(Customer).filter(
         Customer.id == id,
         Customer.business_id == business.id

@@ -11,6 +11,7 @@ from app.models.supplier import Supplier
 from app.models.order import PurchaseOrder, CustomerOrder
 from app.models.customer import Customer
 from app.services.financial import enrich_inventory_item, get_inventory_summary, to_iso_date
+from app.services.sanitization import sanitize_payload
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
 
@@ -275,6 +276,7 @@ def create_product(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     sku = payload.get("sku", "").strip().upper()
     name = payload.get("name", "").strip()
 
@@ -360,6 +362,7 @@ def update_product(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     product = db.query(Product).filter(
         Product.id == productId,
         Product.business_id == business.id
@@ -425,6 +428,7 @@ def record_movement(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     prod_id = payload.get("productId")
     qty = payload.get("quantity", 0)
     mov_type = payload.get("type", "adjustment")

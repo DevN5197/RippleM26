@@ -11,6 +11,7 @@ from app.models.invoice import Invoice
 from app.models.payment import Payment
 from app.models.product import Product
 from app.services.financial import enrich_supplier, get_supplier_summary, to_iso_date
+from app.services.sanitization import sanitize_payload
 
 router = APIRouter(prefix="/api/suppliers", tags=["suppliers"])
 
@@ -211,6 +212,7 @@ def create_supplier(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     name = payload.get("name", "").strip()
     if not name:
         raise HTTPException(status_code=400, detail="Supplier name is required")
@@ -252,6 +254,7 @@ def update_supplier(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     supplier = db.query(Supplier).filter(
         Supplier.id == id,
         Supplier.business_id == business.id

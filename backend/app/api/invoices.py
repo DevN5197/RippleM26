@@ -12,6 +12,7 @@ from app.models.order import CustomerOrder, PurchaseOrder
 from app.models.payment import Payment
 from app.models.cash_flow import CashFlowEvent
 from app.services.financial import enrich_invoice, get_invoice_summary, to_iso_date
+from app.services.sanitization import sanitize_payload
 
 router = APIRouter(prefix="/api/invoices", tags=["invoices"])
 
@@ -146,6 +147,7 @@ def create_invoice(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     inv_type = payload.get("type", "receivable")
     try:
         amount = int(round(float(payload.get("amountPaise", 0))))
@@ -277,6 +279,7 @@ def record_invoice_payment(
     business: Business = Depends(get_current_business),
     db: Session = Depends(get_db),
 ):
+    payload = sanitize_payload(payload)
     inv = db.query(Invoice).filter(Invoice.id == id, Invoice.business_id == business.id).first()
     if not inv:
         raise HTTPException(status_code=404, detail="Invoice not found")
