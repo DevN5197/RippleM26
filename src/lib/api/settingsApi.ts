@@ -1,6 +1,7 @@
 import { DATA_MODE } from "@/lib/config";
 import { httpRequest } from "@/lib/api/client";
 import { db, delay, resetDbToSeed } from "@/mocks/store";
+import { updateStoredBusiness } from "@/lib/api/authApi";
 import type { AppSettings, UpdateSettingsInput } from "@/types";
 
 /**
@@ -31,6 +32,7 @@ export const settingsApi = {
           ...db.business,
           ...input.business,
         };
+        updateStoredBusiness(input.business);
       }
 
       if (input.notifications) {
@@ -55,10 +57,14 @@ export const settingsApi = {
       };
     }
 
-    return httpRequest<AppSettings>("/settings", {
+    const res = await httpRequest<AppSettings>("/settings", {
       method: "PATCH",
       body: input,
     });
+    if (res.business) {
+      updateStoredBusiness(res.business);
+    }
+    return res;
   },
 
   async resetDemoData(): Promise<{ success: boolean; message: string }> {

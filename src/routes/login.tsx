@@ -167,46 +167,6 @@ function LoginPage() {
             </p>
           </div>
 
-          {/* Live Connection Status Pill */}
-          <div className="flex items-center justify-between rounded-xl border border-border/80 bg-muted/40 px-3.5 py-2 text-xs">
-            <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "h-2 w-2 rounded-full",
-                  DATA_MODE === "mock"
-                    ? "bg-amber-500 animate-pulse"
-                    : serverStatus === "online"
-                      ? "bg-emerald-500 ring-2 ring-emerald-500/20"
-                      : serverStatus === "checking"
-                        ? "bg-blue-500 animate-pulse"
-                        : "bg-amber-500",
-                )}
-              />
-              <span className="font-medium text-foreground">
-                {DATA_MODE === "mock"
-                  ? "Offline Demo Mode Ready"
-                  : serverStatus === "online"
-                    ? "Live API Connected"
-                    : serverStatus === "checking"
-                      ? "Checking Live API..."
-                      : "Server Offline (Demo Fallback Ready)"}
-              </span>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                const next = DATA_MODE === "api" ? "mock" : "api";
-                setDataMode(next);
-                toast.info(`Switched to ${next === "api" ? "Live API Mode" : "Offline Demo Mode"}`);
-              }}
-              className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-            >
-              <RefreshCw className="mr-1 h-3 w-3" />
-              {DATA_MODE === "api" ? "Use Demo" : "Use API"}
-            </Button>
-          </div>
 
           {/* ── 1-Click Instant Demo Login (Prominent & Glowing) ── */}
           <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-indigo-500/10 to-primary/5 p-4 shadow-md shadow-primary/5 space-y-2.5">
@@ -322,6 +282,44 @@ function LoginPage() {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* ── Subtle, Low-Profile Live Connection Status in Bottom-Right Corner ── */}
+      <div className="fixed bottom-3 right-3 z-30 flex items-center gap-1.5 rounded-full border border-border/40 bg-background/50 backdrop-blur-md px-2.5 py-1 text-[11px] text-muted-foreground/60 opacity-40 hover:opacity-100 transition-opacity shadow-xs">
+        <span
+          className={cn(
+            "h-1.5 w-1.5 rounded-full",
+            DATA_MODE === "mock"
+              ? "bg-amber-500/80"
+              : serverStatus === "online"
+                ? "bg-emerald-500 ring-2 ring-emerald-500/20"
+                : serverStatus === "checking"
+                  ? "bg-blue-500 animate-pulse"
+                  : "bg-amber-500/80",
+          )}
+        />
+        <span className="text-[10px]">
+          {DATA_MODE === "mock"
+            ? "Demo Mode"
+            : serverStatus === "online"
+              ? "Live API"
+              : serverStatus === "checking"
+                ? "Checking..."
+                : "Offline"}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            const next = DATA_MODE === "api" ? "mock" : "api";
+            setDataMode(next);
+            toast.info(`Switched to ${next === "api" ? "Live API Mode" : "Offline Demo Mode"}`);
+          }}
+          className="ml-0.5 text-muted-foreground/40 hover:text-foreground cursor-pointer transition-colors"
+          title="Switch API / Demo Mode"
+          aria-label="Switch API / Demo Mode"
+        >
+          <RefreshCw className="h-2.5 w-2.5" />
+        </button>
       </div>
     </div>
   );

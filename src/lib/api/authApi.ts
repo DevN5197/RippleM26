@@ -67,6 +67,16 @@ export function setStoredSession(session: AuthSession | null): void {
   }
 }
 
+export function updateStoredBusiness(biz: Partial<BusinessSummary>): void {
+  if (typeof window === "undefined") return;
+  const existing = getStoredBusiness();
+  if (existing) {
+    const updated = { ...existing, ...biz };
+    localStorage.setItem(AUTH_BIZ_KEY, JSON.stringify(updated));
+    syncSimulatorStoreWithBusiness(updated.id, updated.name);
+  }
+}
+
 export function isUserAuthenticated(): boolean {
   if (DATA_MODE === "mock") return true;
   return !!getAuthToken();
@@ -148,6 +158,16 @@ export const authApi = {
       db.invoices = [];
       db.payments = [];
       db.cashFlowEvents = [];
+      db.suppliers = [];
+      db.customers = [];
+      db.products = [];
+      db.inventory = [];
+      db.inventoryMovements = [];
+      db.purchaseOrders = [];
+      db.customerOrders = [];
+      db.simulationScenarios = [];
+      db.riskAlerts = [];
+      db.recommendations = [];
       const session: AuthSession = {
         token: "demo_mock_jwt_token",
         user: {

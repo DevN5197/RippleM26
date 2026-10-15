@@ -330,6 +330,23 @@ export const invoiceApi = {
         }
       }
 
+      const isReceivable = input.type === "receivable";
+      const event: CashFlowEvent = {
+        id: nextId("evt"),
+        type: isReceivable ? "customer_payment" : "supplier_payment",
+        label: `${isReceivable ? "Expected Receipt" : "Scheduled Payment"} - ${invoice.invoiceNumber}`,
+        direction: isReceivable ? "incoming" : "outgoing",
+        amountPaise: input.amountPaise,
+        date: input.dueDate,
+        relatedInvoiceId: invoice.id,
+        isProjected: true,
+        status: "scheduled",
+        counterpartyName: isReceivable
+          ? db.customers.find((c) => c.id === input.customerId)?.name
+          : db.suppliers.find((s) => s.id === input.supplierId)?.name,
+      };
+      db.cashFlowEvents.push(event);
+
       return invoice;
     }
 

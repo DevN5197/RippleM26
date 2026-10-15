@@ -197,6 +197,22 @@ def create_invoice(
         if supp:
             supp.outstanding_paise = (supp.outstanding_paise or 0) + amount
 
+    # Record scheduled CashFlowEvent for real-time forecast calculations
+    cfe = CashFlowEvent(
+        id=f"cfe_{uuid.uuid4().hex[:12]}",
+        business_id=business.id,
+        date=due_date,
+        amount_paise=amount if inv_type == "receivable" else -amount,
+        direction="inflow" if inv_type == "receivable" else "outflow",
+        category="customer_receipt" if inv_type == "receivable" else "supplier_payment",
+        entity_type="customer" if inv_type == "receivable" else "supplier",
+        entity_id=customer_id if inv_type == "receivable" else supplier_id,
+        reference=inv_number,
+        status="scheduled",
+        is_simulated=False,
+    )
+    db.add(cfe)
+
     db.commit()
     db.refresh(invoice)
     return enrich_invoice(invoice, db)
