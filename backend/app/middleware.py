@@ -4,6 +4,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from app.services.auth import get_client_ip
+
 # Maximum payload size: 1 MB
 MAX_PAYLOAD_SIZE = 1024 * 1024
 
@@ -12,6 +14,8 @@ RATE_LIMIT_RULES: dict[str, tuple[int, int]] = {
     "/api/simulator/simulate": (30, 60),
     "/api/simulate": (30, 60),
     "/api/ai/chat": (10, 60),
+    "/api/auth/register": (10, 60),
+    "/api/auth/login": (30, 60),
 }
 
 class SecurityHardeningMiddleware(BaseHTTPMiddleware):
@@ -39,7 +43,7 @@ class SecurityHardeningMiddleware(BaseHTTPMiddleware):
 
         # 2. Check rate limit for protected routes
         path = request.url.path
-        client_ip = request.client.host if request.client else "unknown"
+        client_ip = get_client_ip(request)
         # Check authorization header or IP as client identifier
         auth_hdr = request.headers.get("authorization", "")
         client_key = auth_hdr[:30] if auth_hdr else client_ip
@@ -55,11 +59,13 @@ class SecurityHardeningMiddleware(BaseHTTPMiddleware):
                 self.request_history[history_key] = [t for t in timestamps if t > cutoff]
 
                 if len(self.request_history[history_key]) >= max_req:
+                    msg = f"Rate limit exceeded: maximum {max_req} requests per {window_sec}s for this endpoint."
                     return JSONResponse(
                         status_code=429,
                         content={
                             "error": True,
-                            "message": f"Rate limit exceeded: maximum {max_req} requests per {window_sec}s for this endpoint.",
+                            "message": msg,
+                            "detail": msg,
                         },
                         headers={"Retry-After": str(window_sec)},
                     )

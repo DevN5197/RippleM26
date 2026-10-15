@@ -1,11 +1,17 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.models.business import Business, BusinessMembership
 from app.models.settings import AppSettingsModel
-from app.services.auth import hash_password, verify_password, create_access_token
+from app.services.auth import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    login_rate_limiter,
+    get_client_ip,
+)
 from app.schemas.auth import RegisterRequest, LoginRequest, AuthResponse, UserResponse, BusinessResponse
 from app.api.deps import get_current_user
 
@@ -91,13 +97,29 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     )
 
 @router.post("/login", response_model=AuthResponse)
-def login(req: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == req.email.lower().strip()).first()
+def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
+    client_ip = get_client_ip(request)
+    email = req.email.lower().strip()
+
+    # 1. Enforce brute-force & rate-limiting protection before expensive DB / bcrypt operations
+    is_blocked, retry_after, reason = login_rate_limiter.check_rate_limit(client_ip, email)
+    if is_blocked:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"{reason} Please try again in {retry_after} seconds.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    user = db.query(User).filter(User.email == email).first()
     if not user or not verify_password(req.password, user.hashed_password):
+        login_rate_limiter.record_failed_attempt(client_ip, email)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
         )
+
+    # 2. Reset failed attempts on valid login
+    login_rate_limiter.record_successful_login(client_ip, email)
 
     memberships = db.query(BusinessMembership).filter(BusinessMembership.user_id == user.id).all()
     if not memberships:
