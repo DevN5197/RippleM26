@@ -43,7 +43,7 @@ const toneByStatus: Record<string, StatusTone> = {
 
 const toneClasses: Record<StatusTone, string> = {
   success: "border-transparent bg-success/10 text-success",
-  warning: "border-transparent bg-warning/15 text-warning-foreground",
+  warning: "border-warning/30 bg-warning/20 text-warning-foreground font-medium",
   danger: "border-transparent bg-destructive/10 text-destructive",
   info: "border-transparent bg-primary/10 text-primary",
   neutral: "border-transparent bg-muted text-muted-foreground",
