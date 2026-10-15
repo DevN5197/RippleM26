@@ -382,8 +382,6 @@ export function SupplierTable({
                             <Link
                               to="/suppliers/$supplierId"
                               params={{ supplierId: supplier.id }}
-                              target="_blank"
-                              rel="noreferrer"
                             >
                               <ExternalLink className="mr-2 h-4 w-4" />
                               View Details

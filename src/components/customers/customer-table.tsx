@@ -241,8 +241,6 @@ export function CustomerTable({
                           <Link
                             to="/customers/$customerId"
                             params={{ customerId: customer.id }}
-                            target="_blank"
-                            rel="noreferrer"
                             className="flex items-center cursor-pointer"
                           >
                             <Eye className="mr-2 h-4 w-4" />

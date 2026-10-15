@@ -11,7 +11,9 @@ import { isUserAuthenticated } from "@/lib/api/authApi";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: () => {
-    if (DATA_MODE === "api" && !isUserAuthenticated()) {
+    // The session token lives in localStorage, which is unavailable during SSR.
+    // Checking it on the server would redirect a valid browser session on refresh.
+    if (typeof window !== "undefined" && DATA_MODE === "api" && !isUserAuthenticated()) {
       throw redirect({ to: "/login" });
     }
   },
