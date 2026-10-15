@@ -87,7 +87,7 @@ function RelationshipsPage() {
       />
 
       {/* High-level Metric Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Operating Touchpoints"
           value={String(totalTouchpoints)}
@@ -115,9 +115,12 @@ function RelationshipsPage() {
           value={formatMoney(cashAtRiskPaise)}
           icon={TrendingDown}
           trend={{
-            direction: "down",
-            label: "Day 5 shortfall & overdue receipts",
-            sentiment: "bad",
+            direction: cashAtRiskPaise > 0 ? "down" : "flat",
+            label:
+              cashAtRiskPaise > 0
+                ? `${formatMoney(cashAtRiskPaise)} exposed across cycle`
+                : "No liquidity deficits detected",
+            sentiment: cashAtRiskPaise > 0 ? "bad" : "good",
           }}
         />
       </div>

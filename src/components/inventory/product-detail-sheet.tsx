@@ -121,7 +121,7 @@ export function ProductDetailSheet({
                 </Button>
 
                 <Button size="sm" variant="ghost" asChild className="h-8 text-xs gap-1.5 ml-auto">
-                  <Link to="/relationships" search={{ selectedId: `node_stock_1` }}>
+                  <Link to="/relationships" search={{ selectedId: `node_${data.product.id}` }}>
                     <Network className="h-3.5 w-3.5 text-primary" />
                     <span>View in Graph</span>
                   </Link>
@@ -298,7 +298,7 @@ export function ProductDetailSheet({
                       <Link
                         to="/simulator"
                         search={{
-                          eventId: `node_stock_1`,
+                          eventId: `node_${data.product.id}`,
                           eventName: `${data.product.name} Restock`,
                         }}
                       >

@@ -147,7 +147,11 @@ def create_invoice(
     db: Session = Depends(get_db),
 ):
     inv_type = payload.get("type", "receivable")
-    amount = payload.get("amountPaise", 0)
+    try:
+        amount = int(round(float(payload.get("amountPaise", 0))))
+    except (ValueError, TypeError):
+        amount = 0
+
     customer_id = payload.get("customerId")
     supplier_id = payload.get("supplierId")
 
@@ -172,9 +176,9 @@ def create_invoice(
         business_id=business.id,
         invoice_number=inv_number,
         type=inv_type,
-        customer_id=customer_id,
+        customer_id=customer_id if inv_type == "receivable" else None,
         customer_order_id=payload.get("customerOrderId"),
-        supplier_id=supplier_id,
+        supplier_id=supplier_id if inv_type == "payable" else None,
         purchase_order_id=payload.get("purchaseOrderId"),
         amount_paise=amount,
         amount_paid_paise=0,
@@ -187,31 +191,36 @@ def create_invoice(
     )
     db.add(invoice)
 
-    # Update counterparty balance
+    counterparty_name = "Counterparty"
+    # Update counterparty balance & fetch name
     if inv_type == "receivable" and customer_id:
         cust = db.query(Customer).filter(Customer.id == customer_id).first()
         if cust:
+            counterparty_name = cust.name
             cust.outstanding_paise = (cust.outstanding_paise or 0) + amount
     elif inv_type == "payable" and supplier_id:
         supp = db.query(Supplier).filter(Supplier.id == supplier_id).first()
         if supp:
+            counterparty_name = supp.name
             supp.outstanding_paise = (supp.outstanding_paise or 0) + amount
 
-    # Record scheduled CashFlowEvent for real-time forecast calculations
-    cfe = CashFlowEvent(
-        id=f"cfe_{uuid.uuid4().hex[:12]}",
-        business_id=business.id,
-        date=due_date,
-        amount_paise=amount if inv_type == "receivable" else -amount,
-        direction="inflow" if inv_type == "receivable" else "outflow",
-        category="customer_receipt" if inv_type == "receivable" else "supplier_payment",
-        entity_type="customer" if inv_type == "receivable" else "supplier",
-        entity_id=customer_id if inv_type == "receivable" else supplier_id,
-        reference=inv_number,
-        status="scheduled",
-        is_simulated=False,
-    )
-    db.add(cfe)
+    # Record projected CashFlowEvent for real-time forecast calculations
+    if invoice.status not in ("void", "cancelled"):
+        cfe = CashFlowEvent(
+            id=f"cfe_{uuid.uuid4().hex[:12]}",
+            business_id=business.id,
+            type="customer_payment" if inv_type == "receivable" else "supplier_payment",
+            label=f"{'Expected Customer Receipt' if inv_type == 'receivable' else 'Scheduled Supplier Bill'} - {counterparty_name} ({inv_number})",
+            direction="incoming" if inv_type == "receivable" else "outgoing",
+            amount_paise=amount,
+            date=due_date,
+            related_invoice_id=invoice.id,
+            is_projected=True,
+            counterparty_name=counterparty_name,
+            status="projected" if inv_type == "receivable" else "scheduled",
+            created_at=to_iso_date(date.today()),
+        )
+        db.add(cfe)
 
     db.commit()
     db.refresh(invoice)
@@ -229,7 +238,15 @@ def update_invoice(
         raise HTTPException(status_code=404, detail="Invoice not found")
 
     if "notes" in payload: inv.notes = payload["notes"]
-    if "dueDate" in payload: inv.due_date = payload["dueDate"]
+    if "dueDate" in payload:
+        inv.due_date = payload["dueDate"]
+        # Sync projected CashFlowEvent date
+        proj_events = db.query(CashFlowEvent).filter(
+            CashFlowEvent.related_invoice_id == inv.id,
+            CashFlowEvent.is_projected == True,
+        ).all()
+        for pe in proj_events:
+            pe.date = payload["dueDate"]
     if "status" in payload: inv.status = payload["status"]
 
     inv.updated_at = to_iso_date(date.today())
@@ -251,7 +268,11 @@ def record_invoice_payment(
     if inv.status in ("void", "cancelled"):
         raise HTTPException(status_code=400, detail="Cannot record payment for a cancelled or void invoice.")
 
-    amount = payload.get("amountPaise", 0)
+    try:
+        amount = int(round(float(payload.get("amountPaise", 0))))
+    except (ValueError, TypeError):
+        amount = 0
+
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Payment amount must be greater than zero.")
 
@@ -314,6 +335,21 @@ def record_invoice_payment(
     )
     db.add(cf_event)
 
+    # Reduce or remove projected CashFlowEvent so forecast never double counts
+    proj_events = db.query(CashFlowEvent).filter(
+        CashFlowEvent.related_invoice_id == inv.id,
+        CashFlowEvent.is_projected == True,
+    ).all()
+    for pe in proj_events:
+        if inv.amount_paid_paise >= inv.amount_paise:
+            db.delete(pe)
+        else:
+            new_amount = max(0, pe.amount_paise - amount)
+            if new_amount == 0:
+                db.delete(pe)
+            else:
+                pe.amount_paise = new_amount
+
     db.commit()
     db.refresh(payment)
 
@@ -356,6 +392,14 @@ def cancel_invoice(
         supp = db.query(Supplier).filter(Supplier.id == inv.supplier_id).first()
         if supp:
             supp.outstanding_paise = max(0, (supp.outstanding_paise or 0) - remaining)
+
+    # Delete any projected CashFlowEvent
+    proj_events = db.query(CashFlowEvent).filter(
+        CashFlowEvent.related_invoice_id == inv.id,
+        CashFlowEvent.is_projected == True,
+    ).all()
+    for pe in proj_events:
+        db.delete(pe)
 
     db.commit()
     db.refresh(inv)

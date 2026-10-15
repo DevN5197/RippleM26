@@ -4,6 +4,7 @@ import { settingsApi } from "@/lib/api/settingsApi";
 import { customerApi } from "@/lib/api/customerApi";
 import { supplierApi } from "@/lib/api/supplierApi";
 import { invoiceApi } from "@/lib/api/invoiceApi";
+import { relationshipsApi } from "@/lib/api/relationshipsApi";
 import { db, resetDbToSeed } from "@/mocks/store";
 
 describe("Registration & Initial Account Onboarding Flow", () => {
@@ -122,10 +123,23 @@ describe("Registration & Initial Account Onboarding Flow", () => {
     expect(bill.amountPaise).toBe(2500000);
     expect(db.invoices.length).toBe(2);
 
-    // Verify complete state integrity
-    expect(db.business.name).toBe("Apex Textiles Pvt Ltd");
-    expect(db.customers[0]?.name).toBe("Metro Lifestyle Retail");
-    expect(db.suppliers[0]?.name).toBe("Surat Yarns & Threads");
+    // 5. Verify Relationship Graph contains ONLY the user's entities and zero demo data
+    const graph = await relationshipsApi.getGraph();
+    const nodeLabels = graph.nodes.map((n) => n.label);
+    const partnerNames = graph.nodes.map((n) => n.metadata.partnerName).filter(Boolean);
+
+    expect(nodeLabels).toContain("Surat Yarns & Threads");
+    expect(nodeLabels).toContain("Metro Lifestyle Retail");
+    expect(partnerNames).toContain("Surat Yarns & Threads");
+    expect(partnerNames).toContain("Metro Lifestyle Retail");
+
+    // Demo data must be completely absent
+    expect(nodeLabels).not.toContain("Shree Textiles");
+    expect(nodeLabels).not.toContain("Urban Threads Boutique");
+    expect(nodeLabels).not.toContain("Mehta Fabrics");
+    expect(partnerNames).not.toContain("Shree Textiles");
+    expect(partnerNames).not.toContain("Urban Threads Boutique");
+    expect(partnerNames).not.toContain("Mehta Fabrics");
   });
 
   it("allows user to skip filling customer and supplier info, keeping initial cash calculations", async () => {
@@ -152,5 +166,10 @@ describe("Registration & Initial Account Onboarding Flow", () => {
     expect(db.customers.length).toBe(0);
     expect(db.suppliers.length).toBe(0);
     expect(db.invoices.length).toBe(0);
+
+    // Relationship graph should have 0 nodes (clean empty state) and zero demo data
+    const graph = await relationshipsApi.getGraph();
+    expect(graph.nodes.length).toBe(0);
+    expect(graph.edges.length).toBe(0);
   });
 });

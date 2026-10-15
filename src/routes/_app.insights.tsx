@@ -853,7 +853,7 @@ Customers Count: ${customersRes?.data?.length ?? 0}
   const currentLive = getLiveCrossPageState();
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5.5rem)] gap-3">
+    <div className="flex flex-col h-[calc(100vh-5.5rem)] gap-4">
       {/* Header with Title and Mode Switch */}
       <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-2.5">
@@ -900,9 +900,9 @@ Customers Count: ${customersRes?.data?.length ?? 0}
       </div>
 
       {/* Cross-Page Live State Linking Ribbon */}
-      <div className="rounded-xl border border-border/70 bg-card/60 p-2.5 text-xs text-muted-foreground shadow-xs flex flex-wrap items-center justify-between gap-2">
+      <div className="rounded-xl border border-border/70 bg-card/60 p-3 text-xs text-muted-foreground shadow-xs flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
           <span className="font-semibold text-foreground">Live App State Connected:</span>
           <span className="hidden sm:inline">
             Cash: <strong className="text-foreground">{currentLive.overview.availableCashOnHandFormatted}</strong>

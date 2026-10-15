@@ -77,7 +77,10 @@ function InvoiceDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["customers"] }),
       queryClient.invalidateQueries({ queryKey: ["suppliers"] }),
       queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      queryClient.invalidateQueries({ queryKey: ["forecast"] }),
+      queryClient.invalidateQueries({ queryKey: ["simulator"] }),
       queryClient.invalidateQueries({ queryKey: ["cash-flow"] }),
+      queryClient.invalidateQueries({ queryKey: ["relationships"] }),
     ]);
   };
 
@@ -102,6 +105,10 @@ function InvoiceDetailPage() {
         queryClient.invalidateQueries({ queryKey: ["customers"] }),
         queryClient.invalidateQueries({ queryKey: ["suppliers"] }),
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["forecast"] }),
+        queryClient.invalidateQueries({ queryKey: ["simulator"] }),
+        queryClient.invalidateQueries({ queryKey: ["cash-flow"] }),
+        queryClient.invalidateQueries({ queryKey: ["relationships"] }),
       ]);
       void navigate({ to: "/invoices" });
     } catch (err: unknown) {

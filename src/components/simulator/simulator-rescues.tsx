@@ -332,10 +332,7 @@ export function NodeInspectionDialog({
                 )}
               >
                 {fragility.isKeystone && (
-                  <span className="relative flex h-2 w-2 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                  </span>
+                  <Zap className="h-3 w-3 text-destructive shrink-0" />
                 )}
                 <span>{fragility.badgeText}</span>
               </Badge>
@@ -425,7 +422,7 @@ export function NodeInspectionDialog({
                     size="sm"
                     variant="outline"
                     onClick={onTriggerAutoPhase}
-                    className="w-full justify-start gap-2 border-primary/50 text-primary hover:bg-primary/10 shadow-sm shimmer-rescue-btn ring-1 ring-primary/30"
+                    className="w-full justify-start gap-2 border-primary/40 text-primary hover:bg-primary/10 shadow-xs"
                   >
                     <Layers className="h-4 w-4" />
                     <span>Auto-Phase Inventory (Split into 2 Batches)</span>
@@ -436,7 +433,7 @@ export function NodeInspectionDialog({
                     size="sm"
                     variant="outline"
                     onClick={onTriggerSplitEscrow}
-                    className="w-full justify-start gap-2 border-primary/50 text-primary hover:bg-primary/10 shadow-sm shimmer-rescue-btn ring-1 ring-primary/30"
+                    className="w-full justify-start gap-2 border-primary/40 text-primary hover:bg-primary/10 shadow-xs"
                   >
                     <Lock className="h-4 w-4" />
                     <span>Lock Tri-Party Split-Escrow (Funded via Receivable)</span>

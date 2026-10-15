@@ -173,7 +173,7 @@ export function InventoryRiskAlertsPanel({
                       <Link
                         to="/simulator"
                         search={{
-                          eventId: `node_stock_1`,
+                          eventId: alert.productId ? `node_${alert.productId}` : `node_${alert.id}`,
                           eventName: alert.title,
                         }}
                       >

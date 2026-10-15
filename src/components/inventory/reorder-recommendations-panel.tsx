@@ -231,7 +231,7 @@ export function ReorderRecommendationsPanel({
                   <Link
                     to="/simulator"
                     search={{
-                      eventId: `node_stock_1`,
+                      eventId: `node_${rec.productId}`,
                       eventName: `${rec.productName} Reorder`,
                     }}
                   >

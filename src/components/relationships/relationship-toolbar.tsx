@@ -30,6 +30,7 @@ interface RelationshipToolbarProps {
   onResetFilters: () => void;
   matchCount: number;
   totalCount: number;
+  partnerOptions?: string[];
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
 }
@@ -41,6 +42,7 @@ export function RelationshipToolbar({
   onResetFilters,
   matchCount,
   totalCount,
+  partnerOptions = [],
   isFullscreen,
   onToggleFullscreen,
 }: RelationshipToolbarProps) {
@@ -179,10 +181,13 @@ export function RelationshipToolbar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All partners</SelectItem>
-            <SelectItem value="Shree Textiles">Shree Textiles</SelectItem>
-            <SelectItem value="Mehta Fabrics">Mehta Fabrics</SelectItem>
-            <SelectItem value="Urban Threads">Urban Threads</SelectItem>
-            <SelectItem value="Style Mart">Style Mart</SelectItem>
+            {partnerOptions && partnerOptions.length > 0
+              ? partnerOptions.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
+                  </SelectItem>
+                ))
+              : null}
           </SelectContent>
         </Select>
 

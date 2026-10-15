@@ -121,9 +121,16 @@ function DashboardPage() {
           ? "Customer invoice created successfully!"
           : "Supplier bill recorded successfully!",
       );
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["cash-flow"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["invoices"] }),
+        queryClient.invalidateQueries({ queryKey: ["customers"] }),
+        queryClient.invalidateQueries({ queryKey: ["suppliers"] }),
+        queryClient.invalidateQueries({ queryKey: ["forecast"] }),
+        queryClient.invalidateQueries({ queryKey: ["simulator"] }),
+        queryClient.invalidateQueries({ queryKey: ["cash-flow"] }),
+        queryClient.invalidateQueries({ queryKey: ["relationships"] }),
+      ]);
       setInvoiceDialogOpen(false);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to create invoice record.");
@@ -224,7 +231,7 @@ function DashboardPage() {
       />
 
       {/* ── TOP ROW: 3 CLEAR COCKPIT CARDS ── */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3">
         {/* Card 1: Money in Bank Today */}
         <Card className="shadow-xs border-border/70 bg-card">
           <CardHeader className="pb-2">
@@ -240,12 +247,6 @@ function DashboardPage() {
                     : "bg-warning/15 text-warning-foreground border-warning/30 font-semibold text-xs flex items-center gap-1.5"
                 }
               >
-                {summary.cashOnHandPaise <= 5_000_000 && (
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-                  </span>
-                )}
                 {summary.cashOnHandPaise > 5_000_000
                   ? "Safe Reserve"
                   : "Near Minimum Reserve"}
@@ -333,7 +334,7 @@ function DashboardPage() {
           )}
         >
           {hasRisk && (
-            <div className="h-1 w-full bg-gradient-to-r from-red-500 via-amber-500 to-red-500 animate-pulse" />
+            <div className="h-1 w-full bg-destructive/40" />
           )}
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -342,15 +343,11 @@ function DashboardPage() {
               </span>
               {hasRisk ? (
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <Badge className="bg-destructive text-white text-[10px] font-bold shadow-xs flex items-center gap-1.5 px-2 py-0.5">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-                    </span>
-                    <span>🚨 URGENT: CASH SHORTFALL RISK</span>
+                  <Badge className="bg-destructive/90 text-white text-[10px] font-bold shadow-xs px-2 py-0.5">
+                    CRITICAL LIQUIDITY CONTAGION
                   </Badge>
-                  <span className="bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded">
-                    ⚡ In 10 Days
+                  <span className="bg-destructive/10 text-destructive text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-destructive/20">
+                    In 10 Days
                   </span>
                 </div>
               ) : (
@@ -387,10 +384,10 @@ function DashboardPage() {
               <Button
                 size="sm"
                 asChild
-                className="w-full gap-1.5 font-semibold shadow-md shadow-primary/20 h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/95 shimmer-rescue-btn"
+                className="w-full gap-1.5 font-semibold shadow-xs h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/95"
               >
                 <Link to="/simulator">
-                  Fix Timing in Ripple Simulator →
+                  Explore payment options →
                 </Link>
               </Button>
             ) : (
@@ -410,7 +407,7 @@ function DashboardPage() {
       </div>
 
       {/* ── MIDDLE ROW (SIDE-BY-SIDE): 30-DAY FORECAST (7 COLS) + UPCOMING BILLS & RECEIPTS (5 COLS) ── */}
-      <div className="grid gap-4 lg:grid-cols-12">
+      <div className="grid gap-6 lg:grid-cols-12">
         {/* Left: 30-day projected cash balance (7 cols) */}
         <Card className="shadow-xs lg:col-span-7">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -588,6 +585,8 @@ function DashboardPage() {
           </CardContent>
         )}
       </Card>
+
+
 
       {/* Quick Action Modal for Invoices & Bills */}
       <InvoiceDialog

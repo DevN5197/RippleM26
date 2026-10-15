@@ -54,11 +54,15 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
   const reactFlowInstance = useReactFlow();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const resolvedInitialId = useMemo(() => {
-    if (!initialSelectedId) return "node_delivery_1";
-    const found = data.nodes.find(
-      (n) => n.id === initialSelectedId || n.entityId === initialSelectedId,
-    );
-    return found ? found.id : initialSelectedId;
+    if (initialSelectedId) {
+      const found = data.nodes.find(
+        (n) => n.id === initialSelectedId || n.entityId === initialSelectedId,
+      );
+      if (found) return found.id;
+    }
+    const atRisk = data.nodes.find((n) => n.status === "at_risk" || n.status === "delayed");
+    if (atRisk) return atRisk.id;
+    return data.nodes[0]?.id || null;
   }, [data.nodes, initialSelectedId]);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(resolvedInitialId);
@@ -72,6 +76,24 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
     }
   }, [initialSelectedId, data.nodes]);
   const [filters, setFilters] = useState<FilterState>(initialFilters);
+
+  // Dynamic list of distinct partners across all graph nodes
+  const partnerOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const n of data.nodes) {
+      if (n.metadata.partnerName) set.add(n.metadata.partnerName);
+      if (n.type === "supplier" || n.type === "customer") set.add(n.label);
+    }
+    return Array.from(set).filter(Boolean).sort();
+  }, [data.nodes]);
+
+  // Featured touchpoint nodes for quick inspection
+  const featuredNodes = useMemo(() => {
+    const atRisk = data.nodes.filter((n) => n.status === "at_risk" || n.status === "delayed");
+    if (atRisk.length >= 3) return atRisk.slice(0, 3);
+    const others = data.nodes.filter((n) => !atRisk.some((r) => r.id === n.id));
+    return [...atRisk, ...others].slice(0, 3);
+  }, [data.nodes]);
 
   // Escape key handler for fullscreen
   useEffect(() => {
@@ -223,6 +245,7 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
         onResetFilters={handleResetFilters}
         matchCount={filteredNodeIds.size}
         totalCount={data.nodes.length}
+        partnerOptions={partnerOptions}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
       />
@@ -237,7 +260,15 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
               : "lg:col-span-8 xl:col-span-8 flex flex-col rounded-xl border bg-card shadow-xs overflow-hidden h-[620px] sm:h-[680px] relative"
           }
         >
-          {filteredNodeIds.size === 0 ? (
+          {data.nodes.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center p-8">
+              <EmptyState
+                icon={Network}
+                title="No Relationship Touchpoints Yet"
+                description="Add your suppliers, customers, inventory items, and invoices to see how your operating obligations connect."
+              />
+            </div>
+          ) : filteredNodeIds.size === 0 ? (
             <div className="flex-1 flex items-center justify-center p-8">
               <EmptyState
                 icon={FilterX}
@@ -438,38 +469,27 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                 Click any node on the graph to inspect its upstream dependencies, downstream
                 consequences, cash-flow impact, and simulate delays.
               </p>
-              <div className="mt-4 flex flex-col gap-2 w-full max-w-xs">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Featured workflows
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSelectNode("node_delivery_1")}
-                  className="justify-between text-xs h-8"
-                >
-                  <span>Inventory Delivery (Day 4)</span>
-                  <span className="text-[10px] text-muted-foreground">Upcoming</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSelectNode("node_pay_3")}
-                  className="justify-between text-xs h-8"
-                >
-                  <span>PO Balance Payment (₹30,000)</span>
-                  <span className="text-[10px] text-destructive">Day 4 Outflow</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSelectNode("node_risk_1")}
-                  className="justify-between text-xs h-8"
-                >
-                  <span>Cash Shortfall Risk (Day 5)</span>
-                  <span className="text-[10px] text-warning">Critical</span>
-                </Button>
-              </div>
+              {featuredNodes.length > 0 && (
+                <div className="mt-4 flex flex-col gap-2 w-full max-w-xs">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Featured touchpoints
+                  </p>
+                  {featuredNodes.map((n) => (
+                    <Button
+                      key={n.id}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSelectNode(n.id)}
+                      className="justify-between text-xs h-8"
+                    >
+                      <span className="truncate max-w-[170px]">{n.label}</span>
+                      <span className="text-[10px] text-muted-foreground capitalize">
+                        {n.status.replace(/_/g, " ")}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

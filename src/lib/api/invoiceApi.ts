@@ -277,80 +277,89 @@ export const invoiceApi = {
   },
 
   async create(input: CreateInvoiceInput): Promise<Invoice> {
+    const amountPaise = Math.round(Number(input.amountPaise) || 0);
+    const cleanInput: CreateInvoiceInput = {
+      ...input,
+      amountPaise,
+      customerId: input.type === "receivable" ? input.customerId : undefined,
+      supplierId: input.type === "payable" ? input.supplierId : undefined,
+    };
+
     if (DATA_MODE === "mock") {
       await delay();
-      if (!input.amountPaise || input.amountPaise <= 0) {
+      if (!amountPaise || amountPaise <= 0) {
         throw new Error("Invoice amount must be greater than zero.");
       }
 
-      if (input.type === "receivable" && !input.customerId) {
+      if (cleanInput.type === "receivable" && !cleanInput.customerId) {
         throw new Error("A customer must be selected for accounts receivable invoices.");
       }
 
-      if (input.type === "payable" && !input.supplierId) {
+      if (cleanInput.type === "payable" && !cleanInput.supplierId) {
         throw new Error("A supplier must be selected for accounts payable vendor bills.");
       }
 
       const id = nextId("inv");
       const defaultNumber =
-        input.invoiceNumber?.trim() ||
-        (input.type === "receivable"
+        cleanInput.invoiceNumber?.trim() ||
+        (cleanInput.type === "receivable"
           ? `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`
           : `BILL-2026-${Math.floor(100 + Math.random() * 900)}`);
 
       const invoice: Invoice = {
         id,
         invoiceNumber: defaultNumber,
-        type: input.type,
-        customerId: input.customerId,
-        customerOrderId: input.customerOrderId,
-        supplierId: input.supplierId,
-        purchaseOrderId: input.purchaseOrderId,
-        amountPaise: input.amountPaise,
+        type: cleanInput.type,
+        customerId: cleanInput.customerId,
+        customerOrderId: cleanInput.customerOrderId,
+        supplierId: cleanInput.supplierId,
+        purchaseOrderId: cleanInput.purchaseOrderId,
+        amountPaise,
         amountPaidPaise: 0,
-        status: input.status ?? "sent",
-        issueDate: input.issueDate,
-        dueDate: input.dueDate,
-        notes: input.notes?.trim() || undefined,
+        status: cleanInput.status ?? "sent",
+        issueDate: cleanInput.issueDate,
+        dueDate: cleanInput.dueDate,
+        notes: cleanInput.notes?.trim() || undefined,
         createdAt: new Date().toISOString().slice(0, 10),
       };
 
       db.invoices.unshift(invoice);
 
       // Update counterparty balance
-      if (input.type === "receivable" && input.customerId) {
-        const cust = db.customers.find((c) => c.id === input.customerId);
+      let counterpartyName = "Counterparty";
+      if (cleanInput.type === "receivable" && cleanInput.customerId) {
+        const cust = db.customers.find((c) => c.id === cleanInput.customerId);
         if (cust) {
-          cust.outstandingPaise = (cust.outstandingPaise || 0) + input.amountPaise;
+          counterpartyName = cust.name;
+          cust.outstandingPaise = (cust.outstandingPaise || 0) + amountPaise;
         }
-      } else if (input.type === "payable" && input.supplierId) {
-        const supp = db.suppliers.find((s) => s.id === input.supplierId);
+      } else if (cleanInput.type === "payable" && cleanInput.supplierId) {
+        const supp = db.suppliers.find((s) => s.id === cleanInput.supplierId);
         if (supp) {
-          supp.outstandingPaise = (supp.outstandingPaise || 0) + input.amountPaise;
+          counterpartyName = supp.name;
+          supp.outstandingPaise = (supp.outstandingPaise || 0) + amountPaise;
         }
       }
 
-      const isReceivable = input.type === "receivable";
+      const isReceivable = cleanInput.type === "receivable";
       const event: CashFlowEvent = {
         id: nextId("evt"),
         type: isReceivable ? "customer_payment" : "supplier_payment",
-        label: `${isReceivable ? "Expected Receipt" : "Scheduled Payment"} - ${invoice.invoiceNumber}`,
+        label: `${isReceivable ? "Expected Customer Receipt" : "Scheduled Supplier Bill"} - ${counterpartyName} (${invoice.invoiceNumber})`,
         direction: isReceivable ? "incoming" : "outgoing",
-        amountPaise: input.amountPaise,
-        date: input.dueDate,
+        amountPaise,
+        date: cleanInput.dueDate,
         relatedInvoiceId: invoice.id,
         isProjected: true,
-        status: "scheduled",
-        counterpartyName: isReceivable
-          ? db.customers.find((c) => c.id === input.customerId)?.name
-          : db.suppliers.find((s) => s.id === input.supplierId)?.name,
+        status: isReceivable ? "projected" : "scheduled",
+        counterpartyName,
       };
       db.cashFlowEvents.push(event);
 
       return invoice;
     }
 
-    return httpRequest<Invoice>("/api/invoices", { method: "POST", body: input });
+    return httpRequest<Invoice>("/api/invoices", { method: "POST", body: cleanInput });
   },
 
   async update(id: string, patch: UpdateInvoiceInput): Promise<Invoice> {
@@ -367,12 +376,22 @@ export const invoiceApi = {
         status: patch.status ?? existing.status,
       };
       db.invoices = db.invoices.map((i) => (i.id === id ? updated : i));
+
+      if (patch.dueDate) {
+        const projEvent = db.cashFlowEvents.find(
+          (e) => e.relatedInvoiceId === id && e.isProjected === true,
+        );
+        if (projEvent) projEvent.date = patch.dueDate;
+      }
+
       return updated;
     }
     return httpRequest<Invoice>(`/api/invoices/${id}`, { method: "PATCH", body: patch });
   },
 
   async recordPayment(invoiceId: string, input: RecordPaymentInput): Promise<Payment> {
+    const payAmountPaise = Math.round(Number(input.amountPaise) || 0);
+
     if (DATA_MODE === "mock") {
       await delay();
       const invoice = db.invoices.find((i) => i.id === invoiceId);
@@ -382,14 +401,14 @@ export const invoiceApi = {
         throw new Error("Cannot record payment for a cancelled or void invoice.");
       }
 
-      if (!input.amountPaise || input.amountPaise <= 0) {
+      if (!payAmountPaise || payAmountPaise <= 0) {
         throw new Error("Payment amount must be greater than zero.");
       }
 
       const remainingPaise = Math.max(0, invoice.amountPaise - invoice.amountPaidPaise);
-      if (input.amountPaise > remainingPaise) {
+      if (payAmountPaise > remainingPaise) {
         throw new Error(
-          `Payment amount (₹${(input.amountPaise / 100).toLocaleString("en-IN")}) exceeds remaining invoice balance (₹${(remainingPaise / 100).toLocaleString("en-IN")}).`,
+          `Payment amount (₹${(payAmountPaise / 100).toLocaleString("en-IN")}) exceeds remaining invoice balance (₹${(remainingPaise / 100).toLocaleString("en-IN")}).`,
         );
       }
 
@@ -402,7 +421,7 @@ export const invoiceApi = {
         invoiceId,
         customerId: invoice.customerId,
         supplierId: invoice.supplierId,
-        amountPaise: input.amountPaise,
+        amountPaise: payAmountPaise,
         status: "completed",
         scheduledDate: payDate,
         completedDate: payDate,
@@ -412,7 +431,7 @@ export const invoiceApi = {
       db.payments.push(record);
 
       // Update invoice balances
-      invoice.amountPaidPaise += input.amountPaise;
+      invoice.amountPaidPaise += payAmountPaise;
       if (invoice.amountPaidPaise >= invoice.amountPaise) {
         invoice.status = "paid";
       } else {
@@ -423,12 +442,12 @@ export const invoiceApi = {
       if (isReceivable && invoice.customerId) {
         const cust = db.customers.find((c) => c.id === invoice.customerId);
         if (cust) {
-          cust.outstandingPaise = Math.max(0, (cust.outstandingPaise || 0) - input.amountPaise);
+          cust.outstandingPaise = Math.max(0, (cust.outstandingPaise || 0) - payAmountPaise);
         }
       } else if (!isReceivable && invoice.supplierId) {
         const supp = db.suppliers.find((s) => s.id === invoice.supplierId);
         if (supp) {
-          supp.outstandingPaise = Math.max(0, (supp.outstandingPaise || 0) - input.amountPaise);
+          supp.outstandingPaise = Math.max(0, (supp.outstandingPaise || 0) - payAmountPaise);
         }
       }
 
@@ -438,7 +457,7 @@ export const invoiceApi = {
         type: isReceivable ? "customer_payment" : "supplier_payment",
         label: `${isReceivable ? "Receipt" : "Payment"} - ${invoice.invoiceNumber}`,
         direction: record.direction,
-        amountPaise: input.amountPaise,
+        amountPaise: payAmountPaise,
         date: payDate,
         relatedInvoiceId: invoice.id,
         isProjected: false,
@@ -449,12 +468,29 @@ export const invoiceApi = {
       };
       db.cashFlowEvents.push(event);
 
+      // Reduce or delete projected CashFlowEvent so forecast never double counts
+      const projEvents = db.cashFlowEvents.filter(
+        (e) => e.relatedInvoiceId === invoice.id && e.isProjected === true,
+      );
+      for (const pe of projEvents) {
+        if (invoice.amountPaidPaise >= invoice.amountPaise) {
+          db.cashFlowEvents = db.cashFlowEvents.filter((e) => e.id !== pe.id);
+        } else {
+          const newAmount = Math.max(0, pe.amountPaise - payAmountPaise);
+          if (newAmount === 0) {
+            db.cashFlowEvents = db.cashFlowEvents.filter((e) => e.id !== pe.id);
+          } else {
+            pe.amountPaise = newAmount;
+          }
+        }
+      }
+
       return record;
     }
 
     return httpRequest<Payment>(`/api/invoices/${invoiceId}/payments`, {
       method: "POST",
-      body: input,
+      body: { ...input, amountPaise: payAmountPaise },
     });
   },
 
@@ -483,6 +519,11 @@ export const invoiceApi = {
           supp.outstandingPaise = Math.max(0, (supp.outstandingPaise || 0) - remainingPaise);
         }
       }
+
+      // Delete any projected CashFlowEvent
+      db.cashFlowEvents = db.cashFlowEvents.filter(
+        (e) => !(e.relatedInvoiceId === invoice.id && e.isProjected === true),
+      );
 
       return { ...invoice };
     }

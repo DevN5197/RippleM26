@@ -88,6 +88,21 @@ export const EDGE_HANDLES: Record<string, { sourceHandle: string; targetHandle: 
   edge_inv2002_to_rec2002: { sourceHandle: "right", targetHandle: "left" },
 };
 
+// Process stage default X coordinates for dynamic user-generated graphs
+export const PROCESS_STAGE_X: Record<string, number> = {
+  supplier: 60,
+  purchase_order: 520,
+  recorded_payment: 520,
+  inventory_delivery: 980,
+  inventory_stock: 980,
+  sale: 1440,
+  customer: 1440,
+  customer_invoice: 1900,
+  supplier_payment: 1900,
+  expected_receipt: 2360,
+  cash_flow_risk: 2820,
+};
+
 export interface GraphAdapterOptions {
   selectedNodeId?: string | null | undefined;
   filteredNodeIds?: Set<string> | undefined;
@@ -151,80 +166,95 @@ export function adaptToReactFlow(
   );
 
   const isSelectionActive = Boolean(selectedNodeId);
+  const stageCounts: Record<string, number> = {};
 
   // Transform Nodes
-  const nodes: Node<CustomNodeData>[] = data.nodes
-    .filter((n) => !filteredNodeIds || filteredNodeIds.has(n.id))
-    .map((node, index) => {
-      const isSelected = node.id === selectedNodeId;
-      const isUpstream = upstreamNodeIds.has(node.id);
-      const isDownstream = downstreamNodeIds.has(node.id);
-      const isConnected = isSelected || isUpstream || isDownstream;
-      const isDimmed = isSelectionActive && !isConnected;
+  const visibleNodes = data.nodes.filter((n) => !filteredNodeIds || filteredNodeIds.has(n.id));
 
-      // Deterministic layout with fallback grid
-      const x = STAGE_X[node.id] ?? 80 + (index % 5) * 320;
-      const y = STAGE_Y[node.id] ?? 100 + Math.floor(index / 5) * 160;
+  const nodes: Node<CustomNodeData>[] = visibleNodes.map((node, index) => {
+    const isSelected = node.id === selectedNodeId;
+    const isUpstream = upstreamNodeIds.has(node.id);
+    const isDownstream = downstreamNodeIds.has(node.id);
+    const isConnected = isSelected || isUpstream || isDownstream;
+    const isDimmed = isSelectionActive && !isConnected;
 
-      return {
-        id: node.id,
-        type: "custom",
-        position: { x, y },
-        data: {
-          node,
-          isSelected,
-          isUpstream,
-          isDownstream,
-          isDimmed,
+    const stageKey = node.type;
+    const stageIndex = stageCounts[stageKey] ?? 0;
+    stageCounts[stageKey] = stageIndex + 1;
+
+    // Use predefined STAGE_X if present (demo nodes), else process stage column
+    const defaultX = PROCESS_STAGE_X[node.type] ?? 80 + (index % 5) * 320;
+    const x = STAGE_X[node.id] ?? defaultX;
+
+    // Use predefined STAGE_Y if present, else vertical spacing per stage
+    const defaultY = node.type === "customer" ? -180 : 80 + stageIndex * 220;
+    const y = STAGE_Y[node.id] ?? defaultY;
+
+    return {
+      id: node.id,
+      type: "custom",
+      position: { x, y },
+      data: {
+        node,
+        isSelected,
+        isUpstream,
+        isDownstream,
+        isDimmed,
+      },
+    };
+  });
+
+  // Lane Header Annotations for structured swimlanes (only on pristine demo graph)
+  const isDemoGraph = data.nodes.some((n) => n.id === "node_sup_1");
+
+  const laneNodes: Node<LaneHeaderData>[] = isDemoGraph
+    ? [
+        {
+          id: "lane_1",
+          type: "lane_header",
+          position: { x: 60, y: -260 },
+          data: {
+            title: "Chain 1: Primary Operating Cycle",
+            subtitle: "Shree Textiles → Fabrication → Urban Threads Boutique · Risk Point Day 5",
+            badge: "Critical Path",
+            badgeVariant: "destructive",
+          },
+          selectable: false,
+          draggable: false,
         },
-      };
-    });
-
-  // Lane Header Annotations for structured swimlanes
-  const laneNodes: Node<LaneHeaderData>[] = [
-    {
-      id: "lane_1",
-      type: "lane_header",
-      position: { x: 60, y: -260 },
-      data: {
-        title: "Chain 1: Primary Operating Cycle",
-        subtitle: "Shree Textiles → Fabrication → Urban Threads Boutique · Risk Point Day 5",
-        badge: "Critical Path",
-        badgeVariant: "destructive",
-      },
-      selectable: false,
-      draggable: false,
-    },
-    {
-      id: "lane_2",
-      type: "lane_header",
-      position: { x: 60, y: 570 },
-      data: {
-        title: "Chain 2: Secondary Procurement",
-        subtitle: "Mehta Fabrics → Linen Shirt PO-2 & Day 11 Delivery · Net-45 Terms",
-        badge: "Active Restock",
-        badgeVariant: "secondary",
-      },
-      selectable: false,
-      draggable: false,
-    },
-    {
-      id: "lane_3",
-      type: "lane_header",
-      position: { x: 60, y: 1150 },
-      data: {
-        title: "Chain 3: Receivables & Collections",
-        subtitle: "Style Mart → Overdue INV-1999 Collection & Day 39 Settlement",
-        badge: "Overdue Attention",
-        badgeVariant: "warning",
-      },
-      selectable: false,
-      draggable: false,
-    },
-  ];
+        {
+          id: "lane_2",
+          type: "lane_header",
+          position: { x: 60, y: 570 },
+          data: {
+            title: "Chain 2: Secondary Procurement",
+            subtitle: "Mehta Fabrics → Linen Shirt PO-2 & Day 11 Delivery · Net-45 Terms",
+            badge: "Active Restock",
+            badgeVariant: "secondary",
+          },
+          selectable: false,
+          draggable: false,
+        },
+        {
+          id: "lane_3",
+          type: "lane_header",
+          position: { x: 60, y: 1150 },
+          data: {
+            title: "Chain 3: Receivables & Collections",
+            subtitle: "Style Mart → Overdue INV-1999 Collection & Day 39 Settlement",
+            badge: "Overdue Attention",
+            badgeVariant: "warning",
+          },
+          selectable: false,
+          draggable: false,
+        },
+      ]
+    : [];
 
   const allNodes =
-    filteredNodeIds && filteredNodeIds.size < data.nodes.length ? nodes : [...laneNodes, ...nodes];
+    filteredNodeIds && filteredNodeIds.size < data.nodes.length
+      ? nodes
+      : [...laneNodes, ...nodes];
 
   // Transform Edges
   const validNodeIds = new Set(nodes.map((n) => n.id));

@@ -30,7 +30,7 @@ export function AppHeader() {
   const hasAlerts = alerts.length > 0;
 
   return (
-    <header className="glass-surface sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-border/60 px-3 sm:px-5">
+    <header className="glass-surface sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-border/60 px-4 sm:px-8 lg:px-10">
       <SidebarTrigger aria-label="Toggle sidebar" className="-ml-1 text-muted-foreground" />
       <Separator orientation="vertical" className="mx-1 h-5" />
       <div className="flex-1" />
@@ -40,19 +40,16 @@ export function AppHeader() {
             variant="ghost"
             size="icon"
             aria-label={`Notifications (${alerts.length})`}
-            className="relative rounded-full text-muted-foreground hover:text-foreground"
+            className="relative rounded-full text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <Bell
               className={cn(
                 "h-4.5 w-4.5 transition-colors",
-                hasAlerts && "bell-ring text-destructive",
+                hasAlerts ? "text-destructive" : "text-muted-foreground",
               )}
             />
             {hasAlerts && (
-              <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive ring-2 ring-card" />
-              </span>
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-card" />
             )}
           </Button>
         </DropdownMenuTrigger>

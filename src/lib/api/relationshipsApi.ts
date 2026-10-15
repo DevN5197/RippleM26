@@ -1,6 +1,7 @@
 import { DATA_MODE } from "@/lib/config";
 import { httpRequest } from "@/lib/api/client";
 import { db, delay } from "@/mocks/store";
+import { formatMoney } from "@/lib/formatters";
 import type {
   RelationshipGraphData,
   RelationshipGraphNode,
@@ -11,10 +12,429 @@ import type {
 } from "@/types";
 
 /**
+ * Dynamically builds the relationship graph from active user entities in the database.
+ * Used for all registered, custom, and onboarding user accounts.
+ */
+export function buildDynamicRelationshipGraph(): RelationshipGraphData {
+  const nodes: RelationshipGraphNode[] = [];
+  const edges: RelationshipGraphEdge[] = [];
+
+  // 1. Suppliers
+  for (const s of db.suppliers) {
+    const isAtRisk = (s.reliabilityScore ?? 100) < 75;
+    nodes.push({
+      id: `node_${s.id}`,
+      type: "supplier",
+      label: s.name,
+      status: isAtRisk ? "at_risk" : "active",
+      amountPaise: s.outstandingPaise,
+      currency: "INR",
+      entityId: s.id,
+      metadata: {
+        entityType: "supplier",
+        referenceNumber: `SUP-${s.id.slice(-4).toUpperCase()}`,
+        partnerName: s.name,
+        partnerType: "supplier",
+        expectedDate: `${s.paymentTermsDays ?? 30}d terms`,
+        workflowSignificance: `Supplier partner · ${s.paymentTermsDays ?? 30}d payment terms · Reliability: ${s.reliabilityScore ?? 90}%.`,
+        riskSeverity: isAtRisk ? "warning" : undefined,
+        cashImpactPaise: s.outstandingPaise,
+        cashDirection: "outgoing",
+        nextMilestone: `Supply order fulfillment · Lead time ${s.leadTimeDays ?? 7}d`,
+      },
+    });
+  }
+
+  // 2. Customers
+  for (const c of db.customers) {
+    nodes.push({
+      id: `node_${c.id}`,
+      type: "customer",
+      label: c.name,
+      status: c.status === "archived" ? "completed" : "active",
+      amountPaise: c.outstandingPaise,
+      currency: "INR",
+      entityId: c.id,
+      metadata: {
+        entityType: "customer",
+        referenceNumber: `CUS-${c.id.slice(-4).toUpperCase()}`,
+        partnerName: c.name,
+        partnerType: "customer",
+        expectedDate: `${c.creditTermsDays ?? 15}d payment terms`,
+        workflowSignificance: `Customer partner on ${c.creditTermsDays ?? 15}-day credit terms.`,
+        cashImpactPaise: c.outstandingPaise,
+        cashDirection: "incoming",
+        nextMilestone: "Receivable settlement cycle",
+      },
+    });
+  }
+
+  // 3. Products & Stock
+  for (const p of db.products) {
+    const inv = db.inventory.find((i) => i.productId === p.id);
+    const qtyOnHand = inv?.quantityOnHand ?? 0;
+    const reorderPoint = p.reorderPoint ?? 10;
+    const isStockLow = qtyOnHand <= reorderPoint;
+
+    nodes.push({
+      id: `node_${p.id}`,
+      type: "inventory_stock",
+      label: `${p.name} (${qtyOnHand} in stock)`,
+      status: isStockLow ? "at_risk" : "active",
+      amountPaise: p.unitPricePaise ?? p.unitCostPaise,
+      currency: "INR",
+      entityId: p.id,
+      metadata: {
+        entityType: "product",
+        referenceNumber: p.sku,
+        productName: p.name,
+        sku: p.sku,
+        quantity: qtyOnHand,
+        riskSeverity: isStockLow ? "warning" : undefined,
+        riskDescription: isStockLow
+          ? `${qtyOnHand} units on hand, at or below safety reorder point of ${reorderPoint}.`
+          : undefined,
+        workflowSignificance: `Product SKU ${p.sku}. Current warehouse inventory: ${qtyOnHand} units.`,
+        nextMilestone: isStockLow ? "Trigger restock replenishment" : "Available for fulfillment",
+      },
+    });
+
+    if (p.preferredSupplierId && db.suppliers.some((s) => s.id === p.preferredSupplierId)) {
+      edges.push({
+        id: `edge_sup_${p.preferredSupplierId}_to_prod_${p.id}`,
+        source: `node_${p.preferredSupplierId}`,
+        target: `node_${p.id}`,
+        relationship: "supplies_stock",
+        status: "active",
+        description: `Supplies stock for ${p.name}`,
+        lagDays: 7,
+      });
+    }
+  }
+
+  // 4. Purchase Orders & Inventory Deliveries
+  for (const po of db.purchaseOrders) {
+    const supplier = db.suppliers.find((s) => s.id === po.supplierId);
+    const prodId = po.productId || po.lineItems?.[0]?.productId;
+    const product = prodId ? db.products.find((p) => p.id === prodId) : null;
+    const poNodeId = `node_${po.id}`;
+    const delivNodeId = `node_deliv_${po.id}`;
+
+    nodes.push({
+      id: poNodeId,
+      type: "purchase_order",
+      label: `${po.poNumber || po.id}: ${po.quantity ?? 1}x ${product?.name || "Goods"}`,
+      status: po.status === "received" ? "completed" : po.status === "delayed" ? "delayed" : "upcoming",
+      date: po.orderDate,
+      amountPaise: po.totalPaise,
+      currency: "INR",
+      entityId: po.id,
+      metadata: {
+        entityType: "purchase_order",
+        referenceNumber: po.poNumber || po.id,
+        partnerName: supplier?.name || "Supplier",
+        quantity: po.quantity ?? 1,
+        productName: product?.name,
+        sku: product?.sku,
+        expectedDate: po.expectedDeliveryDate,
+        actualDate: po.orderDate,
+        cashImpactPaise: -po.totalPaise,
+        cashDirection: "outgoing",
+        workflowSignificance: `Procurement order placed with ${supplier?.name || "supplier"}.`,
+        nextMilestone: `Delivery expected ${po.expectedDeliveryDate}`,
+      },
+    });
+
+    nodes.push({
+      id: delivNodeId,
+      type: "inventory_delivery",
+      label: `Delivery: ${po.poNumber || po.id}`,
+      status: po.status === "received" ? "completed" : "upcoming",
+      date: po.expectedDeliveryDate,
+      currency: "INR",
+      entityId: po.id,
+      metadata: {
+        entityType: "inventory_item",
+        referenceNumber: `DELIV-${po.id}`,
+        partnerName: supplier?.name || "Supplier",
+        productName: product?.name,
+        sku: product?.sku,
+        quantity: po.quantity ?? 1,
+        expectedDate: po.expectedDeliveryDate,
+        workflowSignificance: `Arrival of ${po.quantity ?? 1} units from ${supplier?.name || "supplier"}.`,
+        nextMilestone: "Stock added to available inventory",
+      },
+    });
+
+    if (supplier) {
+      edges.push({
+        id: `edge_sup_${supplier.id}_to_po_${po.id}`,
+        source: `node_${supplier.id}`,
+        target: poNodeId,
+        relationship: "triggers",
+        status: po.status === "received" ? "completed" : "active",
+        description: "Procurement purchase order",
+        lagDays: 0,
+      });
+    }
+
+    edges.push({
+      id: `edge_po_${po.id}_to_deliv_${po.id}`,
+      source: poNodeId,
+      target: delivNodeId,
+      relationship: "delivers_to",
+      status: po.status === "received" ? "completed" : "active",
+      description: `Dispatched to warehouse (${po.expectedDeliveryDate})`,
+      lagDays: 5,
+    });
+
+    if (product) {
+      edges.push({
+        id: `edge_deliv_${po.id}_to_prod_${product.id}`,
+        source: delivNodeId,
+        target: `node_${product.id}`,
+        relationship: "supplies_stock",
+        status: "active",
+        description: "Replenishes on-hand inventory",
+        lagDays: 1,
+      });
+    }
+  }
+
+  // 5. Customer Orders
+  for (const co of db.customerOrders) {
+    const customer = db.customers.find((c) => c.id === co.customerId);
+    const product = co.productId ? db.products.find((p) => p.id === co.productId) : null;
+    const coNodeId = `node_${co.id}`;
+
+    nodes.push({
+      id: coNodeId,
+      type: "sale",
+      label: `Order #${co.id}: ${co.quantity ?? 1}x ${product?.name || "Goods"}`,
+      status: co.status === "fulfilled" ? "completed" : "upcoming",
+      date: co.orderDate,
+      amountPaise: co.totalPaise,
+      currency: "INR",
+      entityId: co.id,
+      metadata: {
+        entityType: "customer_order",
+        referenceNumber: co.id,
+        partnerName: customer?.name || "Customer",
+        productName: product?.name,
+        quantity: co.quantity,
+        expectedDate: co.deliveryDate,
+        cashImpactPaise: co.totalPaise,
+        cashDirection: "incoming",
+        workflowSignificance: `Customer order commitment for ${customer?.name || "customer"}.`,
+        nextMilestone: "Shipment and invoicing",
+      },
+    });
+
+    if (customer) {
+      edges.push({
+        id: `edge_cus_${customer.id}_to_co_${co.id}`,
+        source: `node_${customer.id}`,
+        target: coNodeId,
+        relationship: "sold_to",
+        status: co.status === "fulfilled" ? "completed" : "active",
+        description: `Order placed by ${customer.name}`,
+        lagDays: 0,
+      });
+    }
+
+    if (product) {
+      edges.push({
+        id: `edge_prod_${product.id}_to_co_${co.id}`,
+        source: `node_${product.id}`,
+        target: coNodeId,
+        relationship: "fulfills",
+        status: "active",
+        description: `Allocates stock for ${customer?.name || "order"}`,
+        lagDays: 2,
+      });
+    }
+  }
+
+  // 6. Invoices (Receivable & Payable)
+  for (const inv of db.invoices) {
+    const isReceivable = inv.type === "receivable";
+    const customer = inv.customerId ? db.customers.find((c) => c.id === inv.customerId) : null;
+    const supplier = inv.supplierId ? db.suppliers.find((s) => s.id === inv.supplierId) : null;
+    const partnerName = customer?.name || supplier?.name || "Counterparty";
+    const isOverdue = inv.status === "overdue";
+    const isPaid = inv.status === "paid";
+    const invNodeId = `node_${inv.id}`;
+
+    nodes.push({
+      id: invNodeId,
+      type: isReceivable ? "customer_invoice" : "supplier_payment",
+      label: `${isReceivable ? "Invoice" : "Bill"} ${inv.invoiceNumber}`,
+      status: isPaid ? "completed" : isOverdue ? "at_risk" : "upcoming",
+      date: inv.issueDate,
+      amountPaise: inv.amountPaise,
+      currency: "INR",
+      entityId: inv.id,
+      metadata: {
+        entityType: "invoice",
+        referenceNumber: inv.invoiceNumber,
+        partnerName,
+        expectedDate: inv.dueDate,
+        actualDate: inv.issueDate,
+        cashDirection: isReceivable ? "incoming" : "outgoing",
+        cashImpactPaise: isReceivable ? inv.amountPaise : -inv.amountPaise,
+        riskSeverity: isOverdue ? "warning" : undefined,
+        riskDescription: isOverdue ? `${inv.invoiceNumber} is overdue past due date ${inv.dueDate}.` : undefined,
+        workflowSignificance: `${isReceivable ? "Customer receivable" : "Supplier bill"} for ${partnerName}. Due on ${inv.dueDate}.`,
+        nextMilestone: isPaid ? "Settled" : `Due on ${inv.dueDate}`,
+      },
+    });
+
+    if (isReceivable && customer) {
+      edges.push({
+        id: `edge_cus_${customer.id}_to_inv_${inv.id}`,
+        source: `node_${customer.id}`,
+        target: invNodeId,
+        relationship: "billed_as",
+        status: isPaid ? "completed" : "active",
+        description: `Billed to ${customer.name}`,
+        lagDays: 0,
+      });
+    } else if (!isReceivable && supplier) {
+      edges.push({
+        id: `edge_sup_${supplier.id}_to_inv_${inv.id}`,
+        source: `node_${supplier.id}`,
+        target: invNodeId,
+        relationship: "triggers",
+        status: isPaid ? "completed" : "active",
+        description: `Bill from ${supplier.name}`,
+        lagDays: 0,
+      });
+    }
+  }
+
+  // 7. Payments & Receipts
+  for (const pay of db.payments) {
+    const isIncoming = pay.direction === "incoming";
+    const isCompleted = pay.status === "completed";
+    const isFailed = pay.status === "failed";
+    const payNodeId = `node_${pay.id}`;
+
+    const partner = pay.customerId
+      ? db.customers.find((c) => c.id === pay.customerId)?.name
+      : pay.supplierId
+        ? db.suppliers.find((s) => s.id === pay.supplierId)?.name
+        : "Counterparty";
+
+    nodes.push({
+      id: payNodeId,
+      type: isIncoming ? "expected_receipt" : "recorded_payment",
+      label: `${isIncoming ? "Receipt" : "Payment"} (${formatMoney(pay.amountPaise)})`,
+      status: isCompleted ? "completed" : isFailed ? "at_risk" : "upcoming",
+      date: pay.completedDate || pay.scheduledDate,
+      amountPaise: pay.amountPaise,
+      currency: "INR",
+      entityId: pay.id,
+      metadata: {
+        entityType: "payment",
+        referenceNumber: pay.id,
+        partnerName: partner,
+        cashDirection: pay.direction,
+        cashImpactPaise: isIncoming ? pay.amountPaise : -pay.amountPaise,
+        expectedDate: pay.scheduledDate,
+        actualDate: pay.completedDate,
+        workflowSignificance: `${isIncoming ? "Cash collection" : "Cash payment"} with ${partner}.`,
+        nextMilestone: isCompleted ? "Settled" : `Scheduled for ${pay.scheduledDate}`,
+      },
+    });
+
+    if (pay.invoiceId && nodes.some((n) => n.id === `node_${pay.invoiceId}`)) {
+      edges.push({
+        id: `edge_inv_${pay.invoiceId}_to_pay_${pay.id}`,
+        source: `node_${pay.invoiceId}`,
+        target: payNodeId,
+        relationship: "settled_by",
+        status: isCompleted ? "completed" : "active",
+        description: isIncoming ? "Customer settlement" : "Supplier settlement",
+        lagDays: 0,
+      });
+    }
+  }
+
+  // 8. Risk Alerts
+  for (const ra of db.riskAlerts) {
+    const raNodeId = `node_${ra.id}`;
+    nodes.push({
+      id: raNodeId,
+      type: "cash_flow_risk",
+      label: ra.title,
+      status: "at_risk",
+      date: ra.createdAt,
+      currency: "INR",
+      entityId: ra.id,
+      metadata: {
+        entityType: "risk_alert",
+        referenceNumber: ra.id,
+        riskSeverity: ra.severity,
+        riskDescription: ra.description,
+        workflowSignificance: ra.description,
+        nextMilestone: "Mitigate shortfall",
+      },
+    });
+
+    if (ra.relatedEntityId) {
+      const sourceNode = nodes.find(
+        (n) => n.entityId === ra.relatedEntityId || n.id === `node_${ra.relatedEntityId}`,
+      );
+      if (sourceNode) {
+        edges.push({
+          id: `edge_${sourceNode.id}_to_risk_${ra.id}`,
+          source: sourceNode.id,
+          target: raNodeId,
+          relationship: "threatens",
+          status: "at_risk",
+          description: "Operational risk trigger",
+          lagDays: 1,
+        });
+      }
+    }
+  }
+
+  const atRiskCount = nodes.filter((n) => n.status === "at_risk" || n.status === "delayed").length;
+  const upcomingCount = nodes.filter((n) => n.status === "upcoming").length;
+  const totalCashAtRiskPaise = nodes
+    .filter((n) => n.status === "at_risk" || n.status === "delayed")
+    .reduce((sum, n) => sum + (n.amountPaise ?? 0), 0);
+
+  return {
+    nodes,
+    edges,
+    summary: {
+      totalNodes: nodes.length,
+      totalEdges: edges.length,
+      atRiskCount,
+      upcomingCount,
+      totalCashAtRiskPaise,
+      dateWindowDays: 30,
+    },
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
  * Builds the canonical business relationship graph from the active store.
- * Reflects Rupi Clothing's operating cycle with stable, deterministic entity linkage.
+ * Reflects Rupi Clothing's operating cycle when in pristine demo mode,
+ * or dynamically builds the graph from user entities for all other users.
  */
 export function buildRelationshipGraph(): RelationshipGraphData {
+  const isDemoRupi =
+    db.business.id === "biz_rupi" &&
+    db.suppliers.some((s) => s.id === "sup_1") &&
+    db.customers.some((c) => c.id === "cus_1");
+
+  if (!isDemoRupi) {
+    return buildDynamicRelationshipGraph();
+  }
+
   const nodes: RelationshipGraphNode[] = [
     // --- Chain 1: Primary Operating Cycle (Cotton Kurti) ---
     {

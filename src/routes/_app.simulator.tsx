@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { FlaskConical, BookOpen, AlertTriangle, ArrowDown } from "lucide-react";
+import { FlaskConical, BookOpen, AlertTriangle } from "lucide-react";
 import { formatMoney } from "@/lib/formatters";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -406,25 +406,16 @@ function SimulatorPage() {
   }, [result, scenarioName, controls, saveMutation]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Page header with Plain-English 1-line explanation */}
       <PageHeader
         title="Ripple Simulator"
         description="Drag the slider to see how one late customer payment triggers supplier halts and late fees—and test 1-click fixes to protect your profit."
         actions={
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsBaselineDialogOpen(true)}
-              className="h-7 text-xs text-muted-foreground hover:text-foreground border-border/70 font-medium gap-1.5"
-            >
-              <FlaskConical className="h-3 w-3 text-muted-foreground" />
-              Custom Amounts
-            </Button>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium text-muted-foreground bg-muted/40 border border-border/60">
-              <FlaskConical className="h-3 w-3 text-muted-foreground" aria-hidden />
-              Cockpit View
+              <FlaskConical className="h-3 w-3 text-primary" aria-hidden />
+              Real-Time Simulation Engine
             </span>
           </div>
         }
@@ -459,27 +450,23 @@ function SimulatorPage() {
           result.shortfallPaise < 0) && (
           <div
             id="emergency-contagion-banner"
-            className="emergency-card-critical rounded-xl border border-destructive/60 bg-destructive/10 p-3.5 sm:p-4 shadow-lg text-foreground flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
+            className="emergency-card-critical rounded-xl border border-destructive/40 bg-destructive/10 p-3.5 sm:p-4 text-foreground shadow-xs"
           >
-            <div className="flex items-start sm:items-center gap-3">
+            <div className="flex items-start sm:items-center gap-3.5">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive/20 text-destructive shadow-xs">
-                <AlertTriangle className="h-5 w-5 bell-ring text-destructive" />
+                <AlertTriangle className="h-5 w-5 text-destructive" />
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className="bg-destructive text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide flex items-center gap-1.5 shadow-xs">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-                    </span>
+                  <Badge className="bg-destructive/90 text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide shadow-xs">
                     CRITICAL LIQUIDITY CONTAGION
                   </Badge>
                   <span className="text-xs font-semibold text-destructive font-mono">
                     Cash plunges to {formatMoney(result.scenarioMinPaise)}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground font-medium">
-                  🚨 <strong className="text-foreground">CRITICAL LIQUIDITY CONTAGION DETECTED:</strong> Cash plunges to{" "}
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                  <strong className="text-foreground">Cascade analysis:</strong> Cash plunges to{" "}
                   <span className="text-destructive font-bold font-mono">{formatMoney(result.scenarioMinPaise)}</span> and{" "}
                   <span className="text-destructive font-bold font-mono">
                     {formatMoney(
@@ -490,26 +477,13 @@ function SimulatorPage() {
                 </p>
               </div>
             </div>
-
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => {
-                const el = document.getElementById("timeline-rescues-section");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="shrink-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold text-xs h-9 px-4 gap-1.5 shadow-md shimmer-rescue-btn"
-            >
-              <span>Jump to 1-Click Rescues ↓</span>
-              <ArrowDown className="h-3.5 w-3.5" />
-            </Button>
           </div>
         )}
 
       {/* ── Main Split Workspace (Zero-Scroll Cockpit: 7 cols Chart+Margin / 5 cols Timeline) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column (lg:col-span-7): Chart + 4 Compact KPI Pills + Profit Reality Check Card */}
-        <div className="lg:col-span-7 space-y-3.5">
+        <div className="lg:col-span-7 space-y-4">
           {/* Chart card */}
           <Card className="shadow-xs border-border/70 rounded-xl bg-card overflow-hidden">
             <CardHeader className="pb-1.5 pt-3 px-4 sm:px-5">

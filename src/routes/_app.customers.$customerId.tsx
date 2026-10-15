@@ -118,6 +118,10 @@ function CustomerDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["customers"] }),
       queryClient.invalidateQueries({ queryKey: ["invoices"] }),
       queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      queryClient.invalidateQueries({ queryKey: ["forecast"] }),
+      queryClient.invalidateQueries({ queryKey: ["simulator"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash-flow"] }),
+      queryClient.invalidateQueries({ queryKey: ["relationships"] }),
     ]);
   };
 

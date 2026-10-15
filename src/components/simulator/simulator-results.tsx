@@ -156,9 +156,8 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
               Closing Cash
             </p>
             {scenarioClosingPaise < 0 && (
-              <span className="relative inline-flex items-center gap-1 rounded bg-red-500/20 px-1.5 py-0.2 text-[9px] font-bold text-red-500 uppercase tracking-wide">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
-                CRITICAL DEFICIT
+              <span className="inline-flex items-center rounded bg-destructive/15 px-1.5 py-0.5 text-[9px] font-bold text-destructive uppercase tracking-wide">
+                DEFICIT
               </span>
             )}
           </div>
@@ -167,7 +166,7 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
               className={cn(
                 "text-2xl sm:text-3xl font-bold font-mono tabular-nums",
                 scenarioClosingPaise < 0
-                  ? "text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.35)]"
+                  ? "text-destructive"
                   : hasShortfall
                     ? "text-destructive"
                     : "text-foreground",
@@ -208,9 +207,8 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
               Lowest Cash Point
             </p>
             {scenarioMinPaise < 0 && (
-              <span className="relative inline-flex items-center gap-1 rounded bg-red-500/20 px-1.5 py-0.2 text-[9px] font-bold text-red-500 uppercase tracking-wide">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
-                CRITICAL DEFICIT
+              <span className="inline-flex items-center rounded bg-destructive/15 px-1.5 py-0.5 text-[9px] font-bold text-destructive uppercase tracking-wide">
+                DEFICIT
               </span>
             )}
           </div>
@@ -218,7 +216,7 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
             className={cn(
               "mt-0.5 text-2xl sm:text-3xl font-bold font-mono tabular-nums",
               scenarioMinPaise < 0
-                ? "text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.35)]"
+                ? "text-destructive"
                 : isBelowThreshold
                   ? "text-amber-600 dark:text-amber-400"
                   : "text-foreground",
@@ -641,10 +639,6 @@ export function SimulatorEventTimeline({
                           variant="destructive"
                           className="text-[9px] uppercase tracking-wider font-bold shadow-xs flex items-center gap-1"
                         >
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
-                          </span>
                           Root Cause of Cash Crunch
                         </Badge>
                       )}
@@ -661,14 +655,7 @@ export function SimulatorEventTimeline({
                               : "border-warning/40 bg-warning/10 text-warning-foreground",
                           )}
                         >
-                          {node.fragility.isKeystone ? (
-                            <span className="relative flex h-2 w-2 mr-1.5 shrink-0">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                            </span>
-                          ) : (
-                            <Zap className="h-3 w-3 mr-1" />
-                          )}
+                          <Zap className="h-3 w-3 mr-1" />
                           <span>
                             {node.fragility.badgeText.includes("Critical Keystone") ||
                             node.fragility.badgeText.includes("20")
@@ -750,7 +737,7 @@ export function SimulatorEventTimeline({
                         <button
                           type="button"
                           onClick={() => onAutoPhaseClick(node)}
-                          className="w-full text-left p-3 rounded-lg border-2 border-primary/50 bg-primary/10 hover:bg-primary/15 hover:border-primary transition-all group/btn shadow-md cursor-pointer shimmer-rescue-btn ring-1 ring-primary/40 hover:ring-primary shadow-[0_0_16px_rgba(99,102,241,0.25)]"
+                          className="w-full text-left p-3 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-colors group/btn shadow-xs cursor-pointer"
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-semibold text-sm text-primary flex items-center gap-1.5">
@@ -759,7 +746,7 @@ export function SimulatorEventTimeline({
                             </span>
                             <Badge
                               variant="outline"
-                              className="text-xs font-semibold bg-primary/20 text-primary border-primary/30 px-2 py-0.5"
+                              className="text-xs font-semibold bg-primary/15 text-primary border-primary/25 px-2 py-0.5"
                             >
                               1-Click Fix
                             </Badge>
@@ -776,7 +763,7 @@ export function SimulatorEventTimeline({
                         <button
                           type="button"
                           onClick={() => onSplitEscrowClick(node)}
-                          className="w-full text-left p-3 rounded-lg border-2 border-primary/50 bg-primary/10 hover:bg-primary/15 hover:border-primary transition-all group/btn shadow-md cursor-pointer shimmer-rescue-btn ring-1 ring-primary/40 hover:ring-primary shadow-[0_0_16px_rgba(99,102,241,0.25)]"
+                          className="w-full text-left p-3 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-colors group/btn shadow-xs cursor-pointer"
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-semibold text-sm text-primary flex items-center gap-1.5">
@@ -785,7 +772,7 @@ export function SimulatorEventTimeline({
                             </span>
                             <Badge
                               variant="outline"
-                              className="text-xs font-semibold bg-primary/20 text-primary border-primary/30 px-2 py-0.5"
+                              className="text-xs font-semibold bg-primary/15 text-primary border-primary/25 px-2 py-0.5"
                             >
                               Zero Cash
                             </Badge>

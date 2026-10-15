@@ -187,6 +187,10 @@ function InvoicesIndexPage() {
       queryClient.invalidateQueries({ queryKey: ["customers"] }),
       queryClient.invalidateQueries({ queryKey: ["suppliers"] }),
       queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      queryClient.invalidateQueries({ queryKey: ["forecast"] }),
+      queryClient.invalidateQueries({ queryKey: ["simulator"] }),
+      queryClient.invalidateQueries({ queryKey: ["cash-flow"] }),
+      queryClient.invalidateQueries({ queryKey: ["relationships"] }),
     ]);
   };
 

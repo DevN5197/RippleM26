@@ -81,22 +81,19 @@ function SettingsPage() {
         description="Manage your business profile, liquidity alerts, notification rules, and workspace preferences."
       />
 
-      <Tabs defaultValue="business" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto p-1 gap-1">
-          <TabsTrigger value="business" className="py-2 text-xs sm:text-sm">
-            Business Profile
-          </TabsTrigger>
+      <Tabs defaultValue="financial" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto p-1 gap-1">
           <TabsTrigger value="financial" className="py-2 text-xs sm:text-sm">
-            Financial
+            Cash & Thresholds
           </TabsTrigger>
           <TabsTrigger value="notifications" className="py-2 text-xs sm:text-sm">
             Notifications
           </TabsTrigger>
           <TabsTrigger value="data-privacy" className="py-2 text-xs sm:text-sm">
-            Data & Privacy
+            Reset Demo Data
           </TabsTrigger>
-          <TabsTrigger value="app" className="py-2 text-xs sm:text-sm">
-            App Settings
+          <TabsTrigger value="business" className="py-2 text-xs sm:text-sm">
+            Business Profile
           </TabsTrigger>
         </TabsList>
 

@@ -85,7 +85,7 @@ export function SimulatorControlPanel({
                 isBaseline ? "shadow-xs" : "border-border/70 text-muted-foreground hover:text-foreground",
               )}
             >
-              Normal Baseline
+              Reset Baseline
             </Button>
             {isDemo && (
               <Button
@@ -100,7 +100,7 @@ export function SimulatorControlPanel({
                     : "border-border/70 text-foreground hover:border-primary/40",
                 )}
               >
-                Apex Flagship (+16d Delay)
+                Apex Flagship (+16d)
               </Button>
             )}
 
@@ -127,7 +127,7 @@ export function SimulatorControlPanel({
               >
                 <Zap className="h-3.5 w-3.5 mr-1 fill-purple-600 text-purple-600 dark:fill-purple-400 dark:text-purple-400" aria-hidden />
                 <span>
-                  {isChaosTesting ? "Calculating Shock…" : "Chaos Stress-Test (+5d Shock)"}
+                  {isChaosTesting ? "Calculating…" : "Chaos Stress-Test (+5d)"}
                 </span>
                 <span className="sr-only">Run Chaos Stress-Test (+5d)</span>
               </Button>
@@ -166,7 +166,7 @@ export function SimulatorControlPanel({
             />
           </div>
 
-          {/* 3. Actions: Advanced Drawer Trigger & Simulate Button */}
+          {/* 3. Actions: Advanced Drawer Trigger */}
           <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
             <Button
               variant="outline"
@@ -181,27 +181,6 @@ export function SimulatorControlPanel({
               ) : (
                 <ChevronDown className="h-3 w-3" />
               )}
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={onRun}
-              disabled={isRunning || isChaosTesting}
-              className="h-8 text-xs gap-1.5 font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
-            >
-              <Play className="h-3 w-3" aria-hidden />
-              <span>{isRunning ? "Simulating…" : "Run Simulation"}</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onSave}
-              disabled={!hasResult || isSaving}
-              className="h-8 text-xs gap-1 border-border/70"
-            >
-              <Save className="h-3 w-3" aria-hidden />
-              <span>{isSaving ? "Saving…" : "Save"}</span>
             </Button>
           </div>
         </div>

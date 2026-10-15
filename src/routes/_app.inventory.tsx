@@ -407,14 +407,14 @@ function InventoryPage() {
             onViewInGraph={(id) => {
               navigate({
                 to: "/relationships",
-                search: { selectedId: `node_stock_1` },
+                search: { selectedId: `node_${id}` },
               });
             }}
             onSimulate={(id, name) => {
               navigate({
                 to: "/simulator",
                 search: {
-                  eventId: `node_stock_1`,
+                  eventId: `node_${id}`,
                   eventName: `${name} Restock`,
                 },
               });
