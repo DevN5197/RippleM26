@@ -82,13 +82,18 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-muted/35 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+      <div className="absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-chart-2/10 blur-3xl" />
+      <div className="relative w-full max-w-md space-y-7">
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/20">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25 ring-4 ring-primary/10">
             <Waves className="h-6 w-6 text-primary-foreground" aria-hidden />
           </div>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+            Welcome back
+          </p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Sign in to Ripple
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
@@ -96,9 +101,9 @@ function LoginPage() {
           </p>
         </div>
 
-        <Card className="border shadow-lg">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl">Account Credentials</CardTitle>
+        <Card className="overflow-hidden border-border/70 bg-card/95 shadow-xl shadow-primary/5 backdrop-blur">
+          <CardHeader className="space-y-1 border-b border-border/60 bg-muted/25 pb-5">
+            <CardTitle className="text-xl tracking-tight">Account Credentials</CardTitle>
             <CardDescription>
               Enter your email and password to access your business workspace
             </CardDescription>
@@ -165,7 +170,7 @@ function LoginPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="h-10 w-full shadow-sm" disabled={loading}>
                 {loading ? (
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
@@ -192,7 +197,7 @@ function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full border-dashed hover:border-primary hover:bg-primary/5"
+              className="h-10 w-full border-dashed hover:border-primary hover:bg-primary/5"
               onClick={handleDemoLogin}
               disabled={loading}
             >
