@@ -4,6 +4,7 @@ import { MetricCard } from "@/components/shared/metric-card";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { PaymentReliabilityBadge } from "@/components/shared/payment-reliability-badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -71,13 +72,17 @@ export function InvoiceDetailView({ data, onRecordPayment }: InvoiceDetailViewPr
                 : "Payment pending"
           }
           icon={AlertTriangle}
-          intent={invoice.outstandingPaise > 0 ? (invoice.isOverdue ? "danger" : "info") : "success"}
+          intent={
+            invoice.outstandingPaise > 0 ? (invoice.isOverdue ? "danger" : "info") : "success"
+          }
         />
 
         <MetricCard
           label="Payment Due Date"
           value={formatDate(invoice.dueDate)}
-          subtext={invoice.isOverdue ? `Overdue by ${invoice.daysOverdue} days` : "Net terms active"}
+          subtext={
+            invoice.isOverdue ? `Overdue by ${invoice.daysOverdue} days` : "Net terms active"
+          }
           icon={Calendar}
           intent={invoice.isOverdue ? "danger" : "default"}
         />
@@ -220,7 +225,7 @@ export function InvoiceDetailView({ data, onRecordPayment }: InvoiceDetailViewPr
                             : "—"}
                       </TableCell>
                       <TableCell>{p.method || "Bank Transfer"}</TableCell>
-                      <TableCell className="text-right font-medium text-emerald-600 dark:text-emerald-400">
+                      <TableCell className="text-right font-medium text-success">
                         {formatMoney(p.amountPaise)}
                       </TableCell>
                       <TableCell>
@@ -246,7 +251,8 @@ export function InvoiceDetailView({ data, onRecordPayment }: InvoiceDetailViewPr
                         Customer Order #{customerOrder.id}
                       </span>
                       <span className="text-xs text-muted-foreground block">
-                        Ordered on {formatDate(customerOrder.orderDate)} · {customerOrder.quantity} units
+                        Ordered on {formatDate(customerOrder.orderDate)} · {customerOrder.quantity}{" "}
+                        units
                       </span>
                     </div>
                     <div className="text-right">

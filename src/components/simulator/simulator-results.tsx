@@ -32,12 +32,7 @@ interface SimulatorResultsProps {
 }
 
 function ScoreBar({ score }: { score: number }) {
-  const color =
-    score >= 70
-      ? "bg-destructive"
-      : score >= 40
-        ? "bg-warning"
-        : "bg-success";
+  const color = score >= 70 ? "bg-destructive" : score >= 40 ? "bg-warning" : "bg-success";
   return (
     <div className="relative h-2 w-full rounded-full bg-muted overflow-hidden">
       <div
@@ -120,12 +115,16 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
                 Cash shortage risk identified: -{formatMoney(Math.abs(shortfallPaise))}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Simulated balance drops below safety reserve on <DateLabel iso={scenarioMinDate} className="inline font-medium text-foreground" />.
-                {recommendations.length > 0 && ` Action: ${recommendations[0].title}.`}
+                Simulated balance drops below safety reserve on{" "}
+                <DateLabel iso={scenarioMinDate} className="inline font-medium text-foreground" />.
+                {recommendations[0] ? ` Action: ${recommendations[0].title}.` : ""}
               </p>
             </div>
           </div>
-          <Badge variant="outline" className="border-destructive/30 bg-destructive/10 text-destructive text-xs shrink-0 font-medium">
+          <Badge
+            variant="outline"
+            className="border-destructive/30 bg-destructive/10 text-destructive text-xs shrink-0 font-medium"
+          >
             Risk Mitigation Required
           </Badge>
         </div>
@@ -148,11 +147,7 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
               {formatMoney(scenarioClosingPaise)}
             </span>
             {deltaClosing !== 0 && (
-              <MoneyAmount
-                paise={deltaClosing}
-                signed
-                className="text-xs font-mono font-medium"
-              />
+              <MoneyAmount paise={deltaClosing} signed className="text-xs font-mono font-medium" />
             )}
           </div>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
@@ -228,9 +223,7 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
       </div>
 
       {/* ── Feature B: Ripple-Adjusted True Margin Card ── */}
-      {result.trueMargin && (
-        <SimulatorTrueMarginCard margin={result.trueMargin} />
-      )}
+      {result.trueMargin && <SimulatorTrueMarginCard margin={result.trueMargin} />}
 
       {/* ── Level 3: Deep Risk Diagnostics & Recommendations (Expandable) ── */}
       <div className="rounded-xl border border-border/70 bg-card p-4 space-y-3 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
@@ -251,7 +244,12 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
           </span>
         </button>
 
-        <div className={cn("grid gap-4 lg:grid-cols-3 pt-3 border-t border-border/60", !showDiagnostics && "hidden")}>
+        <div
+          className={cn(
+            "grid gap-4 lg:grid-cols-3 pt-3 border-t border-border/60",
+            !showDiagnostics && "hidden",
+          )}
+        >
           {/* Affected dependencies */}
           <div className="rounded-lg border border-border/60 bg-muted/15 p-3.5 space-y-3">
             <div className="flex items-center justify-between pb-1 border-b border-border/40">
@@ -259,7 +257,10 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
                 <Package className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                 <h4 className="text-xs font-semibold text-foreground">Downstream Impact</h4>
               </div>
-              <Badge variant="outline" className="text-[10px] font-mono border-border/60 text-muted-foreground">
+              <Badge
+                variant="outline"
+                className="text-[10px] font-mono border-border/60 text-muted-foreground"
+              >
                 {affectedDependencies.length} event{affectedDependencies.length !== 1 ? "s" : ""}
               </Badge>
             </div>
@@ -330,7 +331,9 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
               <span className={cn("text-2xl font-bold font-mono tabular-nums", scoreSentiment)}>
                 {rippleScore.totalScore}
               </span>
-              <span className="text-[10px] text-muted-foreground">0 (no risk) – 100 (critical)</span>
+              <span className="text-[10px] text-muted-foreground">
+                0 (no risk) – 100 (critical)
+              </span>
             </div>
             <ScoreBar score={rippleScore.totalScore} />
 
@@ -405,7 +408,9 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
                       {rec.priority}
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{rec.rationale}</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {rec.rationale}
+                  </p>
                   {rec.impactPaise !== undefined && (
                     <p className="text-[11px] font-medium text-primary">
                       Impact: {formatMoney(rec.impactPaise)}
@@ -536,7 +541,8 @@ export function SimulatorEventTimeline({
             Chronological Scenario Timeline & Dependency Graph
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Interactive financial dependency nodes, fragility multipliers, and real-time cash flow rescues.
+            Interactive financial dependency nodes, fragility multipliers, and real-time cash flow
+            rescues.
           </p>
         </div>
 
@@ -558,10 +564,14 @@ export function SimulatorEventTimeline({
           <div className="flex items-center gap-2 text-foreground">
             <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>
-              <strong>Active Financial Rescue Applied:</strong> Cash flows, safety buffers, and margins are dynamically protected.
+              <strong>Active Financial Rescue Applied:</strong> Cash flows, safety buffers, and
+              margins are dynamically protected.
             </span>
           </div>
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-[10px]">
+          <Badge
+            variant="outline"
+            className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-[10px]"
+          >
             {result.hasAutoPhaseRescue ? "Auto-Phased" : "Tri-Party Escrow Locked"}
           </Badge>
         </div>
@@ -574,10 +584,14 @@ export function SimulatorEventTimeline({
             <Lock className="h-4 w-4 text-primary shrink-0" />
             <span>Tri-Party Split-Escrow Bypass Active:</span>
             <span className="text-muted-foreground font-normal">
-              Apex Corp Receivable (Day 31) directly satisfies Kaveri Timber (PO-1) on Day 18. Ordinary Day 18 business cash outflow is ₹0.
+              Apex Corp Receivable (Day 31) directly satisfies Kaveri Timber (PO-1) on Day 18.
+              Ordinary Day 18 business cash outflow is ₹0.
             </span>
           </div>
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+          <Badge
+            variant="outline"
+            className="bg-primary/10 text-primary border-primary/20 text-[10px]"
+          >
             Zero-Cash Bypass
           </Badge>
         </div>
@@ -665,7 +679,10 @@ export function SimulatorEventTimeline({
                         )}
 
                         {/* Node Status Badge */}
-                        <Badge variant="outline" className="text-[10px] text-muted-foreground font-normal border-border/60">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-muted-foreground font-normal border-border/60"
+                        >
                           {node.status}
                         </Badge>
                       </div>
@@ -687,7 +704,11 @@ export function SimulatorEventTimeline({
                           : "text-foreground",
                       )}
                     >
-                      {node.direction === "incoming" ? "+" : node.direction === "outgoing" ? "-" : ""}
+                      {node.direction === "incoming"
+                        ? "+"
+                        : node.direction === "outgoing"
+                          ? "-"
+                          : ""}
                       {formatMoney(node.amountPaise)}
                     </p>
                     <span className="text-[10px] text-muted-foreground uppercase font-medium">
@@ -752,8 +773,12 @@ export function SimulatorEventTimeline({
                         {node.description}
                       </p>
                       <div className="mt-2 text-[11px] text-muted-foreground space-y-0.5 font-mono">
-                        <p>Type: <span className="text-foreground">{node.type}</span></p>
-                        <p>Effective Date: <span className="text-foreground">{node.date}</span></p>
+                        <p>
+                          Type: <span className="text-foreground">{node.type}</span>
+                        </p>
+                        <p>
+                          Effective Date: <span className="text-foreground">{node.date}</span>
+                        </p>
                       </div>
                     </div>
 
@@ -764,7 +789,11 @@ export function SimulatorEventTimeline({
                       {fragility ? (
                         <div className="mt-1 space-y-1.5">
                           <p className="text-xs text-foreground">
-                            Keystone node with <span className="font-semibold text-destructive">{fragility.multiplier}x propagation fragility</span>.
+                            Keystone node with{" "}
+                            <span className="font-semibold text-destructive">
+                              {fragility.multiplier}x propagation fragility
+                            </span>
+                            .
                           </p>
                           {fragility.exposedOrders && fragility.exposedOrders.length > 0 && (
                             <div className="text-[11px] text-muted-foreground">
@@ -773,12 +802,16 @@ export function SimulatorEventTimeline({
                             </div>
                           )}
                           <p className="text-[11px] text-muted-foreground">
-                            Value at risk: <span className="font-mono font-medium text-destructive">{formatMoney(fragility.downstreamValueAtRiskPaise)}</span>
+                            Value at risk:{" "}
+                            <span className="font-mono font-medium text-destructive">
+                              {formatMoney(fragility.downstreamValueAtRiskPaise)}
+                            </span>
                           </p>
                         </div>
                       ) : (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Standard operational commitment. No critical fragility multipliers assigned.
+                          Standard operational commitment. No critical fragility multipliers
+                          assigned.
                         </p>
                       )}
 
@@ -804,4 +837,3 @@ export function SimulatorEventTimeline({
     </div>
   );
 }
-

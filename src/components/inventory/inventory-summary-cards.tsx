@@ -1,5 +1,13 @@
 import React from "react";
-import { Package, Boxes, AlertTriangle, AlertCircle, Truck, IndianRupee, Filter } from "lucide-react";
+import {
+  Package,
+  Boxes,
+  AlertTriangle,
+  AlertCircle,
+  Truck,
+  IndianRupee,
+  Filter,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney } from "@/lib/formatters";
@@ -120,7 +128,9 @@ export function InventorySummaryCards({
                 {metrics.lowStockCount}
               </span>
               {metrics.lowStockCount > 0 && (
-                <span className="text-[11px] font-medium text-warning-foreground">Needs restock</span>
+                <span className="text-[11px] font-medium text-warning-foreground">
+                  Needs restock
+                </span>
               )}
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">

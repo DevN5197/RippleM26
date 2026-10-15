@@ -6,8 +6,11 @@
 
 /*
  * Ripple design system — premium fintech, light mode first.
- * Deep indigo primary, dark navy typography, warm off-white surfaces.
+ * Deep indigo primary, dark navy typography, warm off-white surfaces,
+ * and a soft multi-hue ambient wash that blends behind every surface.
+ *
  * Status colors: green (healthy), amber (warning), red (critical).
+ * Rule: all color lives here as OKLCH tokens — never hardcode colors in components.
  */
 
 @theme inline {
@@ -54,23 +57,34 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Elevation — soft, wide and low-contrast for a calm, modern surface feel. */
+  --shadow-soft:
+    0 1px 2px -1px oklch(0.27 0.045 268 / 0.06), 0 8px 24px -14px oklch(0.27 0.045 268 / 0.16);
+  --shadow-elevated:
+    0 2px 4px -2px oklch(0.27 0.045 268 / 0.07), 0 18px 44px -20px oklch(0.27 0.045 268 / 0.22);
+  --shadow-glow:
+    0 1px 2px -1px oklch(0.44 0.16 272 / 0.1), 0 14px 36px -16px oklch(0.44 0.16 272 / 0.28);
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.982 0.003 95);
+  --radius: 0.75rem;
+
+  /* Base surfaces — warm off-white canvas, crisp white cards, navy text. */
+  --background: oklch(0.985 0.004 96);
   --foreground: oklch(0.27 0.045 268);
-  --card: oklch(1 0 0);
+  /* Cards are slightly translucent so the ambient wash blends through them. */
+  --card: oklch(1 0 0 / 0.86);
   --card-foreground: oklch(0.27 0.045 268);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.27 0.045 268);
   --primary: oklch(0.44 0.16 272);
   --primary-foreground: oklch(0.98 0.005 270);
-  --secondary: oklch(0.955 0.008 265);
+  --secondary: oklch(0.958 0.008 265);
   --secondary-foreground: oklch(0.35 0.06 270);
-  --muted: oklch(0.96 0.006 260);
+  --muted: oklch(0.962 0.006 260);
   --muted-foreground: oklch(0.5 0.03 265);
-  --accent: oklch(0.945 0.015 272);
+  --accent: oklch(0.948 0.016 272);
   --accent-foreground: oklch(0.38 0.1 272);
   --destructive: oklch(0.577 0.215 27.3);
   --destructive-foreground: oklch(0.985 0.003 247.9);
@@ -78,28 +92,40 @@
   --success-foreground: oklch(0.985 0.003 247.9);
   --warning: oklch(0.72 0.14 75);
   --warning-foreground: oklch(0.3 0.05 70);
-  --border: oklch(0.912 0.008 260);
-  --input: oklch(0.912 0.008 260);
+  --border: oklch(0.917 0.008 262);
+  --input: oklch(0.917 0.008 262);
   --ring: oklch(0.44 0.16 272);
   --chart-1: oklch(0.44 0.16 272);
   --chart-2: oklch(0.6 0.13 155);
   --chart-3: oklch(0.72 0.14 75);
   --chart-4: oklch(0.577 0.215 27.3);
   --chart-5: oklch(0.55 0.08 230);
-  --sidebar: oklch(1 0 0);
+
+  /* Glass sidebar — translucent panel that blends with the ambient wash. */
+  --sidebar: oklch(1 0 0 / 0.72);
   --sidebar-foreground: oklch(0.27 0.045 268);
   --sidebar-primary: oklch(0.44 0.16 272);
   --sidebar-primary-foreground: oklch(0.98 0.005 270);
-  --sidebar-accent: oklch(0.955 0.01 272);
+  --sidebar-accent: oklch(0.955 0.012 272 / 0.9);
   --sidebar-accent-foreground: oklch(0.38 0.1 272);
-  --sidebar-border: oklch(0.912 0.008 260);
+  --sidebar-border: oklch(0.917 0.008 262 / 0.8);
   --sidebar-ring: oklch(0.44 0.16 272);
+
+  /*
+   * Ambient wash — four soft, overlapping hue pools (indigo, sky, amber, rose)
+   * that blend into one another behind the whole app.
+   */
+  --ambient-indigo: oklch(0.7 0.16 272 / 0.28);
+  --ambient-sky: oklch(0.79 0.12 208 / 0.22);
+  --ambient-amber: oklch(0.88 0.1 82 / 0.13);
+  --ambient-rose: oklch(0.83 0.09 332 / 0.12);
+  --ambient-veil: oklch(0.985 0.004 96 / 0.4);
 }
 
 .dark {
   --background: oklch(0.2 0.03 270);
   --foreground: oklch(0.96 0.005 260);
-  --card: oklch(0.24 0.035 270);
+  --card: oklch(0.24 0.035 270 / 0.72);
   --card-foreground: oklch(0.96 0.005 260);
   --popover: oklch(0.24 0.035 270);
   --popover-foreground: oklch(0.96 0.005 260);
@@ -125,14 +151,20 @@
   --chart-3: oklch(0.75 0.13 80);
   --chart-4: oklch(0.65 0.19 25);
   --chart-5: oklch(0.65 0.08 230);
-  --sidebar: oklch(0.24 0.035 270);
+  --sidebar: oklch(0.24 0.035 270 / 0.68);
   --sidebar-foreground: oklch(0.96 0.005 260);
   --sidebar-primary: oklch(0.65 0.14 272);
   --sidebar-primary-foreground: oklch(0.98 0.005 270);
-  --sidebar-accent: oklch(0.3 0.04 270);
+  --sidebar-accent: oklch(0.32 0.05 272 / 0.85);
   --sidebar-accent-foreground: oklch(0.96 0.005 260);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.65 0.14 272);
+
+  --ambient-indigo: oklch(0.55 0.18 272 / 0.4);
+  --ambient-sky: oklch(0.6 0.14 210 / 0.26);
+  --ambient-amber: oklch(0.63 0.12 80 / 0.13);
+  --ambient-rose: oklch(0.59 0.12 330 / 0.15);
+  --ambient-veil: oklch(0.2 0.03 270 / 0.34);
 }
 
 @layer base {
@@ -140,11 +172,40 @@
     border-color: var(--color-border);
   }
 
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     background-color: var(--color-background);
+    /*
+     * Smooth blended colour background: four large radial hue pools layered over
+     * the base canvas, softened by a translucent veil. `fixed` attachment keeps
+     * the blend stable while the page scrolls.
+     */
+    background-image:
+      radial-gradient(78rem 78rem at 4% -18%, var(--ambient-indigo), transparent 60%),
+      radial-gradient(60rem 60rem at 108% -10%, var(--ambient-sky), transparent 56%),
+      radial-gradient(56rem 56rem at 112% 120%, var(--ambient-amber), transparent 58%),
+      radial-gradient(46rem 46rem at -16% 104%, var(--ambient-rose), transparent 56%),
+      radial-gradient(130rem 96rem at 50% 46%, var(--ambient-veil), transparent 72%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-primary) 22%, transparent);
+    color: var(--color-foreground);
+  }
+
+  :focus-visible {
+    outline-color: var(--color-ring);
   }
 
   button,
@@ -170,22 +231,103 @@
   }
 }
 
+@layer components {
+  /*
+   * Frosted surface — used by the app sidebar and header so scrolling content
+   * fades into the ambient blend instead of cutting against an opaque bar.
+   */
+  .glass-surface {
+    background-color: color-mix(in oklab, var(--color-card) 72%, transparent);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+  }
+
+  /* Applied to the sidebar primitive's inner panel (see ui/sidebar.tsx). */
+  [data-sidebar="sidebar"] {
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+  }
+
+  /* Slim, unobtrusive scrollbars that match the surface palette. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-muted-foreground) 28%, transparent) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--color-muted-foreground) 26%, transparent);
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--color-muted-foreground) 42%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/*
+ * Sidebar navigation polish (unlayered so it wins over the primitive's utilities):
+ * an active item becomes a soft primary pill with a slim left accent bar.
+ */
+[data-sidebar="menu-button"] {
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    width 0.2s ease,
+    height 0.2s ease,
+    padding 0.2s ease;
+}
+
+[data-sidebar="menu-button"][data-active="true"] {
+  background-color: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 0 var(--color-primary);
+}
+
+[data-sidebar="menu-button"][data-active="true"]:hover {
+  background-color: color-mix(in oklab, var(--color-primary) 18%, transparent);
+  color: var(--color-primary);
+}
+
+/* No accent bar in icon-only mode — the pill alone reads better at that size. */
+[data-collapsible="icon"] [data-sidebar="menu-button"][data-active="true"] {
+  box-shadow: none;
+}
+
 /* React Flow styling aligned with Ripple design tokens */
 .react-flow {
-  background-color: var(--color-background);
+  background-color: transparent;
   font-family: var(--font-sans);
 }
 
 .react-flow__controls {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+  box-shadow: var(--shadow-soft);
   overflow: hidden;
   background-color: var(--color-card);
+  backdrop-filter: blur(12px);
 }
 
 .react-flow__controls-button {
-  background-color: var(--color-card) !important;
+  background-color: transparent !important;
   border-bottom: 1px solid var(--color-border) !important;
   color: var(--color-foreground) !important;
   fill: var(--color-foreground) !important;
@@ -200,7 +342,7 @@
   border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-md) !important;
   background-color: var(--color-card) !important;
-  box-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.06);
+  box-shadow: var(--shadow-soft);
 }
 
 /* Ensure edge labels sit permanently above node boxes */

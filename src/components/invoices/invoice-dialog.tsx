@@ -33,6 +33,18 @@ interface InvoiceDialogProps {
   onSubmit: (data: CreateInvoiceInput) => Promise<void>;
 }
 
+/**
+ * Field-level validation messages. A precise shape beats `Record<string, string>`:
+ * it keeps dot access legal under `noPropertyAccessFromIndexSignature` and turns
+ * a mistyped field key into a compile error instead of a silently ignored message.
+ */
+interface InvoiceFormErrors {
+  amount?: string;
+  counterparty?: string;
+  issueDate?: string;
+  dueDate?: string;
+}
+
 export function InvoiceDialog({
   open,
   onOpenChange,
@@ -52,7 +64,7 @@ export function InvoiceDialog({
   const [dueDate, setDueDate] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<InvoiceFormErrors>({});
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -87,7 +99,7 @@ export function InvoiceDialog({
   };
 
   const validate = () => {
-    const errs: Record<string, string> = {};
+    const errs: InvoiceFormErrors = {};
     const parsedAmt = parseFloat(amountRupees);
     if (Number.isNaN(parsedAmt) || parsedAmt <= 0) {
       errs.amount = "Invoice amount must be greater than ₹0.";
@@ -146,7 +158,8 @@ export function InvoiceDialog({
               {type === "receivable" ? "Create Customer Invoice" : "Record Vendor Bill"}
             </DialogTitle>
             <DialogDescription>
-              Issue an accounts receivable invoice to a customer or record an accounts payable vendor bill.
+              Issue an accounts receivable invoice to a customer or record an accounts payable
+              vendor bill.
             </DialogDescription>
           </DialogHeader>
 
@@ -180,7 +193,11 @@ export function InvoiceDialog({
             {type === "receivable" ? (
               <div className="grid gap-1.5">
                 <Label htmlFor="inv-customer">Customer</Label>
-                <Select value={customerId} onValueChange={handleCustomerChange} disabled={isSubmitting}>
+                <Select
+                  value={customerId}
+                  onValueChange={handleCustomerChange}
+                  disabled={isSubmitting}
+                >
                   <SelectTrigger id="inv-customer">
                     <SelectValue placeholder="Select customer" />
                   </SelectTrigger>
@@ -201,7 +218,11 @@ export function InvoiceDialog({
             ) : (
               <div className="grid gap-1.5">
                 <Label htmlFor="inv-supplier">Supplier</Label>
-                <Select value={supplierId} onValueChange={handleSupplierChange} disabled={isSubmitting}>
+                <Select
+                  value={supplierId}
+                  onValueChange={handleSupplierChange}
+                  disabled={isSubmitting}
+                >
                   <SelectTrigger id="inv-supplier">
                     <SelectValue placeholder="Select supplier" />
                   </SelectTrigger>
@@ -266,14 +287,20 @@ export function InvoiceDialog({
                       const c = customers.find((cust) => cust.id === customerId);
                       if (c && e.target.value) {
                         setDueDate(
-                          format(addDays(parseISO(e.target.value), c.creditTermsDays ?? 15), "yyyy-MM-dd"),
+                          format(
+                            addDays(parseISO(e.target.value), c.creditTermsDays ?? 15),
+                            "yyyy-MM-dd",
+                          ),
                         );
                       }
                     } else {
                       const s = suppliers.find((supp) => supp.id === supplierId);
                       if (s && e.target.value) {
                         setDueDate(
-                          format(addDays(parseISO(e.target.value), s.paymentTermsDays ?? 30), "yyyy-MM-dd"),
+                          format(
+                            addDays(parseISO(e.target.value), s.paymentTermsDays ?? 30),
+                            "yyyy-MM-dd",
+                          ),
                         );
                       }
                     }

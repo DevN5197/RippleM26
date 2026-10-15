@@ -388,9 +388,7 @@ export const LaneHeaderNode = memo(({ data }: NodeProps) => {
           {lane.title}
         </span>
         <span className="text-muted-foreground/40 font-light">|</span>
-        <span className="text-xs text-muted-foreground font-medium">
-          {lane.subtitle}
-        </span>
+        <span className="text-xs text-muted-foreground font-medium">{lane.subtitle}</span>
       </div>
       <span
         className={cn(

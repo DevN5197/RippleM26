@@ -78,9 +78,7 @@ export function RecordPaymentDialog({
 
     const inputPaise = Math.round(parsedRupees * 100);
     if (inputPaise > remainingPaise) {
-      setError(
-        `Amount cannot exceed remaining balance of ${formatMoney(remainingPaise)}.`,
-      );
+      setError(`Amount cannot exceed remaining balance of ${formatMoney(remainingPaise)}.`);
       return;
     }
 
@@ -123,7 +121,9 @@ export function RecordPaymentDialog({
             <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1.5">
               <div className="flex justify-between text-muted-foreground">
                 <span>Invoice Total:</span>
-                <span className="font-medium text-foreground">{formatMoney(invoice.amountPaise)}</span>
+                <span className="font-medium text-foreground">
+                  {formatMoney(invoice.amountPaise)}
+                </span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Already Paid:</span>

@@ -346,7 +346,11 @@ export function StockMovementDialog({
                           type="number"
                           min={1}
                           placeholder="Enter quantity"
-                          value={field.value === 0 || field.value === undefined || field.value === null ? "" : field.value}
+                          value={
+                            field.value === 0 || field.value === undefined || field.value === null
+                              ? ""
+                              : field.value
+                          }
                           onChange={(e) => {
                             const val = e.target.value;
                             field.onChange(val === "" ? 0 : Number(val));

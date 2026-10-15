@@ -10,10 +10,7 @@ interface CustomerSummaryCardsProps {
 
 export function CustomerSummaryCards({ metrics }: CustomerSummaryCardsProps) {
   const avgScore = metrics.averageReliabilityScore;
-  const scoreLabel =
-    avgScore !== null
-      ? `${avgScore}/100 avg rating`
-      : "Insufficient history";
+  const scoreLabel = avgScore !== null ? `${avgScore}/100 avg rating` : "Insufficient history";
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

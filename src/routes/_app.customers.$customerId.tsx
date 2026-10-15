@@ -42,7 +42,11 @@ export const Route = createFileRoute("/_app/customers/$customerId")({
   errorComponent: ({ error, reset }) => (
     <ErrorState
       title="Could not load customer"
-      message={error instanceof Error ? error.message : "The requested customer profile could not be found."}
+      message={
+        error instanceof Error
+          ? error.message
+          : "The requested customer profile could not be found."
+      }
       onRetry={reset}
     />
   ),
@@ -64,14 +68,22 @@ function CustomerDetailPage() {
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers", "list-quick"],
-    queryFn: () => customerApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    queryFn: () =>
+      customerApi
+        .list({ pageSize: 100 })
+        .then((r) => r.data)
+        .catch(() => []),
     enabled: invoiceDialogOpen,
     staleTime: 60_000,
   });
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers", "list-quick"],
-    queryFn: () => supplierApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    queryFn: () =>
+      supplierApi
+        .list({ pageSize: 100 })
+        .then((r) => r.data)
+        .catch(() => []),
     enabled: invoiceDialogOpen,
     staleTime: 60_000,
   });

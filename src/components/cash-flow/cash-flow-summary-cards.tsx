@@ -39,6 +39,7 @@ export function CashFlowSummaryCards({ forecast }: CashFlowSummaryCardsProps) {
     .slice(0, 3);
 
   const topShortfallEvent: CashFlowEvent | undefined = criticalEvents[0];
+  const firstBreachDate = forecast.breachDates[0];
 
   return (
     <div className="space-y-4">
@@ -237,12 +238,12 @@ export function CashFlowSummaryCards({ forecast }: CashFlowSummaryCardsProps) {
                 <span className="font-medium text-foreground">
                   {forecast.daysBelowThreshold} days
                 </span>
-                {forecast.breachDates.length > 0 && (
+                {firstBreachDate && (
                   <span>
                     {" "}
                     (first breach on{" "}
                     <span className="font-medium text-foreground">
-                      {formatDate(forecast.breachDates[0])}
+                      {formatDate(firstBreachDate)}
                     </span>
                     )
                   </span>

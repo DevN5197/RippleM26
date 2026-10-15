@@ -91,23 +91,26 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path;
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className={cn("gap-3 pt-4", collapsed ? "px-2 items-center" : "px-3")}>
+    <Sidebar collapsible="icon" className="border-sidebar-border/60">
+      <SidebarHeader className={cn("gap-3 pt-4 pb-2", collapsed ? "items-center px-2" : "px-3")}>
         <Link
           to="/dashboard"
           preload="intent"
-          className={cn("flex items-center", collapsed ? "w-8 justify-center" : "gap-2.5")}
+          className={cn(
+            "flex items-center rounded-lg transition-opacity hover:opacity-90",
+            collapsed ? "w-9 justify-center" : "gap-2.5",
+          )}
           aria-label="Ripple home"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary">
-            <Waves className="h-4.5 w-4.5 text-primary-foreground" aria-hidden />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-glow">
+            <Waves className="h-[1.15rem] w-[1.15rem] text-primary-foreground" aria-hidden />
           </span>
           {!collapsed && (
-            <span className="flex flex-col">
-              <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">
+            <span className="flex min-w-0 flex-col">
+              <span className="text-[15px] leading-tight font-semibold tracking-[-0.01em] text-sidebar-foreground">
                 Ripple
               </span>
-              <span className="text-[10px] leading-tight text-muted-foreground">
+              <span className="truncate text-[10px] tracking-wide text-muted-foreground">
                 Financial coordination platform
               </span>
             </span>
@@ -118,12 +121,17 @@ export function AppSidebar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="flex w-full items-center justify-between rounded-md border bg-card px-2.5 py-2 text-left text-sm hover:bg-accent"
+                className="flex w-full items-center justify-between gap-2 rounded-xl border border-border/70 bg-card/70 px-2.5 py-2 text-left transition-colors hover:border-primary/30 hover:bg-accent"
                 aria-label="Select business"
               >
                 <span className="flex min-w-0 flex-col">
-                  <span className="truncate font-medium text-foreground">{businessName}</span>
-                  <span className="text-[11px] text-muted-foreground">{settings?.business?.industry || "Apparel retail"} · {settings?.business?.currency || "INR"}</span>
+                  <span className="truncate text-[13px] font-medium text-foreground">
+                    {businessName}
+                  </span>
+                  <span className="truncate text-[11px] text-muted-foreground">
+                    {settings?.business?.industry || "Apparel retail"} ·{" "}
+                    {settings?.business?.currency || "INR"}
+                  </span>
                 </span>
                 <ChevronsUpDown
                   className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
@@ -131,7 +139,7 @@ export function AppSidebar() {
                 />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuContent align="start" className="w-56 shadow-elevated">
               <DropdownMenuLabel>Businesses</DropdownMenuLabel>
               <DropdownMenuItem>
                 {businessName}
@@ -148,16 +156,16 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="gap-1 px-1.5">
         {navGroups.map((group) => (
           <SidebarGroup key={group.label} className="py-1">
             {!collapsed && (
-              <SidebarGroupLabel className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase px-3 py-1">
+              <SidebarGroupLabel className="h-auto px-2.5 py-1.5 text-[10px] font-semibold tracking-[0.1em] text-muted-foreground/80 uppercase">
                 {group.label}
               </SidebarGroupLabel>
             )}
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-0.5">
                 {group.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -165,7 +173,7 @@ export function AppSidebar() {
                       isActive={isActive(item.url)}
                       tooltip={item.title}
                       onClick={() => setOpenMobile(false)}
-                      className="text-xs h-8"
+                      className="h-9 rounded-lg text-[13px] font-medium"
                     >
                       <Link to={item.url} preload="intent">
                         <item.icon className="h-4 w-4" />
@@ -179,11 +187,16 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
 
-        <SidebarGroup className="pt-2">
+        <SidebarGroup className="pt-1">
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/settings")} tooltip="Settings" className="text-xs h-8">
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/settings")}
+                  tooltip="Settings"
+                  className="h-9 rounded-lg text-[13px] font-medium"
+                >
                   <Link to="/settings" preload="intent">
                     <Settings className="h-4 w-4" />
                     <span>Settings</span>
@@ -195,9 +208,9 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className={cn("pb-4", collapsed ? "px-2 items-center" : "px-3")}>
+      <SidebarFooter className={cn("pb-4", collapsed ? "items-center px-2" : "px-3")}>
         {IS_DEMO && !collapsed && (
-          <div className="mb-2 rounded-md border border-warning/40 bg-warning/10 px-2.5 py-2">
+          <div className="mb-2 rounded-xl border border-warning/40 bg-warning/10 px-2.5 py-2">
             <p className="text-[11px] font-medium text-warning-foreground">Demo workspace</p>
             <p className="text-[11px] leading-snug text-muted-foreground">
               Synthetic data — mock mode active.
@@ -209,25 +222,23 @@ export function AppSidebar() {
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
-                "flex items-center gap-2.5 rounded-md py-1.5 text-left hover:bg-sidebar-accent",
-                collapsed ? "justify-center w-8 px-0" : "w-full px-1",
+                "flex items-center gap-2.5 rounded-xl py-1.5 text-left transition-colors hover:bg-sidebar-accent",
+                collapsed ? "w-9 justify-center px-0" : "w-full px-1.5",
               )}
               aria-label="User menu"
             >
               <CircleUserRound className="h-7 w-7 shrink-0 text-muted-foreground" aria-hidden />
               {!collapsed && (
                 <span className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm font-medium text-sidebar-foreground">
+                  <span className="truncate text-[13px] font-medium text-sidebar-foreground">
                     {userFullName}
                   </span>
-                  <span className="truncate text-[11px] text-muted-foreground">
-                    {userEmail}
-                  </span>
+                  <span className="truncate text-[11px] text-muted-foreground">{userEmail}</span>
                 </span>
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" side="top" className="w-56">
+          <DropdownMenuContent align="start" side="top" className="w-56 shadow-elevated">
             <DropdownMenuLabel>{userFullName}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -235,7 +246,10 @@ export function AppSidebar() {
                 <Settings className="mr-2 h-4 w-4" /> Settings
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => authApi.logout()} className="cursor-pointer text-destructive focus:text-destructive">
+            <DropdownMenuItem
+              onClick={() => authApi.logout()}
+              className="cursor-pointer text-destructive focus:text-destructive"
+            >
               <LogOut className="mr-2 h-4 w-4" /> Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>

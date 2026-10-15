@@ -1,10 +1,23 @@
 import { useState, useEffect } from "react";
 import { Building2, Save, Undo2 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Business, CurrencyCode } from "@/types";
 
 interface BusinessProfileSectionProps {
@@ -97,7 +110,8 @@ export function BusinessProfileSection({
             <div>
               <CardTitle className="text-base font-semibold">Business Profile</CardTitle>
               <CardDescription>
-                Company registration details, primary point of contact, and default operating currency.
+                Company registration details, primary point of contact, and default operating
+                currency.
               </CardDescription>
             </div>
           </div>
@@ -113,9 +127,7 @@ export function BusinessProfileSection({
                 placeholder="e.g. Rupi Clothing"
                 disabled={isSaving}
               />
-              {errors["name"] ? (
-                <p className="text-xs text-destructive">{errors["name"]}</p>
-              ) : null}
+              {errors["name"] ? <p className="text-xs text-destructive">{errors["name"]}</p> : null}
             </div>
 
             <div className="space-y-1.5">

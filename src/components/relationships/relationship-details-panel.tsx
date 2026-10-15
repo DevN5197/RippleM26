@@ -78,7 +78,7 @@ export function RelationshipDetailsPanel({
     window.open(
       `/simulator?eventId=${encodeURIComponent(node.id)}&eventName=${encodeURIComponent(node.label)}`,
       "_blank",
-      "noopener,noreferrer"
+      "noopener,noreferrer",
     );
   };
 

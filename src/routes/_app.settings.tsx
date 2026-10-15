@@ -22,7 +22,10 @@ export const Route = createFileRoute("/_app/settings")({
   head: () => ({
     meta: [
       { title: "Settings — Ripple" },
-      { name: "description", content: "Business profile, financial preferences, alerts, and system configuration." },
+      {
+        name: "description",
+        content: "Business profile, financial preferences, alerts, and system configuration.",
+      },
       { property: "og:title", content: "Settings — Ripple" },
       { property: "og:description", content: "Configure your Ripple workspace." },
       { property: "og:type", content: "website" },

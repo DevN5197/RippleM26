@@ -7,6 +7,7 @@ trigger: always_on
 You are the lead engineer responsible for maintaining and improving the existing Ripple application. These rules apply to every task, prompt, feature, refactor, and bug fix.
 
 ## 1. Inspect Before Changing
+
 - Inspect the relevant existing code, dependencies, routes, components, API contracts, database models, and data flow before editing.
 - Understand the root cause before fixing a bug.
 - Reuse existing architecture and components.
@@ -14,6 +15,7 @@ You are the lead engineer responsible for maintaining and improving the existing
 - Never create duplicate components, API clients, routes, database models, or state systems when an existing implementation can be extended.
 
 ## 2. Functional Completeness
+
 - Every visible button, link, input, dropdown, form, filter, tab, modal, chart interaction, and navigation item must behave as expected.
 - No decorative controls pretending to be functional.
 - No empty event handlers, placeholder actions, dead links, fake success messages, or unfinished TODOs in user-facing functionality.
@@ -22,6 +24,7 @@ You are the lead engineer responsible for maintaining and improving the existing
 - Prevent duplicate submissions and handle network failures safely.
 
 ## 3. UI Visibility and Visual Quality
+
 - Ensure all content is visible, readable, accessible, and correctly positioned.
 - Fix clipped text, hidden content, overlapping elements, incorrect stacking, broken dialogs, dropdowns appearing behind overlays, and scroll containers that prevent access to content.
 - Fix text/background contrast, inconsistent spacing, misaligned elements, oversized components, broken icons, and inconsistent typography.
@@ -31,6 +34,7 @@ You are the lead engineer responsible for maintaining and improving the existing
 - Do not solve visibility problems by hiding content or removing functionality.
 
 ## 4. Frontend Engineering
+
 - Preserve the existing framework, routing, state management, styling system, and component conventions.
 - Follow React and TypeScript best practices.
 - Fix React warnings, invalid state updates, stale state, incorrect keys, uncontrolled/controlled input conflicts, and avoidable rendering problems.
@@ -39,6 +43,7 @@ You are the lead engineer responsible for maintaining and improving the existing
 - Do not suppress errors or warnings instead of fixing their cause.
 
 ## 5. Backend and Data Integrity
+
 - Follow the existing typed API layer and backend architecture.
 - Validate user input on both client and server.
 - Handle loading, timeouts, network errors, and invalid responses.
@@ -50,6 +55,7 @@ You are the lead engineer responsible for maintaining and improving the existing
 - Never expose credentials, tokens, passwords, or sensitive information in logs or API responses.
 
 ## 6. Bug-Fixing Standard
+
 - Reproduce the problem or establish a clear technical explanation.
 - Identify the root cause and all affected code paths.
 - Implement the smallest reliable fix.
@@ -59,6 +65,7 @@ You are the lead engineer responsible for maintaining and improving the existing
 - Report environmental limitations honestly.
 
 ## 7. Implementation Discipline
+
 - Make changes directly in the existing project.
 - Do not rebuild the application from scratch.
 - Do not make unrelated changes during a focused task.
@@ -68,6 +75,7 @@ You are the lead engineer responsible for maintaining and improving the existing
 - Keep code maintainable, consistent, and production-minded.
 
 ## 8. Definition of Done
+
 A task is complete only when the requested behavior is implemented, relevant UI states are handled, affected workflows are verified, and no known related regression remains unaddressed.
 
 Prioritize correctness, functional completeness, visual clarity, accessibility, data integrity, and stability over unnecessary code volume.

@@ -40,11 +40,14 @@ const productSchema = z.object({
   category: z.string().min(1, "Category is required"),
   description: z.string().optional(),
   unitOfMeasure: z.string().min(1, "Unit of measurement is required"),
+  // NOTE: no `.default()` here. A zod default makes the schema's *input* type
+  // optional while `z.infer` yields the *output* type where the field is required,
+  // which desynchronises `zodResolver(schema)` from `useForm<ProductFormValues>`.
+  // Defaults live in `defaultValues` instead.
   initialStockQuantity: z
     .number({ invalid_type_error: "Must be a valid number" })
     .int("Must be an integer")
-    .min(0, "Initial stock quantity cannot be negative")
-    .default(0),
+    .min(0, "Initial stock quantity cannot be negative"),
   reorderPoint: z
     .number({ invalid_type_error: "Must be a valid number" })
     .int("Must be an integer")
@@ -54,7 +57,7 @@ const productSchema = z.object({
     .number({ invalid_type_error: "Must be a valid number" })
     .min(0, "Unit cost cannot be negative")
     .optional(),
-  currency: z.enum(["INR", "USD", "EUR"]).default("INR"),
+  currency: z.enum(["INR", "USD", "EUR"]),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;

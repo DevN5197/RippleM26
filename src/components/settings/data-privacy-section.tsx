@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Database, Download, RotateCcw, AlertTriangle, ShieldCheck } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -38,8 +45,11 @@ export function DataPrivacySection({
     try {
       const bName = business?.name ?? (dataMode === "mock" ? db.business.name : "Active Business");
       const bCurr = business?.currency ?? (dataMode === "mock" ? db.business.currency : "INR");
-      const bOpenCash = business?.openingCashPaise ?? (dataMode === "mock" ? db.business.openingCashPaise : 0);
-      const bSafety = business?.safetyThresholdPaise ?? (dataMode === "mock" ? db.business.safetyThresholdPaise ?? 0 : 0);
+      const bOpenCash =
+        business?.openingCashPaise ?? (dataMode === "mock" ? db.business.openingCashPaise : 0);
+      const bSafety =
+        business?.safetyThresholdPaise ??
+        (dataMode === "mock" ? (db.business.safetyThresholdPaise ?? 0) : 0);
 
       // Export cohesive business summary CSV
       const rows = [
@@ -56,8 +66,14 @@ export function DataPrivacySection({
         ["Customers Count", String(dataMode === "mock" ? db.customers.length : "N/A (API Mode)")],
         ["Products Count", String(dataMode === "mock" ? db.products.length : "N/A (API Mode)")],
         ["Invoices Count", String(dataMode === "mock" ? db.invoices.length : "N/A (API Mode)")],
-        ["Purchase Orders Count", String(dataMode === "mock" ? db.purchaseOrders.length : "N/A (API Mode)")],
-        ["Cash Flow Events Count", String(dataMode === "mock" ? db.cashFlowEvents.length : "N/A (API Mode)")],
+        [
+          "Purchase Orders Count",
+          String(dataMode === "mock" ? db.purchaseOrders.length : "N/A (API Mode)"),
+        ],
+        [
+          "Cash Flow Events Count",
+          String(dataMode === "mock" ? db.cashFlowEvents.length : "N/A (API Mode)"),
+        ],
       ];
 
       const csvContent = rows
@@ -128,7 +144,8 @@ export function DataPrivacySection({
           <div className="space-y-1">
             <h4 className="text-sm font-medium text-foreground">Export Workspace Data</h4>
             <p className="text-xs text-muted-foreground">
-              Download your current counterparties, products, invoices, and financial preferences in CSV format.
+              Download your current counterparties, products, invoices, and financial preferences in
+              CSV format.
             </p>
           </div>
           <Button
@@ -150,7 +167,10 @@ export function DataPrivacySection({
             <div className="flex items-center gap-2">
               <h4 className="text-sm font-semibold text-destructive">Reset Demo Data</h4>
               {!isMockMode ? (
-                <Badge variant="outline" className="border-destructive/30 text-destructive text-[10px]">
+                <Badge
+                  variant="outline"
+                  className="border-destructive/30 text-destructive text-[10px]"
+                >
                   Disabled in Live API Mode
                 </Badge>
               ) : null}
@@ -183,8 +203,9 @@ export function DataPrivacySection({
                     <AlertDialogTitle>Reset demo data to initial seed?</AlertDialogTitle>
                   </div>
                   <AlertDialogDescription>
-                    This will restore all mock counterparties, invoices, payments, inventory, and business settings
-                    to the default Rupi Clothing seed dataset. Any unsaved edits will be discarded.
+                    This will restore all mock counterparties, invoices, payments, inventory, and
+                    business settings to the default Rupi Clothing seed dataset. Any unsaved edits
+                    will be discarded.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -207,7 +228,8 @@ export function DataPrivacySection({
       </CardContent>
       <CardFooter className="border-t px-6 py-3">
         <p className="text-[11px] text-muted-foreground">
-          Never expose sensitive credentials or API keys. Ripple enforces strict environment segregation.
+          Never expose sensitive credentials or API keys. Ripple enforces strict environment
+          segregation.
         </p>
       </CardFooter>
     </Card>

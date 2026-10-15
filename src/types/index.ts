@@ -170,12 +170,7 @@ export interface Customer {
 }
 
 export type PaymentReliabilityCategory =
-  | "Excellent"
-  | "Good"
-  | "Fair"
-  | "Poor"
-  | "Very poor"
-  | "Insufficient payment history";
+  "Excellent" | "Good" | "Fair" | "Poor" | "Very poor" | "Insufficient payment history";
 
 export interface PaymentReliabilityResult {
   score: number | null; // 0-100 or null if insufficient history
@@ -461,13 +456,7 @@ export interface CustomerOrder {
 
 export type InvoiceType = "receivable" | "payable";
 export type InvoiceStatus =
-  | "draft"
-  | "sent"
-  | "partially_paid"
-  | "paid"
-  | "overdue"
-  | "void"
-  | "cancelled";
+  "draft" | "sent" | "partially_paid" | "paid" | "overdue" | "void" | "cancelled";
 
 export type AgingBucket = "current" | "1_7" | "8_30" | "31_60" | "over_60";
 
@@ -744,6 +733,12 @@ export interface ApiErrorBody {
     message: string;
     fieldErrors?: Record<string, string[]>;
   };
+  /**
+   * FastAPI's native error envelope. The backend returns `{ detail: "..." }`
+   * alongside (or instead of) the Ripple `error` object, so it has to be part of
+   * the declared shape — otherwise the message is silently dropped.
+   */
+  detail?: string | undefined;
 }
 
 export interface ListParams {
@@ -846,6 +841,84 @@ export interface SplitEscrowPreview {
   explanation: string;
 }
 
+/*
+ * Simulator domain types.
+ *
+ * These previously lived in `src/lib/api/simulationApi.ts`, which forced
+ * `ChaosStressTestResult.stressedResult` to be `any` (a shared type cannot
+ * reference an API-module type without inverting the layering) and made UI
+ * components import their types from an API module. They live here now;
+ * `simulationApi.ts` re-exports them so existing imports keep working.
+ */
+
+export interface SimulatorControls {
+  supplierDeliveryDelayDays: number;
+  customerPaymentDelayDays: number;
+  customerPaymentAmountPaise: number | null; // null = unchanged
+  supplierPaymentAmountPaise: number | null; // null = unchanged
+  orderQuantityMultiplier: number; // 1.0 = unchanged
+  horizonDays: 7 | 14 | 30;
+}
+
+export interface DependencyImpact {
+  entityId: string;
+  entityType: string;
+  label: string;
+  originalDate?: string;
+  shiftedDate?: string;
+  shiftDays: number;
+  amountPaise?: number;
+  impactDescription: string;
+}
+
+export interface RippleScoreBreakdown {
+  cashShortfallFactor: number; // 0–40 pts: is there a shortfall, how deep?
+  delayMagnitudeFactor: number; // 0–25 pts: combined delay days
+  downstreamCountFactor: number; // 0–20 pts: # affected dependencies
+  liquidityGapFactor: number; // 0–15 pts: baseline vs simulated delta
+  totalScore: number; // 0–100
+}
+
+export interface SimulatorRecommendation {
+  id: string;
+  title: string;
+  rationale: string;
+  priority: "high" | "medium" | "low";
+  impactPaise?: number | undefined;
+}
+
+export interface SimulatorResult {
+  baselinePoints: ForecastPoint[];
+  scenarioPoints: ForecastPoint[];
+  baselineClosingPaise: number;
+  scenarioClosingPaise: number;
+  baselineMinPaise: number;
+  baselineMinDate: string;
+  scenarioMinPaise: number;
+  scenarioMinDate: string;
+  shortfallPaise: number; // > 0 means scenario went negative
+  affectedDependencies: DependencyImpact[];
+  rippleScore: RippleScoreBreakdown;
+  recommendations: SimulatorRecommendation[];
+  savedScenarioId?: string;
+  trueMargin?: TrueMarginData | undefined;
+  timelineNodes?: SimulatorTimelineNode[] | undefined;
+  /** Rescue actions currently applied to the simulated scenario. */
+  activeRescues?: ActiveRescue[] | undefined;
+  isAutoPhaseApplied?: boolean | undefined;
+  isSplitEscrowApplied?: boolean | undefined;
+  hasAutoPhaseRescue?: boolean | undefined;
+  hasSplitEscrowRescue?: boolean | undefined;
+}
+
+/** A mitigation currently applied to a scenario (auto-phase inventory or split escrow). */
+export interface ActiveRescue {
+  id: string;
+  type: "auto_phase" | "split_escrow";
+  label?: string | undefined;
+  appliedAt?: string | undefined;
+}
+
 export interface ChaosStressTestResult {
   isStressTestActive: boolean;
   baselineMinCashPaise: number;
@@ -859,6 +932,7 @@ export interface ChaosStressTestResult {
   mostFragileMultiplier: number;
   baselineTrueMargin: TrueMarginData;
   stressedTrueMargin: TrueMarginData;
-  stressedResult: any;
+  /** Full simulator result produced by the stressed run; drives the results panel. */
+  stressedResult?: SimulatorResult | undefined;
   summary: string;
 }

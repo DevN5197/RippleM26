@@ -58,13 +58,16 @@ const supplierFormSchema = z.object({
     .int("Must be an integer")
     .min(0, "Payment terms cannot be negative")
     .max(365, "Payment terms cannot exceed 365 days"),
+  // NOTE: no `.default()` here. A zod default makes the schema's *input* type
+  // optional while `z.infer` yields the *output* type where the field is required,
+  // which desynchronises `zodResolver(schema)` from `useForm<SupplierFormValues>`.
+  // Defaults live in `defaultValues` / `form.reset` instead.
   leadTimeDays: z
     .number({ invalid_type_error: "Must be a valid number of days" })
     .int("Must be an integer")
     .min(0, "Lead time cannot be negative")
-    .max(365, "Lead time cannot exceed 365 days")
-    .default(7),
-  status: z.enum(["active", "archived"]).default("active"),
+    .max(365, "Lead time cannot exceed 365 days"),
+  status: z.enum(["active", "archived"]),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
@@ -81,7 +84,7 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSubmit }: Suppl
   const isEditing = Boolean(supplier);
 
   const form = useForm<SupplierFormValues>({
-    resolver: zodResolver(supplierFormSchema) as any,
+    resolver: zodResolver(supplierFormSchema),
     defaultValues: {
       name: "",
       contactName: "",
@@ -191,7 +194,8 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSubmit }: Suppl
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
                     <FormLabel>
-                      Supplier / Company Name <span className="text-destructive font-bold ml-0.5">*</span>
+                      Supplier / Company Name{" "}
+                      <span className="text-destructive font-bold ml-0.5">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Shree Textiles Pvt Ltd" {...field} />
@@ -263,7 +267,8 @@ export function SupplierDialog({ open, onOpenChange, supplier, onSubmit }: Suppl
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Payment Terms (Days) <span className="text-destructive font-bold ml-0.5">*</span>
+                      Payment Terms (Days){" "}
+                      <span className="text-destructive font-bold ml-0.5">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input

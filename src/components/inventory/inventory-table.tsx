@@ -109,7 +109,7 @@ export function InventoryTable({
   if (error) {
     return (
       <div className="rounded-lg border bg-card p-6 shadow-xs">
-        <ErrorState message="Could not load inventory catalog." retry={onRetry} />
+        <ErrorState message="Could not load inventory catalog." onRetry={onRetry} />
       </div>
     );
   }

@@ -66,12 +66,12 @@ export function evaluateObligation(
 
   const paidAmountPaise = Math.min(
     invoice.amountPaise,
-    invoice.amountPaidPaise ||
-      completedPayments.reduce((sum, p) => sum + (p.amountPaise || 0), 0),
+    invoice.amountPaidPaise || completedPayments.reduce((sum, p) => sum + (p.amountPaise || 0), 0),
   );
   const isFullyPaid = paidAmountPaise >= invoice.amountPaise;
   const isOverdue =
-    !isFullyPaid && (invoice.status === "overdue" || differenceInCalendarDays(asOfDate, dueDate) > 0);
+    !isFullyPaid &&
+    (invoice.status === "overdue" || differenceInCalendarDays(asOfDate, dueDate) > 0);
 
   // If neither paid nor overdue (i.e. upcoming un-matured invoice with no payments yet),
   // this obligation does not qualify as historical transaction data yet.

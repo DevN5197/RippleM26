@@ -13,7 +13,7 @@ export const STAGE_X: Record<string, number> = {
   node_stock_1: 1940,
   node_risk_1: 1940,
   node_co_1: 2410,
-  node_cus_1: 2410,       // Directly above customer sale node_co_1
+  node_cus_1: 2410, // Directly above customer sale node_co_1
   node_inv_2001: 2880,
   node_rec_2001: 3350,
 
@@ -34,31 +34,31 @@ export const STAGE_X: Record<string, number> = {
 // Deterministic vertical positions (Y-coordinates)
 export const STAGE_Y: Record<string, number> = {
   // Chain 1: Primary Operating Cycle
-  node_cus_1: -180,      // Customer (Urban Threads) placed directly above node_co_1
-  node_sup_1: 70,        // Row 0: Supplier (Shree Textiles)
-  node_pay_1: 70,        // Row 0: Advance payment
-  node_po_1: 70,         // Row 0: Purchase order PO-1
-  node_delivery_1: 70,   // Row 0: Inventory delivery Day 4
-  node_stock_1: 70,      // Row 0: Inventory stock (12 units)
-  node_co_1: 70,         // Row 0: Customer sale #CO-1
-  node_inv_2001: 70,     // Row 0: Invoice INV-2001
-  node_rec_2001: 70,     // Row 0: Customer receipt REC-2001
+  node_cus_1: -180, // Customer (Urban Threads) placed directly above node_co_1
+  node_sup_1: 70, // Row 0: Supplier (Shree Textiles)
+  node_pay_1: 70, // Row 0: Advance payment
+  node_po_1: 70, // Row 0: Purchase order PO-1
+  node_delivery_1: 70, // Row 0: Inventory delivery Day 4
+  node_stock_1: 70, // Row 0: Inventory stock (12 units)
+  node_co_1: 70, // Row 0: Customer sale #CO-1
+  node_inv_2001: 70, // Row 0: Invoice INV-2001
+  node_rec_2001: 70, // Row 0: Customer receipt REC-2001
 
-  node_pay_3: 360,       // Row 1: PO balance payment
-  node_risk_1: 360,      // Row 1: Day 5 cash shortfall risk
+  node_pay_3: 360, // Row 1: PO balance payment
+  node_risk_1: 360, // Row 1: Day 5 cash shortfall risk
 
   // Chain 2: Secondary cycle (Middle workflow lane)
-  node_sup_2: 740,       // Row 2: Supplier (Mehta Fabrics)
-  node_po_2: 740,        // Row 2: Purchase order PO-2
-  node_delivery_2: 640,  // Row 2a: Upper delivery branch
-  node_pay_po2: 920,     // Row 2b: Lower net-45 payment branch
+  node_sup_2: 740, // Row 2: Supplier (Mehta Fabrics)
+  node_po_2: 740, // Row 2: Purchase order PO-2
+  node_delivery_2: 640, // Row 2a: Upper delivery branch
+  node_pay_po2: 920, // Row 2b: Lower net-45 payment branch
 
   // Chain 3: Customer Receivables (Bottom workflow lane)
-  node_cus_2: 1380,      // Row 3: Customer (Style Mart)
-  node_inv_1999: 1240,   // Row 3a: Upper overdue invoice branch
-  node_co_2: 1520,       // Row 3b: Lower customer sale branch
-  node_inv_2002: 1520,   // Row 3b: Invoice INV-2002
-  node_rec_2002: 1520,   // Row 3b: Customer receipt REC-2002
+  node_cus_2: 1380, // Row 3: Customer (Style Mart)
+  node_inv_1999: 1240, // Row 3a: Upper overdue invoice branch
+  node_co_2: 1520, // Row 3b: Lower customer sale branch
+  node_inv_2002: 1520, // Row 3b: Invoice INV-2002
+  node_rec_2002: 1520, // Row 3b: Customer receipt REC-2002
 };
 
 // Exact ER Diagram Port / Handle Mappings to eliminate all edge overlaps
@@ -181,7 +181,7 @@ export function adaptToReactFlow(
     });
 
   // Lane Header Annotations for structured swimlanes
-  const laneNodes: Node<any>[] = [
+  const laneNodes: Node<CustomNodeData>[] = [
     {
       id: "lane_1",
       type: "lane_header",
@@ -224,9 +224,7 @@ export function adaptToReactFlow(
   ];
 
   const allNodes =
-    filteredNodeIds && filteredNodeIds.size < data.nodes.length
-      ? nodes
-      : [...laneNodes, ...nodes];
+    filteredNodeIds && filteredNodeIds.size < data.nodes.length ? nodes : [...laneNodes, ...nodes];
 
   // Transform Edges
   const validNodeIds = new Set(nodes.map((n) => n.id));

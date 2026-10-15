@@ -7,6 +7,11 @@ import { addDays } from "date-fns";
 import type {
   SimulationScenario,
   SimulationResult,
+  SimulatorControls,
+  SimulatorRecommendation,
+  DependencyImpact,
+  RippleScoreBreakdown,
+  ActiveRescue,
   ForecastPoint,
   CashFlowEvent,
   DependencyEdge,
@@ -18,67 +23,20 @@ import type {
 } from "@/types";
 
 // ---------------------------------------------------------------------------
-// Extended simulator types (kept local — not in shared types to stay minimal)
+// Simulator domain types now live in `@/types` — a shared type could not
+// reference an API-module type, which is what forced `activeRescues` and
+// `ChaosStressTestResult.stressedResult` to be `any`. Re-exported here so all
+// existing imports from this module keep working.
 // ---------------------------------------------------------------------------
 
-export interface SimulatorControls {
-  supplierDeliveryDelayDays: number;
-  customerPaymentDelayDays: number;
-  customerPaymentAmountPaise: number | null; // null = unchanged
-  supplierPaymentAmountPaise: number | null; // null = unchanged
-  orderQuantityMultiplier: number; // 1.0 = unchanged
-  horizonDays: 7 | 14 | 30;
-}
-
-export interface DependencyImpact {
-  entityId: string;
-  entityType: string;
-  label: string;
-  originalDate?: string;
-  shiftedDate?: string;
-  shiftDays: number;
-  amountPaise?: number;
-  impactDescription: string;
-}
-
-export interface RippleScoreBreakdown {
-  cashShortfallFactor: number;     // 0–40 pts: is there a shortfall, how deep?
-  delayMagnitudeFactor: number;    // 0–25 pts: combined delay days
-  downstreamCountFactor: number;   // 0–20 pts: # affected dependencies
-  liquidityGapFactor: number;      // 0–15 pts: baseline vs simulated delta
-  totalScore: number;              // 0–100
-}
-
-export interface SimulatorResult {
-  baselinePoints: ForecastPoint[];
-  scenarioPoints: ForecastPoint[];
-  baselineClosingPaise: number;
-  scenarioClosingPaise: number;
-  baselineMinPaise: number;
-  baselineMinDate: string;
-  scenarioMinPaise: number;
-  scenarioMinDate: string;
-  shortfallPaise: number; // > 0 means scenario went negative
-  affectedDependencies: DependencyImpact[];
-  rippleScore: RippleScoreBreakdown;
-  recommendations: SimulatorRecommendation[];
-  savedScenarioId?: string;
-  trueMargin?: TrueMarginData | undefined;
-  timelineNodes?: SimulatorTimelineNode[] | undefined;
-  activeRescues?: any[] | undefined;
-  isAutoPhaseApplied?: boolean | undefined;
-  isSplitEscrowApplied?: boolean | undefined;
-  hasAutoPhaseRescue?: boolean | undefined;
-  hasSplitEscrowRescue?: boolean | undefined;
-}
-
-export interface SimulatorRecommendation {
-  id: string;
-  title: string;
-  rationale: string;
-  priority: "high" | "medium" | "low";
-  impactPaise?: number | undefined;
-}
+export type {
+  SimulatorControls,
+  SimulatorRecommendation,
+  DependencyImpact,
+  RippleScoreBreakdown,
+  SimulatorResult,
+  ActiveRescue,
+} from "@/types";
 
 export interface SavedSimulatorScenario {
   id: string;
@@ -366,7 +324,9 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
       label: "Apex Corp — Customer Invoice #INV-APEX",
       type: "customer_receivable",
       dayLabel: `Day ${15 + controls.customerPaymentDelayDays}`,
-      date: new Date(Date.now() + (15 + controls.customerPaymentDelayDays) * 86400000).toISOString().slice(0, 10),
+      date: new Date(Date.now() + (15 + controls.customerPaymentDelayDays) * 86400000)
+        .toISOString()
+        .slice(0, 10),
       amountPaise: controls.customerPaymentAmountPaise ?? 50_000_000,
       direction: "incoming",
       status: controls.customerPaymentDelayDays > 0 ? "delayed" : "upcoming",
@@ -389,7 +349,9 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
       label: "Kaveri Timber — Supplier Commitment",
       type: "supplier_payable",
       dayLabel: `Day ${18 + controls.supplierDeliveryDelayDays}`,
-      date: new Date(Date.now() + (18 + controls.supplierDeliveryDelayDays) * 86400000).toISOString().slice(0, 10),
+      date: new Date(Date.now() + (18 + controls.supplierDeliveryDelayDays) * 86400000)
+        .toISOString()
+        .slice(0, 10),
       amountPaise: controls.supplierPaymentAmountPaise ?? 12_000_000,
       direction: "outgoing",
       status: controls.supplierDeliveryDelayDays > 0 ? "delayed" : "upcoming",
@@ -413,12 +375,17 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
       label: "Metro Retail — Wholesale Order #MR-2026",
       type: "downstream_fulfillment",
       dayLabel: `Day ${22 + controls.supplierDeliveryDelayDays}`,
-      date: new Date(Date.now() + (22 + controls.supplierDeliveryDelayDays) * 86400000).toISOString().slice(0, 10),
+      date: new Date(Date.now() + (22 + controls.supplierDeliveryDelayDays) * 86400000)
+        .toISOString()
+        .slice(0, 10),
       amountPaise: 16_500_000,
       direction: "incoming",
       status: effectiveContagionDays > 0 ? "at_risk" : "active",
       counterparty: "Metro Retail",
-      description: effectiveContagionDays > 0 ? "Exposed to secondary SLA delay penalty." : "Inventory gate unlocked.",
+      description:
+        effectiveContagionDays > 0
+          ? "Exposed to secondary SLA delay penalty."
+          : "Inventory gate unlocked.",
       fragility: {
         nodeId: "node_metro_retail",
         invoiceAmountPaise: 16_500_000,
@@ -642,7 +609,10 @@ export const simulatorApi = {
       await delay(700);
       return runMockSimulation(controls);
     }
-    return httpRequest<SimulatorResult>("/api/simulator/simulate", { method: "POST", body: controls });
+    return httpRequest<SimulatorResult>("/api/simulator/simulate", {
+      method: "POST",
+      body: controls,
+    });
   },
 
   /**
@@ -662,7 +632,10 @@ export const simulatorApi = {
         isStressTestActive: true,
         baselineMinCashPaise: baseline.scenarioMinPaise,
         stressedMinCashPaise: stressedResult.scenarioMinPaise,
-        additionalShortfallPaise: Math.max(0, baseline.scenarioMinPaise - stressedResult.scenarioMinPaise),
+        additionalShortfallPaise: Math.max(
+          0,
+          baseline.scenarioMinPaise - stressedResult.scenarioMinPaise,
+        ),
         newlyAffectedNodesCount: 1,
         newlyEndangeredOrderValuePaise: 16_500_000,
         mostFragileNodeBefore: "node_apex_corp",
@@ -685,7 +658,8 @@ export const simulatorApi = {
           totalContagionCostPaise: 9_330_000,
           trueRippleMarginPaise: 3_170_000,
           trueRippleMarginPercent: 6.34,
-          explanation: "Paper Margin of 25% reduced by ₹93,300 in ripple contagion to True Margin of 6.34%.",
+          explanation:
+            "Paper Margin of 25% reduced by ₹93,300 in ripple contagion to True Margin of 6.34%.",
         },
         stressedTrueMargin: stressedResult.trueMargin || {
           revenuePaise: 50_000_000,
@@ -706,7 +680,8 @@ export const simulatorApi = {
           explanation: "+5-day stress creates negative True Margin.",
         },
         stressedResult,
-        summary: "+5-day Chaos Stress Test reduced minimum liquidity. Most fragile node: Apex Corp (20.0x multiplier).",
+        summary:
+          "+5-day Chaos Stress Test reduced minimum liquidity. Most fragile node: Apex Corp (20.0x multiplier).",
       };
     }
     return httpRequest<ChaosStressTestResult>("/api/simulator/chaos-test", {
@@ -777,7 +752,8 @@ export const simulatorApi = {
         success: true,
         rescueId: nextId("res_ap"),
         rescue: preview,
-        message: "Auto-Phase Inventory applied. Batch 1 and Batch 2 scheduled with safety buffer intact.",
+        message:
+          "Auto-Phase Inventory applied. Batch 1 and Batch 2 scheduled with safety buffer intact.",
       };
     }
     return httpRequest("/api/simulator/rescues/auto-phase/apply", {
@@ -836,7 +812,8 @@ export const simulatorApi = {
         success: true,
         rescueId: nextId("res_esc"),
         rescue: preview,
-        message: "Tri-Party Split-Escrow arrangement locked. Supplier obligation funded with zero ordinary cash outlay.",
+        message:
+          "Tri-Party Split-Escrow arrangement locked. Supplier obligation funded with zero ordinary cash outlay.",
       };
     }
     return httpRequest("/api/simulator/rescues/split-escrow/apply", {

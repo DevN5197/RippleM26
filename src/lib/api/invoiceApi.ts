@@ -19,14 +19,7 @@ import type {
 
 export interface InvoiceListFilterParams extends ListParams {
   type?: "all" | "receivable" | "payable" | undefined;
-  status?:
-    | "all"
-    | "unpaid"
-    | "partially_paid"
-    | "paid"
-    | "overdue"
-    | "cancelled"
-    | undefined;
+  status?: "all" | "unpaid" | "partially_paid" | "paid" | "overdue" | "cancelled" | undefined;
   aging?: "all" | AgingBucket | undefined;
   sortBy?: "dueDate" | "amount" | "status" | "invoiceNumber" | "overdue" | undefined;
   sortDir?: "asc" | "desc" | undefined;

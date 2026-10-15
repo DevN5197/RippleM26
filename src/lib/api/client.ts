@@ -11,7 +11,11 @@ const ACTIVE_BIZ_KEY = "ripple_active_biz_id";
 
 function safeStorage(): Storage | null {
   try {
-    if (typeof window !== "undefined" && window.localStorage && typeof window.localStorage.getItem === "function") {
+    if (
+      typeof window !== "undefined" &&
+      window.localStorage &&
+      typeof window.localStorage.getItem === "function"
+    ) {
       return window.localStorage;
     }
   } catch {
@@ -145,13 +149,13 @@ export async function httpRequest<T>(path: string, options: RequestOptions = {})
         throw new ApiError(
           0,
           "network_error",
-          `Mixed Content blocked: Insecure HTTP backend (${url.origin}) cannot be called from an HTTPS page. Switch to Demo Mode or use an HTTPS backend proxy.`
+          `Mixed Content blocked: Insecure HTTP backend (${url.origin}) cannot be called from an HTTPS page. Switch to Demo Mode or use an HTTPS backend proxy.`,
         );
       }
       throw new ApiError(
         0,
         "network_error",
-        `Could not reach the server at ${url.origin}. Please ensure the backend is running.`
+        `Could not reach the server at ${url.origin}. Please ensure the backend is running.`,
       );
     }
   }
@@ -174,7 +178,7 @@ export async function httpRequest<T>(path: string, options: RequestOptions = {})
       }
     }
 
-    const detailMsg = (errorBody as any)?.detail || errorBody?.error?.message;
+    const detailMsg = errorBody?.detail || errorBody?.error?.message;
     throw new ApiError(
       response.status,
       errorBody?.error?.code ?? (response.status === 401 ? "unauthorized" : "http_error"),

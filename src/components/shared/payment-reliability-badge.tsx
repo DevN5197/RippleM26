@@ -25,7 +25,9 @@ export function PaymentReliabilityBadge({
 }: PaymentReliabilityBadgeProps) {
   const score = reliability?.score ?? propScore;
   const category: PaymentReliabilityCategory =
-    reliability?.category ?? propCategory ?? (score !== null && score !== undefined ? "Fair" : "Insufficient payment history");
+    reliability?.category ??
+    propCategory ??
+    (score !== null && score !== undefined ? "Fair" : "Insufficient payment history");
   const count = reliability?.transactionCount ?? propCount;
 
   // Visual tones
@@ -34,33 +36,40 @@ export function PaymentReliabilityBadge({
 
   switch (category) {
     case "Excellent":
-      colorClass = "border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300";
+      colorClass =
+        "border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300";
       Icon = ShieldCheck;
       break;
     case "Good":
-      colorClass = "border-blue-500/30 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300";
+      colorClass =
+        "border-blue-500/30 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300";
       Icon = Shield;
       break;
     case "Fair":
-      colorClass = "border-amber-500/30 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300";
+      colorClass =
+        "border-amber-500/30 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300";
       Icon = Shield;
       break;
     case "Poor":
-      colorClass = "border-orange-500/30 bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300";
+      colorClass =
+        "border-orange-500/30 bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300";
       Icon = ShieldAlert;
       break;
     case "Very poor":
-      colorClass = "border-rose-500/30 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300";
+      colorClass =
+        "border-rose-500/30 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300";
       Icon = ShieldX;
       break;
     case "Insufficient payment history":
     default:
-      colorClass = "border-slate-300 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400";
+      colorClass =
+        "border-slate-300 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400";
       Icon = HelpCircle;
       break;
   }
 
-  const isInsufficient = category === "Insufficient payment history" || score === null || score === undefined;
+  const isInsufficient =
+    category === "Insufficient payment history" || score === null || score === undefined;
 
   return (
     <div className={cn("inline-flex items-center gap-1.5", className)}>
@@ -70,10 +79,16 @@ export function PaymentReliabilityBadge({
           "font-medium inline-flex items-center gap-1 px-2 py-0.5",
           colorClass,
           size === "sm" && "text-xs px-1.5 py-0",
-          size === "lg" && "text-sm px-2.5 py-1"
+          size === "lg" && "text-sm px-2.5 py-1",
         )}
       >
-        <Icon className={cn("h-3.5 w-3.5 shrink-0", size === "sm" && "h-3 w-3", size === "lg" && "h-4 w-4")} />
+        <Icon
+          className={cn(
+            "h-3.5 w-3.5 shrink-0",
+            size === "sm" && "h-3 w-3",
+            size === "lg" && "h-4 w-4",
+          )}
+        />
         {isInsufficient ? (
           <span>Insufficient payment history</span>
         ) : (

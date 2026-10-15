@@ -85,18 +85,28 @@ function DashboardPage() {
   const summary: DashboardSummary = data;
 
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-  const [invoiceDialogType, setInvoiceDialogType] = useState<"receivable" | "payable">("receivable");
+  const [invoiceDialogType, setInvoiceDialogType] = useState<"receivable" | "payable">(
+    "receivable",
+  );
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers", "list-quick"],
-    queryFn: () => customerApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    queryFn: () =>
+      customerApi
+        .list({ pageSize: 100 })
+        .then((r) => r.data)
+        .catch(() => []),
     enabled: invoiceDialogOpen,
     staleTime: 60_000,
   });
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers", "list-quick"],
-    queryFn: () => supplierApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    queryFn: () =>
+      supplierApi
+        .list({ pageSize: 100 })
+        .then((r) => r.data)
+        .catch(() => []),
     enabled: invoiceDialogOpen,
     staleTime: 60_000,
   });
@@ -107,7 +117,7 @@ function DashboardPage() {
       toast.success(
         payload.type === "receivable"
           ? "Customer invoice created successfully!"
-          : "Supplier bill recorded successfully!"
+          : "Supplier bill recorded successfully!",
       );
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
@@ -242,7 +252,9 @@ function DashboardPage() {
                 <p className="font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
                   +{formatMoney(summary.receivablesPaise)}
                 </p>
-                <p className="text-[10px] text-muted-foreground">{summary.openInvoiceCount} open invoices</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {summary.openInvoiceCount} open invoices
+                </p>
               </div>
               <div>
                 <span className="text-muted-foreground">Committed Payables:</span>
@@ -329,7 +341,9 @@ function DashboardPage() {
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-sm font-semibold">Upcoming Transactions</CardTitle>
-              <CardDescription className="text-xs">Next key receipts and disbursements</CardDescription>
+              <CardDescription className="text-xs">
+                Next key receipts and disbursements
+              </CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild className="text-xs h-7">
               <Link to="/invoices">
@@ -347,7 +361,10 @@ function DashboardPage() {
             ) : (
               <ul className="divide-y text-xs">
                 {summary.upcomingEvents.slice(0, 5).map((event) => (
-                  <li key={event.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-1">
+                  <li
+                    key={event.id}
+                    className="flex items-center justify-between gap-3 py-2.5 first:pt-1"
+                  >
                     <div className="min-w-0">
                       <p className="truncate font-medium text-foreground">{event.label}</p>
                       <DateLabel iso={event.date} className="text-[11px] text-muted-foreground" />
@@ -406,12 +423,17 @@ function DashboardPage() {
                   </div>
                 ) : (
                   summary.alerts.map((alert) => (
-                    <div key={alert.id} className="rounded-md border bg-background p-2.5 text-xs space-y-1">
+                    <div
+                      key={alert.id}
+                      className="rounded-md border bg-background p-2.5 text-xs space-y-1"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-foreground">{alert.title}</span>
                         <RiskIndicator severity={alert.severity} />
                       </div>
-                      <p className="text-muted-foreground text-[11px] leading-snug">{alert.description}</p>
+                      <p className="text-muted-foreground text-[11px] leading-snug">
+                        {alert.description}
+                      </p>
                     </div>
                   ))
                 )}
@@ -423,7 +445,10 @@ function DashboardPage() {
                 <div className="rounded-md border p-3 text-xs space-y-2 bg-muted/10">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Items Below Reorder Point:</span>
-                    <Badge variant={summary.lowStockCount > 0 ? "destructive" : "outline"} className="text-[10px]">
+                    <Badge
+                      variant={summary.lowStockCount > 0 ? "destructive" : "outline"}
+                      className="text-[10px]"
+                    >
                       {summary.lowStockCount} items
                     </Badge>
                   </div>
@@ -434,7 +459,12 @@ function DashboardPage() {
                     </span>
                   </div>
                   <div className="pt-1 flex justify-end">
-                    <Button variant="ghost" size="sm" asChild className="h-6 text-[11px] p-0 text-primary">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="h-6 text-[11px] p-0 text-primary"
+                    >
                       <Link to="/inventory">Manage inventory & orders →</Link>
                     </Button>
                   </div>

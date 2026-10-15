@@ -207,9 +207,7 @@ export function InvoiceTable({
           <Select
             value={sortBy}
             onValueChange={(val) =>
-              onSortByChange(
-                val as "dueDate" | "amount" | "status" | "invoiceNumber" | "overdue",
-              )
+              onSortByChange(val as "dueDate" | "amount" | "status" | "invoiceNumber" | "overdue")
             }
           >
             <SelectTrigger className="w-[145px] h-9">
@@ -334,7 +332,9 @@ export function InvoiceTable({
                       <div className="flex flex-col gap-0.5">
                         <span
                           className={`text-sm ${
-                            inv.isOverdue ? "font-semibold text-destructive" : "text-muted-foreground"
+                            inv.isOverdue
+                              ? "font-semibold text-destructive"
+                              : "text-muted-foreground"
                           }`}
                         >
                           {formatDate(inv.dueDate)}

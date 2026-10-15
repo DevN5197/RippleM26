@@ -129,7 +129,7 @@ export const authApi = {
     email: string,
     password: string,
     fullName: string,
-    businessName: string = "My Business"
+    businessName: string = "My Business",
   ): Promise<AuthSession> {
     if (DATA_MODE === "mock") {
       await delay(300);
@@ -231,7 +231,7 @@ export const authApi = {
   async switchBusiness(businessId: string): Promise<AuthSession> {
     if (DATA_MODE === "mock") {
       await delay(150);
-      return (await this.login("owner@rupiclothing.in", "password123"));
+      return await this.login("owner@rupiclothing.in", "password123");
     }
 
     const res = await httpRequest<{

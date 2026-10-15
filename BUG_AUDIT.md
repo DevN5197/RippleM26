@@ -1,4 +1,5 @@
 # RIPPLE FULL SYSTEM BUG AUDIT (PHASE 1)
+
 **Date:** October 15, 2026  
 **Auditor:** Senior Full-Stack & QA Engineer  
 **Scope:** Full-stack inspection of frontend routes, layout, navigation, forms, modals, API client, backend services, database models, tenant isolation, and test suites.  
@@ -11,6 +12,7 @@
 A comprehensive, read-only audit of the Ripple cash-flow intelligence platform was conducted across the frontend (TanStack Router, React 19, Vite, Tailwind CSS v4) and backend (FastAPI, SQLAlchemy, SQLite).
 
 ### System Status Overview
+
 - **Startup & Health:** Frontend Vite dev server (port 8080) and FastAPI backend (port 8000) start up cleanly. All 12 frontend routes and 13 backend API endpoints respond with HTTP 200 OK.
 - **Test Suites:** Vitest suite passes 84/84 tests; Backend integration test suite passes 13/13 suites.
 - **Type Safety & Strictness:** `npx tsc --noEmit` reveals 12 concrete TypeScript errors caused by runtime function naming mismatches, missing properties, and `exactOptionalPropertyTypes: true` violations.
@@ -21,24 +23,25 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 
 ## 2. Priority Findings Matrix
 
-| Bug ID | Page / Workflow | Severity | Status | Summary |
-|---|---|---|---|---|
-| **BUG-01** | Dashboard (`/_app/dashboard`) | **P1 (High)** | **RESOLVED** | Runtime crash calling `invoiceApi.createInvoice` (fixed: wired to `invoiceApi.create` and added alias). |
-| **BUG-02** | Invoices & Counterparty Details | **P1 (High)** | **RESOLVED** | Overdue reminder fails in API mode (fixed: `generateOverdueReminder` accepts invoice objects directly). |
-| **BUG-03** | Settings (`/_app/settings`) | **P1 (High)** | **RESOLVED** | Multi-tenant isolation breach in `reset-demo-data` (fixed: strictly enforced 403 Forbidden for non-`biz_1` tenants). |
-| **BUG-04** | Settings (`/_app/settings`) | **P1 (High)** | **RESOLVED** | "Export All CSV" in Data & Privacy (fixed: wired to live business prop and API mode fallback). |
-| **BUG-05** | Cash Flow, Customers, Invoices, Suppliers | **P2 (Med)** | **RESOLVED** | TypeScript compilation failures under `exactOptionalPropertyTypes: true` (fixed: added `\| undefined` to types). |
-| **BUG-06** | Dashboard, Invoices, Customer Detail | **P2 (Med)** | **RESOLVED** | Calling `customerApi.list({ limit: 100 })` using `limit` instead of `pageSize` (fixed: updated callers & added `limit` support). |
-| **BUG-07** | Invoices, Customers, Suppliers Detail Routes | **P2 (Med)** | **RESOLVED** | Dynamic routes (`$invoiceId`, `$customerId`, `$supplierId`) lack `errorComponent` handlers (fixed: added localized `ErrorState`). |
-| **BUG-08** | Inventory Test Suite | **P3 (Low)** | **RESOLVED** | Missing required property `relatedCustomerOrderCount` in `ReorderRecommendation` test mock fixture (fixed: fixture updated). |
-| **BUG-09** | Backend Auth Service | **P3 (Low)** | Open | Python 3.12+ deprecation warning for `datetime.utcnow()` in JWT token creation. |
-| **BUG-10** | Auth & Form Routes (`login`, `register`, `simulator`) | **P3 (Low)** | Open | ESLint violations for `@typescript-eslint/no-explicit-any` and Prettier formatting differences. |
+| Bug ID     | Page / Workflow                                       | Severity      | Status       | Summary                                                                                                                           |
+| ---------- | ----------------------------------------------------- | ------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| **BUG-01** | Dashboard (`/_app/dashboard`)                         | **P1 (High)** | **RESOLVED** | Runtime crash calling `invoiceApi.createInvoice` (fixed: wired to `invoiceApi.create` and added alias).                           |
+| **BUG-02** | Invoices & Counterparty Details                       | **P1 (High)** | **RESOLVED** | Overdue reminder fails in API mode (fixed: `generateOverdueReminder` accepts invoice objects directly).                           |
+| **BUG-03** | Settings (`/_app/settings`)                           | **P1 (High)** | **RESOLVED** | Multi-tenant isolation breach in `reset-demo-data` (fixed: strictly enforced 403 Forbidden for non-`biz_1` tenants).              |
+| **BUG-04** | Settings (`/_app/settings`)                           | **P1 (High)** | **RESOLVED** | "Export All CSV" in Data & Privacy (fixed: wired to live business prop and API mode fallback).                                    |
+| **BUG-05** | Cash Flow, Customers, Invoices, Suppliers             | **P2 (Med)**  | **RESOLVED** | TypeScript compilation failures under `exactOptionalPropertyTypes: true` (fixed: added `\| undefined` to types).                  |
+| **BUG-06** | Dashboard, Invoices, Customer Detail                  | **P2 (Med)**  | **RESOLVED** | Calling `customerApi.list({ limit: 100 })` using `limit` instead of `pageSize` (fixed: updated callers & added `limit` support).  |
+| **BUG-07** | Invoices, Customers, Suppliers Detail Routes          | **P2 (Med)**  | **RESOLVED** | Dynamic routes (`$invoiceId`, `$customerId`, `$supplierId`) lack `errorComponent` handlers (fixed: added localized `ErrorState`). |
+| **BUG-08** | Inventory Test Suite                                  | **P3 (Low)**  | **RESOLVED** | Missing required property `relatedCustomerOrderCount` in `ReorderRecommendation` test mock fixture (fixed: fixture updated).      |
+| **BUG-09** | Backend Auth Service                                  | **P3 (Low)**  | Open         | Python 3.12+ deprecation warning for `datetime.utcnow()` in JWT token creation.                                                   |
+| **BUG-10** | Auth & Form Routes (`login`, `register`, `simulator`) | **P3 (Low)**  | Open         | ESLint violations for `@typescript-eslint/no-explicit-any` and Prettier formatting differences.                                   |
 
 ---
 
 ## 3. Detailed Bug Reports
 
 ### BUG-01: Runtime Crash on Dashboard "+ New Record" Invoice Creation
+
 - **Bug ID:** `BUG-01`
 - **Affected Page / Workflow:** Business Command Center (`src/routes/_app.dashboard.tsx`), "+ New Record" Quick Action Modal.
 - **Severity:** P1 (High)
@@ -64,6 +67,7 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 ---
 
 ### BUG-02: Overdue Reminder Fails in API Mode (Mock Memory Store Dependency)
+
 - **Bug ID:** `BUG-02`
 - **Affected Page / Workflow:** Invoice Detail (`src/routes/_app.invoices.$invoiceId.tsx`), Invoices List (`src/routes/_app.invoices.index.tsx`), Customer Profile (`src/routes/_app.customers.$customerId.tsx`).
 - **Severity:** P1 (High)
@@ -92,10 +96,11 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 ---
 
 ### BUG-03: Multi-Tenant Isolation Breach in Reset Demo Data Endpoint
+
 - **Bug ID:** `BUG-03`
 - **Affected Page / Workflow:** Backend Settings API (`backend/app/api/settings.py:116-124`), Workspace Reset Workflow.
 - **Severity:** P1 (High)
-- **Observed Behavior:** Any authenticated user belonging to *any* tenant business (`biz_xxx`) can invoke `POST /api/settings/reset-demo-data` and trigger a hard wipe and reseed of `biz_1` ("Rupi Clothing"), rather than resetting their own business or being rejected.
+- **Observed Behavior:** Any authenticated user belonging to _any_ tenant business (`biz_xxx`) can invoke `POST /api/settings/reset-demo-data` and trigger a hard wipe and reseed of `biz_1` ("Rupi Clothing"), rather than resetting their own business or being rejected.
 - **Expected Behavior:** Non-demo tenants should either receive a 403 Forbidden error indicating demo reset is only permitted on demo accounts, or the reset logic must only wipe and reseed the caller's specific `business_id`.
 - **Evidence / Reproduction Steps:**
   1. Inspect `backend/app/api/settings.py` lines 116-124:
@@ -120,7 +125,7 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
   ```python
   if business.id != "biz_1":
       raise HTTPException(
-          status_code=403, 
+          status_code=403,
           detail="Resetting demo data is only available for demo accounts."
       )
   ```
@@ -129,6 +134,7 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 ---
 
 ### BUG-04: Settings "Export All CSV" Hardcoded to Mock Memory Store
+
 - **Bug ID:** `BUG-04`
 - **Affected Page / Workflow:** Settings Page -> Data & Privacy tab (`src/components/settings/data-privacy-section.tsx`).
 - **Severity:** P1 (High)
@@ -156,6 +162,7 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 ---
 
 ### BUG-05: TypeScript Failures Under `exactOptionalPropertyTypes: true`
+
 - **Bug ID:** `BUG-05`
 - **Affected Page / Workflow:** Cash Flow (`_app.cash-flow.tsx`), Customers (`_app.customers.index.tsx`), Invoices (`_app.invoices.index.tsx`), Suppliers (`_app.suppliers.index.tsx`).
 - **Severity:** P2 (Medium)
@@ -192,6 +199,7 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 ---
 
 ### BUG-06: Invalid Pagination Property `limit` Passed to Customer & Supplier APIs
+
 - **Bug ID:** `BUG-06`
 - **Affected Page / Workflow:** Dashboard (`_app.dashboard.tsx:91, 98`), Invoices (`_app.invoices.index.tsx:148, 155`), Customer Details (`_app.customers.$customerId.tsx:60, 67`).
 - **Severity:** P2 (Medium)
@@ -211,6 +219,7 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 ---
 
 ### BUG-07: Missing Route-Level `errorComponent` on Dynamic Detail Pages
+
 - **Bug ID:** `BUG-07`
 - **Affected Page / Workflow:** Invoice Details (`_app.invoices.$invoiceId.tsx`), Customer Details (`_app.customers.$customerId.tsx`), Supplier Details (`_app.suppliers.$supplierId.tsx`).
 - **Severity:** P2 (Medium)
@@ -238,6 +247,7 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 ---
 
 ### BUG-08: Missing Property `relatedCustomerOrderCount` in Inventory Test Fixture
+
 - **Bug ID:** `BUG-08`
 - **Affected Page / Workflow:** Test Suite (`src/test/inventory-components.test.tsx:164`).
 - **Severity:** P3 (Low)
@@ -256,6 +266,7 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 ---
 
 ### BUG-09: Deprecated `datetime.utcnow()` in JWT Token Generation
+
 - **Bug ID:** `BUG-09`
 - **Affected Page / Workflow:** Authentication Service (`backend/app/services/auth.py:19, 21`).
 - **Severity:** P3 (Low)
@@ -278,6 +289,7 @@ A comprehensive, read-only audit of the Ripple cash-flow intelligence platform w
 ---
 
 ### BUG-10: ESLint Violations & Code Formatting Inconsistencies
+
 - **Bug ID:** `BUG-10`
 - **Affected Page / Workflow:** Code Quality & Linting (`npm run lint`).
 - **Severity:** P3 (Low)
@@ -320,6 +332,7 @@ The following read-only checks and test suites were executed:
 ## 5. Uninspected / Out-of-Scope Areas
 
 Due to environmental boundaries, the following areas could not be physically exercised:
+
 1. **Interactive Playwright Browser Automation:** Browser driver binary download failed due to network sandbox restrictions (`playwright.azureedge.net` unreachable/blocked). Interactive browser checks were substituted with automated HTTP/SSR route verification, API endpoint integration tests, React unit/integration test suites (Vitest), and end-to-end regression scripts.
 2. **Physical Mobile Touchscreen Gestures:** Responsive layout breakpoints (sm, md, lg) were inspected via code and DOM layout styles, but physical capacitive multi-touch pinch-to-zoom was not testable in headless execution.
 3. **External Email / SMTP Dispatch:** The overdue reminder system generates structured reminder payloads; no outbound SMTP transport or webhook integration exists in the codebase (reminders are currently in-app modal workflows).
@@ -330,6 +343,7 @@ Due to environmental boundaries, the following areas could not be physically exe
 ## 6. Final Regression Audit & Verification Status
 
 ### A. Repaired & Verified Defects (Batch 1 - High Priority & Type Safety)
+
 - [x] **BUG-01 (P1 - High):** `_app.dashboard.tsx` wired to `invoiceApi.create(payload)` and `createInvoice` alias added. Verified with `npm run build` and route test. Status: **RESOLVED**.
 - [x] **BUG-02 (P1 - High):** `invoiceApi.generateOverdueReminder` updated to accept full `Invoice` / `EnrichedInvoice` objects. Verified with `invoices.test.tsx` (9/9 pass) and live API calls. Status: **RESOLVED**.
 - [x] **BUG-03 (P1 - High):** Tenant authorization check enforced on `POST /api/settings/reset-demo-data`. Non-`biz_1` tenants receive `403 Forbidden` with detail message. Verified via automated security test. Status: **RESOLVED**.
@@ -340,10 +354,12 @@ Due to environmental boundaries, the following areas could not be physically exe
 - [x] **BUG-08 (P3 - Low):** Added `relatedCustomerOrderCount: 1` to `ReorderRecommendation` test fixture in `inventory-components.test.tsx`. Verified with `vitest run inventory-components.test.tsx` (5/5 pass). Status: **RESOLVED**.
 
 ### B. Remaining Low-Severity Items
+
 - [ ] **BUG-09 (P3 - Low):** Deprecated `datetime.utcnow()` in `backend/app/services/auth.py` emits Python 3.12+ runtime warnings; non-blocking. Status: **Open**.
 - [ ] **BUG-10 (P3 - Low):** ESLint reports `@typescript-eslint/no-explicit-any` and Prettier formatting drift; non-blocking. Status: **Open**.
 
 ### C. Final Regression Verification Test Results
+
 - **Full Vitest Suite:** 11 test files, 84/84 tests passed (13.78s).
 - **Backend Test Suite:** 13/13 test suites passed cleanly.
 - **Production Build:** `npm run build` compiled client and server bundles in 924ms without errors.

@@ -49,9 +49,9 @@ describe("Invoice & Payment Sub-ledger API", () => {
     expect(overdueList.data.every((i) => i.isOverdue)).toBe(true);
 
     const partialList = await invoiceApi.list({ status: "partially_paid" });
-    expect(
-      partialList.data.every((i) => i.amountPaidPaise > 0 && i.outstandingPaise > 0),
-    ).toBe(true);
+    expect(partialList.data.every((i) => i.amountPaidPaise > 0 && i.outstandingPaise > 0)).toBe(
+      true,
+    );
   });
 
   it("4. Creates a customer receivable invoice and updates customer outstanding", async () => {

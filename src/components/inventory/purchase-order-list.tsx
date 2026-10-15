@@ -22,7 +22,8 @@ import { LoadingSkeleton } from "@/components/shared/loading-skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { Search, ShoppingCart, Eye, ArrowLeftRight, Truck, Plus, ExternalLink } from "lucide-react";
 import { formatMoney, formatDate } from "@/lib/formatters";
-import type { EnrichedPurchaseOrder, Supplier, PurchaseOrderStatus } from "@/types";
+import type { Supplier, PurchaseOrderStatus } from "@/types";
+import type { EnrichedPurchaseOrder } from "@/lib/api/purchaseOrderApi";
 
 interface PurchaseOrderListProps {
   orders: EnrichedPurchaseOrder[];
@@ -60,7 +61,7 @@ export function PurchaseOrderList({
   if (error) {
     return (
       <div className="rounded-lg border bg-card p-6 shadow-xs">
-        <ErrorState message="Could not load purchase orders." retry={onRetry} />
+        <ErrorState message="Could not load purchase orders." onRetry={onRetry} />
       </div>
     );
   }

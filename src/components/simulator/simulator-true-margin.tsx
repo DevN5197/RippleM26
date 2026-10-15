@@ -3,7 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/formatters";
-import { TrendingDown, ShieldAlert, CheckCircle2, DollarSign, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  TrendingDown,
+  ShieldAlert,
+  CheckCircle2,
+  DollarSign,
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TrueMarginData } from "@/types";
 
@@ -92,7 +100,9 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
               </span>
             </div>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              {contagionDays > 0 ? `${contagionDays} days compromised supply chain` : "Zero unmitigated delays"}
+              {contagionDays > 0
+                ? `${contagionDays} days compromised supply chain`
+                : "Zero unmitigated delays"}
             </p>
           </div>
 
@@ -103,7 +113,11 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
             <div className="mt-1 flex items-baseline gap-1.5">
               <span
                 className={`text-xl font-bold font-mono tabular-nums ${
-                  isNegative ? "text-destructive" : isSevere ? "text-warning-foreground" : "text-primary"
+                  isNegative
+                    ? "text-destructive"
+                    : isSevere
+                      ? "text-warning-foreground"
+                      : "text-primary"
                 }`}
               >
                 {trueRippleMarginPercent}%
@@ -170,7 +184,12 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
             </span>
           </button>
 
-          <div className={cn("p-3 border-t bg-muted/10 space-y-2 transition-all", !isBreakdownOpen && "hidden")}>
+          <div
+            className={cn(
+              "p-3 border-t bg-muted/10 space-y-2 transition-all",
+              !isBreakdownOpen && "hidden",
+            )}
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
               <div className="flex items-center justify-between border-b pb-1">
                 <span className="text-muted-foreground">Lost Supplier Early Discount</span>
@@ -202,7 +221,9 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
 
               {breakdown.floatFeePaise > 0 && (
                 <div className="flex items-center justify-between col-span-full border-t pt-1">
-                  <span className="text-muted-foreground">Tri-Party Split-Escrow Float Fee (2%)</span>
+                  <span className="text-muted-foreground">
+                    Tri-Party Split-Escrow Float Fee (2%)
+                  </span>
                   <span className="font-mono font-medium tabular-nums text-primary">
                     {formatMoney(breakdown.floatFeePaise)}
                   </span>

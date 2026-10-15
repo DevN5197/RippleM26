@@ -5,13 +5,9 @@ import { buildDetailedForecast } from "@/mocks/data";
 import type { ForecastResponse, GetForecastParams, SimulationScenario } from "@/types";
 
 export const forecastApi = {
-  async getForecast(
-    paramsOrDays?: number | GetForecastParams,
-  ): Promise<ForecastResponse> {
+  async getForecast(paramsOrDays?: number | GetForecastParams): Promise<ForecastResponse> {
     const params: GetForecastParams =
-      typeof paramsOrDays === "number"
-        ? { days: paramsOrDays }
-        : (paramsOrDays ?? {});
+      typeof paramsOrDays === "number" ? { days: paramsOrDays } : (paramsOrDays ?? {});
     const days = params.days ?? db.business.defaultForecastHorizonDays ?? 30;
     const scenarioId = params.scenarioId;
     const safetyThresholdPaise =
@@ -29,7 +25,7 @@ export const forecastApi = {
       );
     }
 
-    const res = await httpRequest<any>("/api/forecast", {
+    const res = await httpRequest<ForecastResponse>("/api/forecast", {
       query: {
         business_id: businessId,
         days,
@@ -41,7 +37,7 @@ export const forecastApi = {
     if (res && res.points && Array.isArray(res.points)) {
       return Object.assign([...res.points], res) as ForecastResponse;
     }
-    return res as ForecastResponse;
+    return res;
   },
 
   async updateSafetyThreshold(

@@ -124,13 +124,7 @@ describe("Settings UI Components", () => {
   it("renders BusinessProfileSection and handles save", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
 
-    render(
-      <BusinessProfileSection
-        business={db.business}
-        onSave={onSave}
-        isSaving={false}
-      />
-    );
+    render(<BusinessProfileSection business={db.business} onSave={onSave} isSaving={false} />);
 
     expect(screen.getByDisplayValue("Rupi Clothing")).toBeInTheDocument();
     expect(screen.getByLabelText(/Business Name/i)).toBeInTheDocument();
@@ -146,7 +140,7 @@ describe("Settings UI Components", () => {
       expect(onSave).toHaveBeenCalledWith(
         expect.objectContaining({
           name: "Rupi Global",
-        })
+        }),
       );
     });
   });
@@ -154,13 +148,7 @@ describe("Settings UI Components", () => {
   it("renders FinancialPreferencesSection and validates numerical inputs", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
 
-    render(
-      <FinancialPreferencesSection
-        business={db.business}
-        onSave={onSave}
-        isSaving={false}
-      />
-    );
+    render(<FinancialPreferencesSection business={db.business} onSave={onSave} isSaving={false} />);
 
     expect(screen.getByLabelText(/Opening Cash Balance/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Low-Cash Alert Threshold/i)).toBeInTheDocument();
@@ -175,7 +163,7 @@ describe("Settings UI Components", () => {
       expect(onSave).toHaveBeenCalledWith(
         expect.objectContaining({
           safetyThresholdPaise: 750_000,
-        })
+        }),
       );
     });
   });
@@ -184,11 +172,7 @@ describe("Settings UI Components", () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
 
     render(
-      <NotificationsSection
-        notifications={db.notifications}
-        onSave={onSave}
-        isSaving={false}
-      />
+      <NotificationsSection notifications={db.notifications} onSave={onSave} isSaving={false} />,
     );
 
     expect(screen.getByText("Overdue Payments")).toBeInTheDocument();
@@ -202,31 +186,17 @@ describe("Settings UI Components", () => {
   it("renders DataPrivacySection with export and reset controls", () => {
     const onReset = vi.fn();
 
-    render(
-      <DataPrivacySection
-        dataMode="mock"
-        onResetDemoData={onReset}
-        isResetting={false}
-      />
-    );
+    render(<DataPrivacySection dataMode="mock" onResetDemoData={onReset} isResetting={false} />);
 
     expect(screen.getByText("Current Operating Mode")).toBeInTheDocument();
     expect(screen.getByText("Export to CSV")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Reset Demo Data/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Reset Demo Data/i })).toBeInTheDocument();
   });
 
   it("renders AppSettingsSection with theme options and compact mode toggle", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
 
-    render(
-      <AppSettingsSection
-        appPreferences={db.app}
-        onSave={onSave}
-        isSaving={false}
-      />
-    );
+    render(<AppSettingsSection appPreferences={db.app} onSave={onSave} isSaving={false} />);
 
     expect(screen.getByText("Light")).toBeInTheDocument();
     expect(screen.getByText("Dark")).toBeInTheDocument();

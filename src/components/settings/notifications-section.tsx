@@ -1,6 +1,23 @@
 import { useState, useEffect } from "react";
-import { Bell, Save, Undo2, AlertTriangle, Clock, FileWarning, Wallet, Truck, Network } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Bell,
+  Save,
+  Undo2,
+  AlertTriangle,
+  Clock,
+  FileWarning,
+  Wallet,
+  Truck,
+  Network,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -23,7 +40,8 @@ const NOTIFICATION_ITEMS: NotificationItemConfig[] = [
   {
     key: "overduePayments",
     label: "Overdue Payments",
-    description: "Alert when scheduled outgoing payments or vendor disbursements exceed payment terms.",
+    description:
+      "Alert when scheduled outgoing payments or vendor disbursements exceed payment terms.",
     icon: AlertTriangle,
   },
   {
@@ -47,13 +65,15 @@ const NOTIFICATION_ITEMS: NotificationItemConfig[] = [
   {
     key: "delayedDeliveries",
     label: "Delayed Deliveries & Stockout Risks",
-    description: "Notifications when vendor shipments run late or inventory threatens customer fulfillment.",
+    description:
+      "Notifications when vendor shipments run late or inventory threatens customer fulfillment.",
     icon: Truck,
   },
   {
     key: "highRippleImpact",
     label: "High Ripple Impact Score",
-    description: "Alert when a single change triggers cascading disruptions across downstream orders and cash.",
+    description:
+      "Alert when a single change triggers cascading disruptions across downstream orders and cash.",
     icon: Network,
   },
 ];
@@ -100,7 +120,8 @@ export function NotificationsSection({
             <div>
               <CardTitle className="text-base font-semibold">Notifications & Risk Alerts</CardTitle>
               <CardDescription>
-                Choose which events and operational risks surface banners and activity alerts across Ripple.
+                Choose which events and operational risks surface banners and activity alerts across
+                Ripple.
               </CardDescription>
             </div>
           </div>

@@ -42,7 +42,11 @@ export const Route = createFileRoute("/_app/suppliers/$supplierId")({
   errorComponent: ({ error, reset }) => (
     <ErrorState
       title="Could not load supplier"
-      message={error instanceof Error ? error.message : "The requested supplier profile could not be found."}
+      message={
+        error instanceof Error
+          ? error.message
+          : "The requested supplier profile could not be found."
+      }
       onRetry={reset}
     />
   ),

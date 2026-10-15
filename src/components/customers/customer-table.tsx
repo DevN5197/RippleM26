@@ -115,9 +115,7 @@ export function CustomerTable({
           {/* Overdue Filter */}
           <Select
             value={overdueFilter}
-            onValueChange={(val) =>
-              onOverdueFilterChange(val as "all" | "has_overdue" | "healthy")
-            }
+            onValueChange={(val) => onOverdueFilterChange(val as "all" | "has_overdue" | "healthy")}
           >
             <SelectTrigger className="w-[145px] h-9">
               <SelectValue placeholder="Overdue" />
@@ -132,9 +130,7 @@ export function CustomerTable({
           {/* Sort By */}
           <Select
             value={sortBy}
-            onValueChange={(val) =>
-              onSortByChange(val as "name" | "outstanding" | "reliability")
-            }
+            onValueChange={(val) => onSortByChange(val as "name" | "outstanding" | "reliability")}
           >
             <SelectTrigger className="w-[155px] h-9">
               <SelectValue placeholder="Sort by" />

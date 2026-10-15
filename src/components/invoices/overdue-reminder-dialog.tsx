@@ -108,22 +108,12 @@ export function OverdueReminderDialog({
         </div>
 
         <DialogFooter className="flex-row justify-between sm:justify-between items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
             Close
           </Button>
 
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              asChild
-            >
+            <Button type="button" variant="outline" size="sm" asChild>
               <a
                 href={`mailto:${reminderData.recipientEmail}?subject=${encodeURIComponent(
                   reminderData.subject,

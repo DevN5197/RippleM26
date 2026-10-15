@@ -21,12 +21,18 @@ interface CustomerDialogProps {
   onSubmit: (data: CreateCustomerInput | UpdateCustomerInput) => Promise<void>;
 }
 
-export function CustomerDialog({
-  open,
-  onOpenChange,
-  customer,
-  onSubmit,
-}: CustomerDialogProps) {
+/**
+ * Field-level validation messages. A precise shape beats `Record<string, string>`:
+ * it keeps dot access legal under `noPropertyAccessFromIndexSignature` and turns
+ * a mistyped field key into a compile error instead of a silently ignored message.
+ */
+interface CustomerFormErrors {
+  name?: string;
+  email?: string;
+  creditTermsDays?: string;
+}
+
+export function CustomerDialog({ open, onOpenChange, customer, onSubmit }: CustomerDialogProps) {
   const isEdit = !!customer;
 
   const [name, setName] = useState("");
@@ -38,7 +44,7 @@ export function CustomerDialog({
   const [creditTermsDays, setCreditTermsDays] = useState(15);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<CustomerFormErrors>({});
 
   useEffect(() => {
     if (customer) {
@@ -64,7 +70,7 @@ export function CustomerDialog({
   }, [customer, open]);
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: CustomerFormErrors = {};
     if (!name.trim() || name.trim().length < 2) {
       newErrors.name = "Customer name must be at least 2 characters.";
     }

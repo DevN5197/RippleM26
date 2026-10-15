@@ -34,7 +34,10 @@ export const Route = createFileRoute("/_app/invoices/$invoiceId")({
   head: () => ({
     meta: [
       { title: "Invoice Details — Ripple" },
-      { name: "description", content: "Invoice breakdown, payment history and counterparty details." },
+      {
+        name: "description",
+        content: "Invoice breakdown, payment history and counterparty details.",
+      },
     ],
   }),
   component: InvoiceDetailPage,
@@ -143,8 +146,8 @@ function InvoiceDetailPage() {
               <AlertDialogTitle>Cancel Invoice {invoice.invoiceNumber}?</AlertDialogTitle>
             </div>
             <AlertDialogDescription>
-              Cancelling will mark this invoice as void and reduce the counterparty outstanding balance.
-              This action cannot be undone.
+              Cancelling will mark this invoice as void and reduce the counterparty outstanding
+              balance. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -71,9 +71,7 @@ export function CustomerArchiveDialog({
               </p>
             ) : (
               <>
-                <p>
-                  Archiving hides this customer from active ordering and new invoice creation.
-                </p>
+                <p>Archiving hides this customer from active ordering and new invoice creation.</p>
                 <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
                   <strong>Preserved Historical Data:</strong> All existing customer orders (
                   {customer.orderCount}), invoices ({customer.invoiceCount}), and payment records (
@@ -97,7 +95,11 @@ export function CustomerArchiveDialog({
                 : "bg-amber-600 hover:bg-amber-700 text-white"
             }
           >
-            {isProcessing ? "Processing..." : isArchived ? "Reactivate Customer" : "Archive Customer"}
+            {isProcessing
+              ? "Processing..."
+              : isArchived
+                ? "Reactivate Customer"
+                : "Archive Customer"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

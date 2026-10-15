@@ -23,6 +23,7 @@
 - Data fetching in routes: loader `ensureQueryData` + `useSuspenseQuery` with shared `queryOptions` (see `_app.dashboard.tsx`).
 
 ## Efficiency & Inspection Rules (No Full-Codebase Re-Audits)
+
 - **Do NOT perform full-codebase audits, recursive directory walks, or mass file scans** before implementing features.
 - Consult `PROJECT_CONTEXT.md` for architecture, file locations, conventions, and test commands.
 - Inspect **ONLY** the files directly relevant to the current task:
@@ -31,4 +32,3 @@
   3. The domain types in `src/types/index.ts`
   4. Specific components under `src/components/<feature>/`
 - Verify changes with targeted test runs (`npm test` or `npx vitest run src/test/<feature>.test.tsx`) and `npm run build`.
-

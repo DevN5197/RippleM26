@@ -291,10 +291,7 @@ export function SupplierTable({
                     {/* Outstanding Balance */}
                     <TableCell className="text-right tabular-nums whitespace-nowrap">
                       <div className="flex flex-col items-end">
-                        <MoneyAmount
-                          paise={supplier.outstandingPaise}
-                          className="font-medium"
-                        />
+                        <MoneyAmount paise={supplier.outstandingPaise} className="font-medium" />
                         {supplier.overdueAmountPaise > 0 && (
                           <span className="text-[11px] font-medium text-destructive">
                             {formatMoney(supplier.overdueAmountPaise)} overdue
@@ -382,7 +379,12 @@ export function SupplierTable({
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuLabel>Supplier Actions</DropdownMenuLabel>
                           <DropdownMenuItem asChild>
-                            <Link to="/suppliers/$supplierId" params={{ supplierId: supplier.id }} target="_blank" rel="noreferrer">
+                            <Link
+                              to="/suppliers/$supplierId"
+                              params={{ supplierId: supplier.id }}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
                               <ExternalLink className="mr-2 h-4 w-4" />
                               View Details
                             </Link>

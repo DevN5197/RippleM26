@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery, useQueryClient, useQuery, keepPreviousData } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useSuspenseQuery,
+  useQueryClient,
+  useQuery,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
@@ -19,29 +25,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { invoiceApi, type InvoiceListFilterParams, type OverdueReminderPayload } from "@/lib/api/invoiceApi";
+import {
+  invoiceApi,
+  type InvoiceListFilterParams,
+  type OverdueReminderPayload,
+} from "@/lib/api/invoiceApi";
 import { customerApi } from "@/lib/api/customerApi";
 import { supplierApi } from "@/lib/api/supplierApi";
 import { PlusCircle, Ban } from "lucide-react";
 import { toast } from "sonner";
-import type {
-  EnrichedInvoice,
-  CreateInvoiceInput,
-  RecordPaymentInput,
-  AgingBucket,
-} from "@/types";
+import type { EnrichedInvoice, CreateInvoiceInput, RecordPaymentInput, AgingBucket } from "@/types";
 
 interface InvoicesSearchParams {
   search?: string | undefined;
   type?: "all" | "receivable" | "payable" | undefined;
-  status?:
-    | "all"
-    | "unpaid"
-    | "partially_paid"
-    | "paid"
-    | "overdue"
-    | "cancelled"
-    | undefined;
+  status?: "all" | "unpaid" | "partially_paid" | "paid" | "overdue" | "cancelled" | undefined;
   aging?: "all" | AgingBucket | undefined;
   sortBy?: "dueDate" | "amount" | "status" | "invoiceNumber" | "overdue" | undefined;
   sortDir?: "asc" | "desc" | undefined;
@@ -72,7 +70,8 @@ export const Route = createFileRoute("/_app/invoices/")({
       search["status"] === "overdue" ||
       search["status"] === "cancelled" ||
       search["status"] === "all"
-        ? (search["status"] as "all" | "unpaid" | "partially_paid" | "paid" | "overdue" | "cancelled")
+        ? (search["status"] as
+            "all" | "unpaid" | "partially_paid" | "paid" | "overdue" | "cancelled")
         : "all";
     const aging =
       search["aging"] === "1_7" ||
@@ -112,7 +111,8 @@ export const Route = createFileRoute("/_app/invoices/")({
       { title: "Invoices & Payments — Ripple" },
       {
         name: "description",
-        content: "Accounts receivable, accounts payable bills, payments, and overdue aging timeline.",
+        content:
+          "Accounts receivable, accounts payable bills, payments, and overdue aging timeline.",
       },
     ],
   }),
@@ -144,14 +144,22 @@ function InvoicesIndexPage() {
 
   const { data: customers = [] } = useQuery({
     queryKey: ["customers", "list-quick"],
-    queryFn: () => customerApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    queryFn: () =>
+      customerApi
+        .list({ pageSize: 100 })
+        .then((r) => r.data)
+        .catch(() => []),
     enabled: createDialogOpen,
     staleTime: 60_000,
   });
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers", "list-quick"],
-    queryFn: () => supplierApi.list({ pageSize: 100 }).then((r) => r.data).catch(() => []),
+    queryFn: () =>
+      supplierApi
+        .list({ pageSize: 100 })
+        .then((r) => r.data)
+        .catch(() => []),
     enabled: createDialogOpen,
     staleTime: 60_000,
   });
@@ -306,8 +314,8 @@ function InvoicesIndexPage() {
               </AlertDialogTitle>
             </div>
             <AlertDialogDescription>
-              Cancelling will mark this invoice as void and adjust the counterparty outstanding balance.
-              This action cannot be undone.
+              Cancelling will mark this invoice as void and adjust the counterparty outstanding
+              balance. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

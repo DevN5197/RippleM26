@@ -3,14 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
-import {
-  ArrowLeft,
-  CreditCard,
-  Bell,
-  Ban,
-  ArrowDownLeft,
-  ArrowUpRight,
-} from "lucide-react";
+import { ArrowLeft, CreditCard, Bell, Ban, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import type { EnrichedInvoice } from "@/types";
 
 interface InvoiceDetailHeaderProps {
@@ -72,14 +65,18 @@ export function InvoiceDetailHeader({
             <StatusBadge status={invoice.status} />
 
             {isOverdue && (
-              <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive text-xs">
+              <Badge
+                variant="outline"
+                className="border-destructive/40 bg-destructive/10 text-destructive text-xs"
+              >
                 {invoice.daysOverdue} days overdue
               </Badge>
             )}
           </div>
 
           <p className="mt-1 text-sm text-muted-foreground">
-            Counterparty: <span className="font-medium text-foreground">{invoice.counterpartyName}</span>
+            Counterparty:{" "}
+            <span className="font-medium text-foreground">{invoice.counterpartyName}</span>
           </p>
         </div>
 

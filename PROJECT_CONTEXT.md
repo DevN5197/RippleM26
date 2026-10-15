@@ -1,6 +1,7 @@
 # Ripple — Project Context & Quick Reference
 
 ## Tech Stack
+
 - **Framework & SSR**: TanStack Start (Nitro + Vite 8.1, React 19, TypeScript 5.8)
 - **Routing**: TanStack Router (file-based routing with route tree generated in `src/routeTree.gen.ts`)
 - **State & Data Fetching**: TanStack Query v5 (`queryOptions`, `useSuspenseQuery`, `ensureQueryData`)
@@ -14,6 +15,7 @@
 ---
 
 ## Core Domain Rules
+
 1. **Money**: All monetary amounts are integers in minor units (**paise** for INR, e.g. ₹1.00 = `100` paise). No floating-point math. Format using `formatMoney` from `src/lib/formatters.ts`.
 2. **Dates**: ISO 8601 strings in data/API payloads (`YYYY-MM-DD`). Display formatting via `src/lib/formatters.ts` (`formatDate`, `DateLabel` with `iso` prop).
 3. **Counterparty Invoices**:
@@ -67,6 +69,7 @@
 ---
 
 ## Development & Test Commands
+
 ```bash
 npm test              # Run Vitest test suite
 npm run build         # Verify production compilation (TanStack Start + Nitro + Vite)
@@ -78,7 +81,9 @@ npm run dev           # Start Vite local development server
 ---
 
 ## Targeted Task Workflow (Do NOT re-audit the codebase)
+
 When implementing or modifying a specific feature:
+
 1. **Types**: Check relevant interfaces in `src/types/index.ts`.
 2. **API Layer**: Read/update only the relevant service in `src/lib/api/<feature>Api.ts` and its seed data in `src/mocks/data.ts`.
 3. **Route**: Work directly in the route file (`src/routes/_app.<feature>.tsx`).

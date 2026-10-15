@@ -443,7 +443,13 @@ export function PurchaseOrderWizard({
                           type="number"
                           min={1}
                           placeholder="Qty"
-                          value={item.quantity === 0 || item.quantity === undefined || item.quantity === null ? "" : item.quantity}
+                          value={
+                            item.quantity === 0 ||
+                            item.quantity === undefined ||
+                            item.quantity === null
+                              ? ""
+                              : item.quantity
+                          }
                           onChange={(e) => {
                             const val = e.target.value;
                             handleUpdateLineItem(item.id, "quantity", val === "" ? 0 : Number(val));
@@ -454,16 +460,26 @@ export function PurchaseOrderWizard({
 
                       {/* Unit Price (₹) */}
                       <div className="w-full sm:w-28 shrink-0">
-                        <Label className="text-[11px] text-muted-foreground font-medium">Price (₹)</Label>
+                        <Label className="text-[11px] text-muted-foreground font-medium">
+                          Price (₹)
+                        </Label>
                         <Input
                           type="number"
                           min={0}
                           step="any"
                           placeholder="Price"
-                          value={item.unitPriceRupees === 0 || item.unitPriceRupees === undefined ? "" : item.unitPriceRupees}
+                          value={
+                            item.unitPriceRupees === 0 || item.unitPriceRupees === undefined
+                              ? ""
+                              : item.unitPriceRupees
+                          }
                           onChange={(e) => {
                             const val = e.target.value;
-                            handleUpdateLineItem(item.id, "unitPriceRupees", val === "" ? 0 : Number(val));
+                            handleUpdateLineItem(
+                              item.id,
+                              "unitPriceRupees",
+                              val === "" ? 0 : Number(val),
+                            );
                           }}
                           className="h-8 text-xs mt-1 font-mono tabular-nums"
                         />
@@ -596,7 +612,11 @@ export function PurchaseOrderWizard({
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Supplier Advance Payment</Label>
                   <span className="text-[11px] font-mono font-semibold text-primary">
-                    Exact: {subtotalPaise > 0 ? ((advancePaise / subtotalPaise) * 100).toFixed(1).replace(/\.0$/, "") : "0"}%
+                    Exact:{" "}
+                    {subtotalPaise > 0
+                      ? ((advancePaise / subtotalPaise) * 100).toFixed(1).replace(/\.0$/, "")
+                      : "0"}
+                    %
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">

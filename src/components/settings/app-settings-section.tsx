@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { Sliders, Sun, Moon, Laptop, Save, Undo2, LayoutGrid, Info } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -14,11 +21,7 @@ interface AppSettingsSectionProps {
   isSaving: boolean;
 }
 
-export function AppSettingsSection({
-  appPreferences,
-  onSave,
-  isSaving,
-}: AppSettingsSectionProps) {
+export function AppSettingsSection({ appPreferences, onSave, isSaving }: AppSettingsSectionProps) {
   const [theme, setTheme] = useState<ThemeMode>(appPreferences.theme ?? "system");
   const [compactTables, setCompactTables] = useState<boolean>(
     appPreferences.compactTables ?? false,
@@ -130,11 +133,15 @@ export function AppSettingsSection({
                 <LayoutGrid className="h-3.5 w-3.5" />
               </div>
               <div>
-                <Label htmlFor="compact-tables" className="cursor-pointer text-sm font-medium text-foreground">
+                <Label
+                  htmlFor="compact-tables"
+                  className="cursor-pointer text-sm font-medium text-foreground"
+                >
                   Compact Table Mode
                 </Label>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Reduces row padding across suppliers, customers, invoices, and cash flow ledgers to view more data on screen.
+                  Reduces row padding across suppliers, customers, invoices, and cash flow ledgers
+                  to view more data on screen.
                 </p>
               </div>
             </div>

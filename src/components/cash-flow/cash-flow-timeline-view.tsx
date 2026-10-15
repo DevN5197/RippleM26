@@ -49,10 +49,8 @@ export function CashFlowTimelineView({ events, safetyThresholdPaise }: CashFlowT
   const groupedByDate = useMemo(() => {
     const groups: Record<string, CashFlowEvent[]> = {};
     for (const e of filteredEvents) {
-      if (!groups[e.date]) {
-        groups[e.date] = [];
-      }
-      groups[e.date].push(e);
+      const bucket = groups[e.date] ?? (groups[e.date] = []);
+      bucket.push(e);
     }
     return groups;
   }, [filteredEvents]);
@@ -130,7 +128,7 @@ export function CashFlowTimelineView({ events, safetyThresholdPaise }: CashFlowT
       ) : (
         <div className="space-y-6">
           {dates.map((date) => {
-            const dayEvents = groupedByDate[date];
+            const dayEvents = groupedByDate[date] ?? [];
             const isToday = date === todayIso;
             const isPast = date < todayIso;
 

@@ -184,7 +184,8 @@ function SimulatorPage() {
       runMutation.mutate(controls);
       void queryClient.invalidateQueries({ queryKey: ["simulator"] });
       toast.success("Auto-Phase Inventory Applied", {
-        description: "Supplier order split into Batch 1 (Day 18) and Batch 2 (Day 32). Safety buffer preserved.",
+        description:
+          "Supplier order split into Batch 1 (Day 18) and Batch 2 (Day 32). Safety buffer preserved.",
       });
     },
     onError: (err: Error) => {
@@ -224,7 +225,8 @@ function SimulatorPage() {
       runMutation.mutate(controls);
       void queryClient.invalidateQueries({ queryKey: ["simulator"] });
       toast.success("Tri-Party Split-Escrow Locked", {
-        description: "Zero business cash outlay on Day 18. Customer receivable assigned with bypass arc.",
+        description:
+          "Zero business cash outlay on Day 18. Customer receivable assigned with bypass arc.",
       });
     },
     onError: (err: Error) => {
@@ -258,7 +260,8 @@ function SimulatorPage() {
       });
       setChaosResult(null);
       toast.info("Loaded Apex Corp Flagship Scenario", {
-        description: "₹5L Customer Receivable delayed +16d (Day 31); ₹1.2L Kaveri Timber payable Day 18.",
+        description:
+          "₹5L Customer Receivable delayed +16d (Day 31); ₹1.2L Kaveri Timber payable Day 18.",
       });
     } else {
       setControls(DEFAULT_CONTROLS);
@@ -272,13 +275,19 @@ function SimulatorPage() {
     setIsInspectOpen(true);
   }, []);
 
-  const handleTriggerAutoPhaseFromNode = useCallback((_node?: SimulatorTimelineNode) => {
-    previewAutoPhaseMutation.mutate();
-  }, [previewAutoPhaseMutation]);
+  const handleTriggerAutoPhaseFromNode = useCallback(
+    (_node?: SimulatorTimelineNode) => {
+      previewAutoPhaseMutation.mutate();
+    },
+    [previewAutoPhaseMutation],
+  );
 
-  const handleTriggerSplitEscrowFromNode = useCallback((_node?: SimulatorTimelineNode) => {
-    previewSplitEscrowMutation.mutate();
-  }, [previewSplitEscrowMutation]);
+  const handleTriggerSplitEscrowFromNode = useCallback(
+    (_node?: SimulatorTimelineNode) => {
+      previewSplitEscrowMutation.mutate();
+    },
+    [previewSplitEscrowMutation],
+  );
 
   // ── Dynamic simulation trigger on mount & whenever controls change ──
   useEffect(() => {
@@ -404,8 +413,8 @@ function SimulatorPage() {
                     {(
                       [
                         { key: "baseline", label: "Baseline" },
-                        { key: "both",     label: "Both"     },
-                        { key: "scenario", label: "Simulated"},
+                        { key: "both", label: "Both" },
+                        { key: "scenario", label: "Simulated" },
                       ] as { key: ChartView; label: string }[]
                     ).map(({ key, label }) => (
                       <button
@@ -447,9 +456,7 @@ function SimulatorPage() {
           </Card>
 
           {/* Results panel */}
-          {result && !runMutation.isPending && (
-            <SimulatorResults result={result} />
-          )}
+          {result && !runMutation.isPending && <SimulatorResults result={result} />}
 
           {/* Timeline panel */}
           {result && !runMutation.isPending && (
@@ -512,11 +519,7 @@ function SimulatorPage() {
           </div>
 
           <DialogFooter className="pt-2 border-t flex flex-row items-center justify-between gap-2 sm:justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsBaselineDialogOpen(false)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setIsBaselineDialogOpen(false)}>
               Cancel
             </Button>
             <Button
@@ -527,8 +530,12 @@ function SimulatorPage() {
                 const suppRupees = parseFloat(initSupplierRupees);
                 setControls((prev) => ({
                   ...prev,
-                  customerPaymentAmountPaise: isNaN(custRupees) ? null : Math.round(custRupees * 100),
-                  supplierPaymentAmountPaise: isNaN(suppRupees) ? null : Math.round(suppRupees * 100),
+                  customerPaymentAmountPaise: isNaN(custRupees)
+                    ? null
+                    : Math.round(custRupees * 100),
+                  supplierPaymentAmountPaise: isNaN(suppRupees)
+                    ? null
+                    : Math.round(suppRupees * 100),
                 }));
                 setIsBaselineDialogOpen(false);
               }}

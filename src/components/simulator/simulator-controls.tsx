@@ -4,10 +4,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { RotateCcw, Play, Save, Zap, Sparkles, ShieldAlert, X, ChevronDown, ChevronUp, Sliders } from "lucide-react";
+import {
+  RotateCcw,
+  Play,
+  Save,
+  Zap,
+  Sparkles,
+  ShieldAlert,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Sliders,
+} from "lucide-react";
 import { formatMoney } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { SimulatorControls } from "@/lib/api/simulationApi";
@@ -61,7 +78,10 @@ export function SimulatorControlPanel({
             Scenario Controls
           </CardTitle>
           {chaosStressTestResult?.isStressTestActive && (
-            <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700 text-[10px] font-semibold uppercase">
+            <Badge
+              variant="outline"
+              className="border-purple-200 bg-purple-50 text-purple-700 text-[10px] font-semibold uppercase"
+            >
               Stress Mode
             </Badge>
           )}
@@ -147,7 +167,12 @@ export function SimulatorControlPanel({
           )}
 
           <div className="flex gap-1.5 pt-0.5">
-            <Button variant="ghost" size="sm" onClick={onReset} className="flex-1 gap-1.5 h-7 text-xs text-muted-foreground hover:text-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="flex-1 gap-1.5 h-7 text-xs text-muted-foreground hover:text-foreground"
+            >
               <RotateCcw className="h-3 w-3" aria-hidden />
               Reset
             </Button>
@@ -188,7 +213,9 @@ export function SimulatorControlPanel({
             <div className="space-y-1 text-muted-foreground pt-1.5 border-t border-purple-200/50">
               <div className="flex justify-between">
                 <span>Baseline Min Cash:</span>
-                <span className="font-mono text-foreground">{formatMoney(chaosStressTestResult.baselineMinCashPaise)}</span>
+                <span className="font-mono text-foreground">
+                  {formatMoney(chaosStressTestResult.baselineMinCashPaise)}
+                </span>
               </div>
               <div className="flex justify-between font-medium">
                 <span className="text-purple-700 dark:text-purple-300">Stressed Min Cash:</span>
@@ -218,8 +245,12 @@ export function SimulatorControlPanel({
               </div>
               <div className="flex justify-between pt-1 border-t border-purple-200/50 font-medium">
                 <span>Most Fragile Under Stress:</span>
-                <Badge variant="outline" className="border-purple-300 bg-purple-100/80 text-purple-800 text-[10px]">
-                  {chaosStressTestResult.mostFragileNodeLabel} ({chaosStressTestResult.mostFragileMultiplier}x)
+                <Badge
+                  variant="outline"
+                  className="border-purple-300 bg-purple-100/80 text-purple-800 text-[10px]"
+                >
+                  {chaosStressTestResult.mostFragileNodeLabel} (
+                  {chaosStressTestResult.mostFragileMultiplier}x)
                 </Badge>
               </div>
             </div>
@@ -239,14 +270,23 @@ export function SimulatorControlPanel({
             </span>
             <span className="text-[11px] text-primary flex items-center gap-0.5">
               {showAdvanced ? (
-                <>Hide <ChevronUp className="h-3 w-3" /></>
+                <>
+                  Hide <ChevronUp className="h-3 w-3" />
+                </>
               ) : (
-                <>Configure <ChevronDown className="h-3 w-3" /></>
+                <>
+                  Configure <ChevronDown className="h-3 w-3" />
+                </>
               )}
             </span>
           </button>
 
-          <div className={cn("p-3 border-t space-y-4 bg-card transition-all", !showAdvanced && "hidden")}>
+          <div
+            className={cn(
+              "p-3 border-t space-y-4 bg-card transition-all",
+              !showAdvanced && "hidden",
+            )}
+          >
             {/* Custom Amounts */}
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Customer receipt amount (₹)</Label>
@@ -266,7 +306,10 @@ export function SimulatorControlPanel({
                     setField("customerPaymentAmountPaise", null);
                   } else {
                     const num = parseFloat(val);
-                    setField("customerPaymentAmountPaise", isNaN(num) ? null : Math.round(num * 100));
+                    setField(
+                      "customerPaymentAmountPaise",
+                      isNaN(num) ? null : Math.round(num * 100),
+                    );
                   }
                 }}
                 className="h-8 text-xs tabular-nums"
@@ -291,7 +334,10 @@ export function SimulatorControlPanel({
                     setField("supplierPaymentAmountPaise", null);
                   } else {
                     const num = parseFloat(val);
-                    setField("supplierPaymentAmountPaise", isNaN(num) ? null : Math.round(num * 100));
+                    setField(
+                      "supplierPaymentAmountPaise",
+                      isNaN(num) ? null : Math.round(num * 100),
+                    );
                   }
                 }}
                 className="h-8 text-xs tabular-nums"

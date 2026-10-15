@@ -33,9 +33,18 @@ function SimulatorTooltip({
   label,
   view,
 }: {
-  active?: boolean;
-  payload?: Array<{ name: string; value: number; color: string }>;
-  label?: string;
+  active?: boolean | undefined;
+  // Recharts hands over its own `Payload` shape, where name/value are widened
+  // unions and may be absent. Mirroring that keeps the spread in <Tooltip /> legal
+  // AND stops `entry.value * 100` from silently producing NaN.
+  payload?:
+    | Array<{
+        name?: string | number | undefined;
+        value?: string | number | ReadonlyArray<string | number> | undefined;
+        color?: string | undefined;
+      }>
+    | undefined;
+  label?: string | undefined;
   view: ChartView;
 }) {
   if (!active || !payload || payload.length === 0 || !label) return null;
@@ -46,30 +55,35 @@ function SimulatorTooltip({
         {format(parseISO(label), "d MMM yyyy")}
       </div>
       <div className="space-y-1 tabular-nums">
-        {payload.map((entry) => (
-          <div key={entry.name} className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-1.5">
-              <div
-                className="h-2 w-2 rounded-full shrink-0"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-muted-foreground capitalize text-[11px]">
-                {entry.name === "baseline" ? "Baseline" : "Simulated"}
+        {payload.map((entry, index) => {
+          const name = String(entry.name ?? `series-${index}`);
+          const raw = entry.value;
+          const value = Number(Array.isArray(raw) ? (raw[0] ?? 0) : (raw ?? 0));
+          return (
+            <div key={name} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="h-2 w-2 rounded-full shrink-0"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-muted-foreground capitalize text-[11px]">
+                  {entry.name === "baseline" ? "Baseline" : "Simulated"}
+                </span>
+              </div>
+              <span
+                className={
+                  value < 0
+                    ? "font-mono font-medium text-destructive"
+                    : value < 5000
+                      ? "font-mono font-medium text-warning-foreground"
+                      : "font-mono font-medium text-foreground"
+                }
+              >
+                {formatMoney(Math.round(value * 100))}
               </span>
             </div>
-            <span
-              className={
-                entry.value < 0
-                  ? "font-mono font-medium text-destructive"
-                  : entry.value < 5000
-                    ? "font-mono font-medium text-warning-foreground"
-                    : "font-mono font-medium text-foreground"
-              }
-            >
-              {formatMoney(Math.round(entry.value * 100))}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -127,15 +141,20 @@ export function SimulatorChart({
             <defs>
               <linearGradient id="sim-baselineFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.12} />
-                <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.00} />
+                <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.0} />
               </linearGradient>
               <linearGradient id="sim-scenarioFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--color-warning)" stopOpacity={0.16} />
-                <stop offset="100%" stopColor="var(--color-warning)" stopOpacity={0.00} />
+                <stop offset="100%" stopColor="var(--color-warning)" stopOpacity={0.0} />
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="2 2" stroke="var(--color-border)" strokeOpacity={0.4} vertical={false} />
+            <CartesianGrid
+              strokeDasharray="2 2"
+              stroke="var(--color-border)"
+              strokeOpacity={0.4}
+              vertical={false}
+            />
 
             <XAxis
               dataKey="date"
@@ -158,14 +177,24 @@ export function SimulatorChart({
             <Tooltip content={(props) => <SimulatorTooltip {...props} view={view} />} />
 
             {/* Zero line */}
-            <ReferenceLine y={0} stroke="var(--color-destructive)" strokeDasharray="3 3" strokeOpacity={0.5} />
+            <ReferenceLine
+              y={0}
+              stroke="var(--color-destructive)"
+              strokeDasharray="3 3"
+              strokeOpacity={0.5}
+            />
             {/* Safety threshold ₹5,000 */}
             <ReferenceLine
               y={5000}
               stroke="var(--color-warning)"
               strokeDasharray="2 2"
               strokeOpacity={0.45}
-              label={{ value: "Safety buffer", position: "insideTopRight", fontSize: 10, fill: "var(--color-muted-foreground)" }}
+              label={{
+                value: "Safety buffer",
+                position: "insideTopRight",
+                fontSize: 10,
+                fill: "var(--color-muted-foreground)",
+              }}
             />
 
             {showBaseline && (

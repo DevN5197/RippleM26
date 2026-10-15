@@ -2,12 +2,20 @@ import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Waves, LogIn, Sparkles, ArrowRight, Server, Database, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { authApi } from "@/lib/api/authApi";
 import { DATA_MODE, setDataMode, API_BASE_URL } from "@/lib/config";
+import { isNetworkError, toApiError } from "@/lib/errors";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -37,14 +45,15 @@ function LoginPage() {
       const session = await authApi.login(email, password);
       toast.success(`Welcome back, ${session.user.fullName}!`);
       navigate({ to: "/dashboard" });
-    } catch (err: any) {
-      if (err.code === "network_error" || err.status === 0) {
+    } catch (err) {
+      const { message } = toApiError(err);
+      if (isNetworkError(err)) {
         toast.error(
-          `${err.message} You can also click "Switch to Offline Demo Mode" below.`,
-          { duration: 6000 }
+          `${message ?? "Could not reach the server."} You can also click "Switch to Offline Demo Mode" below.`,
+          { duration: 6000 },
         );
       } else {
-        toast.error(err.message || "Failed to sign in. Please verify your credentials.");
+        toast.error(message || "Failed to sign in. Please verify your credentials.");
       }
     } finally {
       setLoading(false);
@@ -59,21 +68,21 @@ function LoginPage() {
       const session = await authApi.login("owner@rupiclothing.in", "password123");
       toast.success(`Signed in as ${session.user.fullName} (Rupi Clothing)`);
       navigate({ to: "/dashboard" });
-    } catch (err: any) {
+    } catch (err) {
       // If live backend is unreachable, gracefully fall back to local mock demo
-      if (DATA_MODE === "api" && (err.code === "network_error" || err.status === 0)) {
+      if (DATA_MODE === "api" && isNetworkError(err)) {
         toast.info("Live backend unreachable — switching to Offline Demo Mode for Rupi Clothing.");
         setDataMode("mock");
         return;
       }
-      toast.error(err.message || "Demo login failed");
+      toast.error(toApiError(err).message || "Demo login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/20">

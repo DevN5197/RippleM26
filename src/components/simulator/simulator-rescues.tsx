@@ -22,11 +22,7 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type {
-  SimulatorTimelineNode,
-  AutoPhasePreview,
-  SplitEscrowPreview,
-} from "@/types";
+import type { SimulatorTimelineNode, AutoPhasePreview, SplitEscrowPreview } from "@/types";
 
 interface AutoPhaseDialogProps {
   open: boolean;
@@ -109,7 +105,10 @@ export function AutoPhaseDialog({
                   <p className="text-[11px] text-muted-foreground">{preview.batch2.purpose}</p>
                 </div>
                 <div className="text-right">
-                  <Badge variant="outline" className="font-mono text-xs text-primary border-primary/30">
+                  <Badge
+                    variant="outline"
+                    className="font-mono text-xs text-primary border-primary/30"
+                  >
                     {preview.batch2.date}
                   </Badge>
                   <p className="font-semibold text-foreground mt-0.5">
@@ -128,9 +127,16 @@ export function AutoPhaseDialog({
               className="w-full flex items-center justify-between text-xs font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
             >
               <span className="font-semibold">Why this works</span>
-              <span className="text-[11px] text-primary">{showWhy ? "Hide calculation" : "View calculation"}</span>
+              <span className="text-[11px] text-primary">
+                {showWhy ? "Hide calculation" : "View calculation"}
+              </span>
             </button>
-            <p className={cn("text-xs text-muted-foreground leading-relaxed pt-1.5 border-t", !showWhy && "hidden")}>
+            <p
+              className={cn(
+                "text-xs text-muted-foreground leading-relaxed pt-1.5 border-t",
+                !showWhy && "hidden",
+              )}
+            >
               {preview.explanation}
             </p>
           </div>
@@ -186,7 +192,8 @@ export function SplitEscrowDialog({
             </DialogTitle>
           </div>
           <DialogDescription className="text-xs font-medium text-foreground mt-0.5">
-            Use an eligible customer receipt to fund this supplier order without a normal upfront cash outflow.
+            Use an eligible customer receipt to fund this supplier order without a normal upfront
+            cash outflow.
           </DialogDescription>
         </DialogHeader>
 
@@ -204,14 +211,18 @@ export function SplitEscrowDialog({
               <p className="font-semibold text-foreground text-sm mt-0.5">
                 {formatMoney(preview.customerInvoicePaise)}
               </p>
-              <p className="text-[10px] text-muted-foreground">Due: {preview.customerSettlementDate}</p>
+              <p className="text-[10px] text-muted-foreground">
+                Due: {preview.customerSettlementDate}
+              </p>
             </div>
             <div className="rounded-md border p-2.5 bg-muted/20">
               <span className="text-muted-foreground">Funded Supplier Cost</span>
               <p className="font-semibold text-primary text-sm mt-0.5">
                 {formatMoney(preview.supplierCommitmentPaise)}
               </p>
-              <p className="text-[10px] text-muted-foreground">Funded: {preview.supplierFundingDate}</p>
+              <p className="text-[10px] text-muted-foreground">
+                Funded: {preview.supplierFundingDate}
+              </p>
             </div>
           </div>
 
@@ -248,9 +259,16 @@ export function SplitEscrowDialog({
               className="w-full flex items-center justify-between text-xs font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
             >
               <span className="font-semibold">Why this works</span>
-              <span className="text-[11px] text-primary">{showWhy ? "Hide calculation" : "View calculation"}</span>
+              <span className="text-[11px] text-primary">
+                {showWhy ? "Hide calculation" : "View calculation"}
+              </span>
             </button>
-            <p className={cn("text-xs text-muted-foreground leading-relaxed pt-1.5 border-t", !showWhy && "hidden")}>
+            <p
+              className={cn(
+                "text-xs text-muted-foreground leading-relaxed pt-1.5 border-t",
+                !showWhy && "hidden",
+              )}
+            >
               {preview.explanation}
             </p>
           </div>
@@ -316,9 +334,7 @@ export function NodeInspectionDialog({
               </Badge>
             )}
           </div>
-          <DialogTitle className="text-base font-semibold pt-1">
-            {node.label}
-          </DialogTitle>
+          <DialogTitle className="text-base font-semibold pt-1">{node.label}</DialogTitle>
           <DialogDescription className="text-xs">
             Counterparty: {node.counterparty} · Amount: {formatMoney(node.amountPaise)}
           </DialogDescription>
@@ -356,7 +372,12 @@ export function NodeInspectionDialog({
                   <span className="text-[10px]">{showCalculation ? "▲ Hide" : "▼ Expand"}</span>
                 </button>
 
-                <div className={cn("mt-2 space-y-1.5 text-muted-foreground pt-1.5 border-t border-dashed", !showCalculation && "hidden")}>
+                <div
+                  className={cn(
+                    "mt-2 space-y-1.5 text-muted-foreground pt-1.5 border-t border-dashed",
+                    !showCalculation && "hidden",
+                  )}
+                >
                   <div className="flex justify-between">
                     <span>Tranche / Node Amount:</span>
                     <span className="font-mono text-foreground">

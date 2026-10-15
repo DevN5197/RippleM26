@@ -1,10 +1,23 @@
 import { useState, useEffect } from "react";
 import { Coins, Save, Undo2, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Business } from "@/types";
 
 interface FinancialPreferencesSectionProps {
@@ -123,7 +136,8 @@ export function FinancialPreferencesSection({
             <div>
               <CardTitle className="text-base font-semibold">Financial Preferences</CardTitle>
               <CardDescription>
-                Configure baseline cash reserves, payment terms, forecast horizon, and risk alert thresholds.
+                Configure baseline cash reserves, payment terms, forecast horizon, and risk alert
+                thresholds.
               </CardDescription>
             </div>
           </div>
@@ -145,7 +159,9 @@ export function FinancialPreferencesSection({
               {errors["openingCash"] ? (
                 <p className="text-xs text-destructive">{errors["openingCash"]}</p>
               ) : (
-                <p className="text-xs text-muted-foreground">Starting cash for rolling ledger forecasts</p>
+                <p className="text-xs text-muted-foreground">
+                  Starting cash for rolling ledger forecasts
+                </p>
               )}
             </div>
 
@@ -164,7 +180,9 @@ export function FinancialPreferencesSection({
               {errors["safetyThreshold"] ? (
                 <p className="text-xs text-destructive">{errors["safetyThreshold"]}</p>
               ) : (
-                <p className="text-xs text-muted-foreground">Triggers liquidity warnings when balance dips below this</p>
+                <p className="text-xs text-muted-foreground">
+                  Triggers liquidity warnings when balance dips below this
+                </p>
               )}
             </div>
 
@@ -202,7 +220,9 @@ export function FinancialPreferencesSection({
               {errors["customerTerms"] ? (
                 <p className="text-xs text-destructive">{errors["customerTerms"]}</p>
               ) : (
-                <p className="text-xs text-muted-foreground">Net receivables collection expectation</p>
+                <p className="text-xs text-muted-foreground">
+                  Net receivables collection expectation
+                </p>
               )}
             </div>
 
@@ -222,7 +242,9 @@ export function FinancialPreferencesSection({
                   <SelectItem value="30">30 Days (Full monthly projection)</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">Default window on the cash flow dashboard</p>
+              <p className="text-xs text-muted-foreground">
+                Default window on the cash flow dashboard
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -241,7 +263,9 @@ export function FinancialPreferencesSection({
               {errors["taxRate"] ? (
                 <p className="text-xs text-destructive">{errors["taxRate"]}</p>
               ) : (
-                <p className="text-xs text-muted-foreground">Standard tax applied to new invoices & orders</p>
+                <p className="text-xs text-muted-foreground">
+                  Standard tax applied to new invoices & orders
+                </p>
               )}
             </div>
           </div>
@@ -249,8 +273,9 @@ export function FinancialPreferencesSection({
           <div className="flex items-start gap-2.5 rounded-md border border-muted bg-muted/30 p-3 text-xs text-muted-foreground">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              Changes to the low-cash threshold and default forecast horizon immediately update the cash flow
-              projections, shortfall calculations, and active liquidity alerts across Ripple.
+              Changes to the low-cash threshold and default forecast horizon immediately update the
+              cash flow projections, shortfall calculations, and active liquidity alerts across
+              Ripple.
             </span>
           </div>
         </CardContent>

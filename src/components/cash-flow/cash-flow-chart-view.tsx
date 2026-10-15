@@ -29,7 +29,7 @@ interface ChartItem {
   date: string;
   displayDate: string;
   balance: number;
-  scenarioBalance?: number;
+  scenarioBalance?: number | undefined;
   inflows: number;
   outflows: number;
   netMovement: number;
@@ -52,7 +52,9 @@ function CustomTooltip({
   safetyThresholdRupees: number;
 }) {
   if (!active || !payload || !payload.length) return null;
-  const item: ChartItem = payload[0].payload;
+  const first = payload[0];
+  if (!first) return null;
+  const item: ChartItem = first.payload;
 
   return (
     <div className="rounded-lg border bg-card p-3 shadow-lg text-xs space-y-2 min-w-[210px]">

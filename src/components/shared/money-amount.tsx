@@ -11,12 +11,19 @@ interface MoneyAmountProps {
   className?: string;
 }
 
-export function MoneyAmount({ paise, amountPaise, currency = "INR", signed, className }: MoneyAmountProps) {
-  const valuePaise = typeof paise === "number" && !Number.isNaN(paise) 
-    ? paise 
-    : typeof amountPaise === "number" && !Number.isNaN(amountPaise) 
-      ? amountPaise 
-      : 0;
+export function MoneyAmount({
+  paise,
+  amountPaise,
+  currency = "INR",
+  signed,
+  className,
+}: MoneyAmountProps) {
+  const valuePaise =
+    typeof paise === "number" && !Number.isNaN(paise)
+      ? paise
+      : typeof amountPaise === "number" && !Number.isNaN(amountPaise)
+        ? amountPaise
+        : 0;
   const sign = signed ? (valuePaise > 0 ? "+" : valuePaise < 0 ? "−" : "") : "";
   return (
     <span

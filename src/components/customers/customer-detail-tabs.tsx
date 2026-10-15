@@ -203,9 +203,7 @@ export function CustomerDetailTabs({
                   <TableRow key={ord.id}>
                     <TableCell className="font-medium">{ord.id}</TableCell>
                     <TableCell>{formatDate(ord.orderDate)}</TableCell>
-                    <TableCell>
-                      {ord.deliveryDate ? formatDate(ord.deliveryDate) : "TBD"}
-                    </TableCell>
+                    <TableCell>{ord.deliveryDate ? formatDate(ord.deliveryDate) : "TBD"}</TableCell>
                     <TableCell>{ord.quantity} units</TableCell>
                     <TableCell className="text-right font-medium">
                       {formatMoney(ord.totalPaise)}

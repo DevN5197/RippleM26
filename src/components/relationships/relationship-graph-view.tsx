@@ -14,11 +14,7 @@ import {
 } from "@xyflow/react";
 import { Network, Sparkles, FilterX, Maximize2, Minimize2 } from "lucide-react";
 import { adaptToReactFlow } from "./graph-adapter";
-import {
-  RelationshipCustomNode,
-  LaneHeaderNode,
-  type CustomNodeData,
-} from "./relationship-node";
+import { RelationshipCustomNode, LaneHeaderNode, type CustomNodeData } from "./relationship-node";
 import { RelationshipCustomEdge } from "./relationship-edge";
 import { RelationshipToolbar, type FilterState } from "./relationship-toolbar";
 import { RelationshipDetailsPanel } from "./relationship-details-panel";
@@ -246,7 +242,12 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handleResetView} className="h-8 text-xs">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResetView}
+                      className="h-8 text-xs"
+                    >
                       Reset View
                     </Button>
                     <Button
@@ -254,7 +255,10 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                       size="sm"
                       onClick={() => {
                         setIsFullscreen(false);
-                        setTimeout(() => reactFlowInstance?.fitView({ padding: 0.15, duration: 300 }), 100);
+                        setTimeout(
+                          () => reactFlowInstance?.fitView({ padding: 0.15, duration: 300 }),
+                          100,
+                        );
                       }}
                       className="h-8 gap-1.5 text-xs"
                     >
@@ -317,7 +321,10 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                     onClick={() => {
                       const next = !isFullscreen;
                       setIsFullscreen(next);
-                      setTimeout(() => reactFlowInstance?.fitView({ padding: 0.15, duration: 300 }), 150);
+                      setTimeout(
+                        () => reactFlowInstance?.fitView({ padding: 0.15, duration: 300 }),
+                        150,
+                      );
                     }}
                     className="h-8 gap-1.5 text-xs bg-card/90 shadow-xs backdrop-blur-xs cursor-pointer font-medium"
                   >
@@ -339,7 +346,7 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                     </button>
                     <button
                       onClick={() =>
-                        reactFlowInstance?.setCenter(1840, 160, { zoom: 0.50, duration: 450 })
+                        reactFlowInstance?.setCenter(1840, 160, { zoom: 0.5, duration: 450 })
                       }
                       className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                       title="Focus on Primary Operating Cycle"
@@ -348,7 +355,7 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                     </button>
                     <button
                       onClick={() =>
-                        reactFlowInstance?.setCenter(665, 850, { zoom: 0.80, duration: 450 })
+                        reactFlowInstance?.setCenter(665, 850, { zoom: 0.8, duration: 450 })
                       }
                       className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                       title="Focus on Mehta Fabrics cycle"

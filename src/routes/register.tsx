@@ -2,12 +2,20 @@ import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Waves, UserPlus, ArrowLeft, Server, Database, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { authApi } from "@/lib/api/authApi";
 import { DATA_MODE, setDataMode, API_BASE_URL } from "@/lib/config";
+import { isNetworkError, toApiError } from "@/lib/errors";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -43,14 +51,15 @@ function RegisterPage() {
       const session = await authApi.register(email, password, fullName, businessName);
       toast.success(`Account created! Welcome, ${session.user.fullName}.`);
       navigate({ to: "/dashboard" });
-    } catch (err: any) {
-      if (err.code === "network_error" || err.status === 0) {
+    } catch (err) {
+      const { message } = toApiError(err);
+      if (isNetworkError(err)) {
         toast.error(
-          `${err.message} You can also click "Switch to Offline Demo Mode" below to test without the backend.`,
-          { duration: 6000 }
+          `${message ?? "Could not reach the server."} You can also click "Switch to Offline Demo Mode" below to test without the backend.`,
+          { duration: 6000 },
         );
       } else {
-        toast.error(err.message || "Registration failed. Please try again.");
+        toast.error(message || "Registration failed. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -58,7 +67,7 @@ function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/20">
