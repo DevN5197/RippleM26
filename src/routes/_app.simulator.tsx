@@ -25,6 +25,7 @@ import {
   SimulatorErrorState,
   SimulatorEventTimeline,
 } from "@/components/simulator/simulator-results";
+import { SimulatorTrueMarginCard } from "@/components/simulator/simulator-true-margin";
 import {
   AutoPhaseDialog,
   SplitEscrowDialog,
@@ -379,10 +380,10 @@ function SimulatorPage() {
 
   return (
     <div className="space-y-5">
-      {/* Page header */}
+      {/* Page header with Plain-English 1-line explanation */}
       <PageHeader
         title="Ripple Simulator"
-        description="See how a delayed payment affects your cash flow and connected orders."
+        description="Drag the slider to see how one late customer payment triggers supplier halts and late fees—and test 1-click fixes to protect your profit."
         actions={
           <div className="flex items-center gap-2">
             <Button
@@ -396,51 +397,51 @@ function SimulatorPage() {
             </Button>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium text-muted-foreground bg-muted/40 border border-border/60">
               <FlaskConical className="h-3 w-3 text-muted-foreground" aria-hidden />
-              What-if Engine
+              Cockpit View
             </span>
           </div>
         }
       />
 
-      {/* Main layout: left controls + right chart/results */}
-      <div className="grid gap-6 xl:grid-cols-[300px_1fr]">
-        {/* ── Left: scenario controls ── */}
-        <div>
-          <SimulatorControlPanel
-            controls={controls}
-            isRunning={runMutation.isPending}
-            isSaving={saveMutation.isPending}
-            hasResult={result !== null}
-            onChange={setControls}
-            onReset={handleReset}
-            onRun={handleRun}
-            onSave={handleSaveClick}
-            onChaosStressTest={() => chaosMutation.mutate()}
-            isChaosTesting={chaosMutation.isPending}
-            chaosStressTestResult={chaosResult}
-            onExitChaosStressTest={handleExitChaos}
-            onSelectPreset={handleSelectPreset}
-          />
-        </div>
+      {/* ── Top Control Ribbon: Full Width, Compact Presets & Slider ── */}
+      <div>
+        <SimulatorControlPanel
+          controls={controls}
+          isRunning={runMutation.isPending}
+          isSaving={saveMutation.isPending}
+          hasResult={result !== null}
+          onChange={setControls}
+          onReset={handleReset}
+          onRun={handleRun}
+          onSave={handleSaveClick}
+          onChaosStressTest={() => chaosMutation.mutate()}
+          isChaosTesting={chaosMutation.isPending}
+          chaosStressTestResult={chaosResult}
+          onExitChaosStressTest={handleExitChaos}
+          onSelectPreset={handleSelectPreset}
+        />
+      </div>
 
-        {/* ── Right: chart + results ── */}
-        <div className="space-y-4">
+      {/* ── Main Split Workspace (Zero-Scroll Cockpit: 7 cols Chart+Margin / 5 cols Timeline) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left Column (lg:col-span-7): Chart + 4 Compact KPI Pills + Profit Reality Check Card */}
+        <div className="lg:col-span-7 space-y-3.5">
           {/* Chart card */}
-          <Card className="shadow-[0_1px_3px_rgba(0,0,0,0.02)] border-border/70 rounded-xl bg-card">
-            <CardHeader className="pb-2 pt-4 px-4 sm:px-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+          <Card className="shadow-xs border-border/70 rounded-xl bg-card overflow-hidden">
+            <CardHeader className="pb-1.5 pt-3 px-4 sm:px-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
+                  <CardTitle className="text-xs sm:text-sm font-semibold text-foreground">
                     Cash Flow Comparison
                   </CardTitle>
-                  <CardDescription className="text-xs mt-0.5 text-muted-foreground">
+                  <CardDescription className="text-[11px] text-muted-foreground">
                     {result
                       ? `${controls.horizonDays}-day projection · Baseline vs. simulated scenario`
                       : "Run a simulation to compare baseline and scenario forecasts"}
                   </CardDescription>
                 </div>
 
-                {/* Series toggle — only visible once there's a result */}
+                {/* Series toggle */}
                 {result && (
                   <div className="flex items-center rounded-lg border border-border/70 bg-muted/30 p-0.5 gap-0.5">
                     {(
@@ -454,7 +455,7 @@ function SimulatorPage() {
                         key={key}
                         onClick={() => setChartView(key)}
                         className={[
-                          "rounded-md px-2.5 py-1 text-xs font-medium transition-all cursor-pointer",
+                          "rounded-md px-2 py-0.5 text-[11px] font-medium transition-all cursor-pointer",
                           chartView === key
                             ? "bg-background text-foreground shadow-xs font-semibold"
                             : "text-muted-foreground hover:text-foreground",
@@ -467,11 +468,11 @@ function SimulatorPage() {
                 )}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-4 pb-3">
               {runMutation.isPending ? (
-                <div className="h-72 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <p className="text-sm">Calculating simulation…</p>
+                <div className="h-[250px] flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                  <div className="h-7 w-7 animate-spin rounded-full border-3 border-primary border-t-transparent" />
+                  <p className="text-xs">Calculating simulation…</p>
                 </div>
               ) : error ? (
                 <SimulatorErrorState message={error} />
@@ -488,11 +489,18 @@ function SimulatorPage() {
             </CardContent>
           </Card>
 
-          {/* Results panel */}
+          {/* 4 Compact KPI Pills & Deep Diagnostics */}
           {result && !runMutation.isPending && <SimulatorResults result={result} />}
 
-          {/* Timeline panel */}
-          {result && !runMutation.isPending && (
+          {/* Profit Reality Check Card */}
+          {result?.trueMargin && !runMutation.isPending && (
+            <SimulatorTrueMarginCard margin={result.trueMargin} />
+          )}
+        </div>
+
+        {/* Right Column (lg:col-span-5): Chronological Timeline & 1-Click Rescues */}
+        <div className="lg:col-span-5">
+          {result && !runMutation.isPending ? (
             <SimulatorEventTimeline
               result={result}
               onInspectNode={handleInspectNode}
@@ -500,6 +508,10 @@ function SimulatorPage() {
               onSplitEscrowClick={handleTriggerSplitEscrowFromNode}
               onRevertRescues={() => revertRescuesMutation.mutate()}
             />
+          ) : (
+            <Card className="shadow-xs border-border/70 rounded-xl bg-card p-6 text-center text-xs text-muted-foreground">
+              Run a scenario above to inspect chronological order dependencies and 1-click rescues.
+            </Card>
           )}
         </div>
       </div>

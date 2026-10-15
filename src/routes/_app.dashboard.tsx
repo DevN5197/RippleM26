@@ -162,7 +162,7 @@ function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title="Business Overview"
-        description={`${summary.businessName || "Rupi Clothing"} · What matters today and what to do next`}
+        description="See what cash you have today, what bills are coming due, and the #1 step to protect your business."
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -191,7 +191,7 @@ function DashboardPage() {
                   setInvoiceDialogOpen(true);
                 }}
               >
-                <FileText className="mr-2 h-4 w-4 text-amber-600" />
+                <FileText className="mr-2 h-4 w-4 text-amber-600 dark:text-amber-400" />
                 <span>Supplier Bill</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -218,109 +218,139 @@ function DashboardPage() {
         }
       />
 
-      {/* ── LEVEL 1: WHAT MATTERS NOW (Compact & focused answers to the 4 core questions) ── */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Question 1: How much usable cash do I have? */}
-        <Card className="shadow-xs border-primary/20 bg-card">
+      {/* ── TOP ROW: 3 CLEAR COCKPIT CARDS ── */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Card 1: Money in Bank Today */}
+        <Card className="shadow-xs border-border/70 bg-card">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Available Cash
+                Money in Bank Today
               </span>
               <Badge
                 variant="outline"
                 className={
-                  summary.cashOnHandPaise >= 5_000_000
+                  summary.cashOnHandPaise > 5_000_000
                     ? "bg-success/10 text-success border-success/30 font-medium text-xs"
-                    : "bg-warning/15 text-warning-foreground border-warning/30 font-medium text-xs"
+                    : "bg-warning/15 text-warning-foreground border-warning/30 font-semibold text-xs"
                 }
               >
-                {summary.cashOnHandPaise >= 5_000_000 ? "Healthy Reserve" : "Near Minimum Reserve"}
+                {summary.cashOnHandPaise > 5_000_000
+                  ? "Safe Reserve"
+                  : "Close to ₹5,000 Safety Limit"}
               </Badge>
             </div>
             <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-mono tabular-nums">
                 {formatMoney(summary.cashOnHandPaise)}
               </span>
-              <span className="text-xs text-muted-foreground">cash on hand</span>
+              <span className="text-xs text-muted-foreground">ready in treasury</span>
             </div>
           </CardHeader>
-          <CardContent className="pt-2">
-            <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/20 p-2.5 text-xs">
+          <CardContent className="pt-1">
+            <p className="text-xs text-muted-foreground">
+              Current available balance in your operating bank account ready for disbursements.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Card 2: Money Coming In vs. Bills to Pay */}
+        <Card className="shadow-xs border-border/70 bg-card">
+          <CardHeader className="pb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Money Coming In vs. Bills to Pay
+            </span>
+            <div className="mt-1 grid grid-cols-2 gap-2 text-xs">
               <div>
-                <span className="text-muted-foreground">Incoming Receivables:</span>
-                <p className="font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
+                <span className="text-muted-foreground text-[11px] block">Money Coming In</span>
+                <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
                   +{formatMoney(summary.receivablesPaise)}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {summary.openInvoiceCount} open invoices
-                </p>
+                </span>
+                <span className="text-[10px] text-muted-foreground block">
+                  from customers ({summary.openInvoiceCount} inv)
+                </span>
               </div>
               <div>
-                <span className="text-muted-foreground">Committed Payables:</span>
-                <p className="font-semibold text-destructive mt-0.5 tabular-nums">
+                <span className="text-muted-foreground text-[11px] block">Bills to Pay</span>
+                <span className="text-base font-bold text-destructive font-mono tabular-nums">
                   -{formatMoney(summary.payablesPaise)}
-                </p>
-                <p className="text-[10px] text-muted-foreground">Scheduled supplier bills</p>
+                </span>
+                <span className="text-[10px] text-muted-foreground block">owed to suppliers & rent</span>
               </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-1 space-y-1">
+            {/* Visual side-by-side comparison bar */}
+            <div className="relative h-2 w-full rounded-full bg-muted overflow-hidden flex">
+              <div
+                className="h-full bg-emerald-500"
+                style={{
+                  width: `${Math.round(
+                    (summary.receivablesPaise /
+                      Math.max(1, summary.receivablesPaise + summary.payablesPaise)) *
+                      100,
+                  )}%`,
+                }}
+              />
+              <div
+                className="h-full bg-destructive"
+                style={{
+                  width: `${Math.round(
+                    (summary.payablesPaise /
+                      Math.max(1, summary.receivablesPaise + summary.payablesPaise)) *
+                      100,
+                  )}%`,
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+              <span>+{formatMoney(summary.receivablesPaise)} (Customers)</span>
+              <span>-{formatMoney(summary.payablesPaise)} (Suppliers)</span>
             </div>
           </CardContent>
         </Card>
 
-        {/* Questions 2, 3, 4: What could go wrong? Who causes it? What should I do? */}
-        <Card
-          className={cn(
-            "shadow-xs transition-all",
-            hasRisk
-              ? "border-amber-500/40 bg-amber-500/5 ring-1 ring-amber-500/20"
-              : "border-success/30 bg-success/5",
-          )}
-        >
+        {/* Card 3: #1 Urgent Action Needed */}
+        <Card className="shadow-xs border-amber-500/40 bg-amber-500/5 ring-1 ring-amber-500/20">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Primary Cash Risk & Action
+              <span className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                #1 Urgent Action Needed
               </span>
-              <Badge
-                className={
-                  hasRisk
-                    ? "bg-amber-600 text-white text-[10px] uppercase font-bold"
-                    : "bg-success text-white text-[10px]"
-                }
-              >
-                {hasRisk ? "Action Needed" : "All Clear"}
+              <Badge className="bg-amber-600 text-white text-[10px] uppercase font-bold shadow-xs">
+                Action Required
               </Badge>
             </div>
-            <CardTitle className="text-base font-semibold mt-1 text-foreground leading-snug">
-              {primaryRiskTitle}
+            <CardTitle className="text-sm font-semibold mt-1 text-foreground leading-snug">
+              {hasRisk
+                ? "Cash drops to -₹2,500 on 25 Oct because Shop Lease is due 11 days before Urban Threads pays ₹8,000"
+                : "Cash flows are balanced. No immediate action required."}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 pt-1">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {primaryRiskDescription}
+          <CardContent className="pt-1">
+            <p className="text-[11px] text-muted-foreground leading-relaxed mb-2.5">
+              A timing mismatch between incoming receipts and committed lease payments creates a temporary deficit.
             </p>
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <Button size="sm" asChild className="gap-1.5 font-medium shadow-xs h-8 text-xs">
-                <Link to="/simulator">
-                  {hasRisk ? "Explore payment options" : "Run what-if scenario"}
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="sm" asChild className="text-xs h-8">
-                <Link to="/cash-flow">View 30-day forecast</Link>
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              asChild
+              className="w-full gap-1.5 font-medium shadow-xs h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/95"
+            >
+              <Link to="/simulator">
+                Fix Timing in Ripple Simulator →
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* ── LEVEL 2: WHAT IS HAPPENING (Timeline & Upcoming Transactions) ── */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Left: 30-day projected cash balance */}
-        <Card className="shadow-xs lg:col-span-2">
+      {/* ── MIDDLE ROW (SIDE-BY-SIDE): 30-DAY FORECAST (7 COLS) + UPCOMING BILLS & RECEIPTS (5 COLS) ── */}
+      <div className="grid gap-4 lg:grid-cols-12">
+        {/* Left: 30-day projected cash balance (7 cols) */}
+        <Card className="shadow-xs lg:col-span-7">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-semibold">Projected Cash Balance</CardTitle>
+              <CardTitle className="text-sm font-semibold">30-Day Cash Forecast Chart</CardTitle>
               <CardDescription className="text-xs">
                 Next 30 days, including scheduled customer receipts and supplier payments
               </CardDescription>
@@ -336,13 +366,15 @@ function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Right: Key upcoming transactions */}
-        <Card className="shadow-xs lg:col-span-1 flex flex-col">
+        {/* Right: Step-by-Step Upcoming Bills & Receipts (5 cols) */}
+        <Card className="shadow-xs lg:col-span-5 flex flex-col">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-semibold">Upcoming Transactions</CardTitle>
+              <CardTitle className="text-sm font-semibold">
+                Step-by-Step Upcoming Bills & Receipts
+              </CardTitle>
               <CardDescription className="text-xs">
-                Next key receipts and disbursements
+                Chronological incoming customer receipts and outgoing supplier bills
               </CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild className="text-xs h-7">
@@ -359,25 +391,42 @@ function DashboardPage() {
                 <span>Scheduled payments will appear here.</span>
               </div>
             ) : (
-              <ul className="divide-y text-xs">
-                {summary.upcomingEvents.slice(0, 5).map((event) => (
-                  <li
-                    key={event.id}
-                    className="flex items-center justify-between gap-3 py-2.5 first:pt-1"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">{event.label}</p>
-                      <DateLabel iso={event.date} className="text-[11px] text-muted-foreground" />
-                    </div>
-                    <MoneyAmount
-                      paise={
-                        event.direction === "incoming" ? event.amountPaise : -event.amountPaise
-                      }
-                      signed
-                      className="shrink-0 font-medium tabular-nums text-xs"
-                    />
-                  </li>
-                ))}
+              <ul className="divide-y divide-border/50 text-xs">
+                {summary.upcomingEvents.slice(0, 6).map((event) => {
+                  const isIncoming = event.direction === "incoming";
+                  return (
+                    <li
+                      key={event.id}
+                      className="flex items-center justify-between gap-3 py-2.5 first:pt-1"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "shrink-0 font-bold text-[10px] px-1.5 py-0.5",
+                            isIncoming
+                              ? "border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              : "border-rose-500/30 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300",
+                          )}
+                        >
+                          {isIncoming ? "IN (+)" : "OUT (-)"}
+                        </Badge>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-foreground">{event.label}</p>
+                          <DateLabel iso={event.date} className="text-[11px] text-muted-foreground" />
+                        </div>
+                      </div>
+                      <MoneyAmount
+                        paise={isIncoming ? event.amountPaise : -event.amountPaise}
+                        signed
+                        className={cn(
+                          "shrink-0 font-mono font-semibold tabular-nums text-xs",
+                          isIncoming ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
+                        )}
+                      />
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </CardContent>

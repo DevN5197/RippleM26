@@ -73,7 +73,7 @@ export function CashFlowSummaryCards({ forecast }: CashFlowSummaryCardsProps) {
             <div className="mt-1.5 text-xl font-bold tabular-nums text-success">
               +{formatMoney(forecast.totalInflowsPaise)}
             </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">Expected collections</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Money Coming In (Customer Invoices)</p>
           </CardContent>
         </Card>
 
@@ -89,7 +89,7 @@ export function CashFlowSummaryCards({ forecast }: CashFlowSummaryCardsProps) {
             <div className="mt-1.5 text-xl font-bold tabular-nums text-destructive">
               −{formatMoney(forecast.totalOutflowsPaise)}
             </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">Committed expenses & POs</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Bills to Pay (Suppliers & Rent)</p>
           </CardContent>
         </Card>
 

@@ -404,7 +404,7 @@ function runMockSimulation(controls: SimulatorControls): SimulatorResult {
           downstreamValueAtRiskPaise: 80_000_000,
           multiplier: 20.0,
           isKeystone: true,
-          badgeText: "Ripple Risk: 20.0x (Critical Keystone)",
+          badgeText: "20x Chain-Reaction Risk (Biggest Bottleneck)",
           badgeVariant: "destructive",
           exposedOrders: ["Metro Retail Wholesale Order #MR-2026", "Central Distribution Lot #4"],
         },

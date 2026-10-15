@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Waves, UserPlus, ArrowLeft, Server, Database, RefreshCw } from "lucide-react";
+import { Waves, UserPlus, ArrowLeft, ArrowRight, Server, Database, RefreshCw } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { authApi } from "@/lib/api/authApi";
 import { DATA_MODE, setDataMode, API_BASE_URL } from "@/lib/config";
 import { isNetworkError, toApiError } from "@/lib/errors";
+import { AuthVisualPanel } from "@/components/auth/auth-visual-panel";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -50,7 +51,7 @@ function RegisterPage() {
     try {
       const session = await authApi.register(email, password, fullName, businessName);
       toast.success(`Account created! Welcome, ${session.user.fullName}.`);
-      navigate({ to: "/dashboard" });
+      void navigate({ to: "/dashboard" });
     } catch (err) {
       const { message } = toApiError(err);
       if (isNetworkError(err)) {
@@ -67,136 +68,122 @@ function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/20">
-            <Waves className="h-6 w-6 text-primary-foreground" aria-hidden />
+    <div className="flex min-h-screen w-full flex-col lg:flex-row bg-background">
+      {/* ── Left 55%: Interactive "Live Loop" Visual Storyteller ── */}
+      <AuthVisualPanel />
+
+      {/* ── Right 45%: Reactive Register Cockpit ── */}
+      <div className="relative flex flex-1 items-center justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto">
+        {/* Subtle background glow */}
+        <div className="pointer-events-none absolute -right-20 top-1/4 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
+
+        <div className="w-full max-w-md space-y-6 my-auto">
+          <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/20 lg:hidden mb-3">
+              <Waves className="h-6 w-6 text-primary-foreground" aria-hidden />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Create Business Account
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Set up cash-flow coordination and what-if simulation for your company
+            </p>
           </div>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Get Started with Ripple
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Set up cash-flow intelligence for your business
-          </p>
-        </div>
 
-        <Card className="border shadow-lg">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl">Create New Business</CardTitle>
-            <CardDescription>
-              Enter your business and owner profile details to begin
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {/* Mode Switcher Banner */}
-            <div className="mb-4 flex items-center justify-between rounded-lg border border-border/70 bg-muted/40 p-2.5 text-xs">
-              <div className="flex items-center gap-2">
-                {DATA_MODE === "api" ? (
-                  <Server className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Database className="h-4 w-4 text-amber-600" />
-                )}
-                <div>
-                  <span className="font-semibold text-foreground">
-                    {DATA_MODE === "api" ? "Live API Mode" : "Offline Demo Mode"}
-                  </span>
-                  <p className="text-[11px] text-muted-foreground">
-                    {DATA_MODE === "api" ? API_BASE_URL : "In-memory demo store"}
-                  </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs font-medium"
-                onClick={() => setDataMode(DATA_MODE === "api" ? "mock" : "api")}
-              >
-                <RefreshCw className="mr-1 h-3 w-3" />
-                {DATA_MODE === "api" ? "Use Demo Mode" : "Use Live API"}
-              </Button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="businessName" className="text-xs font-medium text-foreground">
+                Business Name
+              </Label>
+              <Input
+                id="businessName"
+                type="text"
+                required
+                placeholder="e.g. Apex Apparel & Co"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                disabled={loading}
+                className="h-10 text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary"
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="businessName">Business Name</Label>
-                <Input
-                  id="businessName"
-                  type="text"
-                  required
-                  placeholder="e.g. Apex Apparel & Co"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="fullName" className="text-xs font-medium text-foreground">
+                Your Full Name
+              </Label>
+              <Input
+                id="fullName"
+                type="text"
+                required
+                placeholder="e.g. Rahul Sharma"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                disabled={loading}
+                className="h-10 text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Your Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  required
-                  placeholder="e.g. Rahul Sharma"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs font-medium text-foreground">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="h-10 text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-xs font-medium text-foreground">
+                Password (min 6 characters)
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                className="h-10 text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary"
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password (min. 6 characters)</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
+            <Button
+              type="submit"
+              className="h-11 w-full font-semibold shadow-sm transition-all hover:scale-[1.01]"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                  <span>Creating business workspace...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  <span>Create Account & Launch Cockpit</span>
+                </div>
+              )}
+            </Button>
+          </form>
 
-              <Button type="submit" className="w-full mt-2" disabled={loading}>
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                    <span>Creating workspace...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    <span>Register Business Account</span>
-                  </div>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-
-          <CardFooter className="flex justify-center border-t py-4 text-center text-sm text-muted-foreground">
+          {/* Footer Navigation */}
+          <div className="pt-2 text-center text-sm text-muted-foreground border-t border-border/60">
             Already have an account?{" "}
-            <Link to="/login" className="ml-1.5 font-medium text-primary hover:underline">
-              <ArrowLeft className="inline h-3.5 w-3.5" /> Sign in instead
+            <Link to="/login" className="font-semibold text-primary hover:underline">
+              Sign in <ArrowRight className="inline h-3.5 w-3.5" />
             </Link>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

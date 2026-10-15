@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/formatters";
 import {
   TrendingDown,
@@ -11,6 +10,7 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
+  Percent,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TrueMarginData } from "@/types";
@@ -20,7 +20,7 @@ interface SimulatorTrueMarginCardProps {
 }
 
 export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps) {
-  const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
+  const [isBreakdownOpen, setIsBreakdownOpen] = useState(true);
 
   const {
     revenuePaise,
@@ -38,16 +38,18 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
   const isNegative = trueRippleMarginPaise < 0;
 
   return (
-    <Card className="shadow-[0_1px_3px_rgba(0,0,0,0.02)] border-border/70 rounded-xl bg-card">
-      <CardHeader className="pb-3 pt-4 px-4 sm:px-6">
+    <Card className="shadow-xs border-border/70 rounded-xl bg-card overflow-hidden">
+      <CardHeader className="pb-2.5 pt-3.5 px-4 sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
               <DollarSign className="h-4 w-4" />
             </div>
             <div>
-              <CardTitle className="text-sm font-semibold">Ripple-Adjusted True Margin</CardTitle>
-              <CardDescription className="text-xs">
+              <CardTitle className="text-sm font-semibold text-foreground">
+                Profit Reality Check
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
                 Your actual profit after the costs caused by payment delays.
               </CardDescription>
             </div>
@@ -65,23 +67,24 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
             {isNegative
               ? "Negative Margin Risk"
               : isSevere
-                ? "Contagion Compression"
+                ? "Profit Eaten by Delays"
                 : "Healthy Margin"}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
-        {/* Margin comparison header */}
+      <CardContent className="space-y-3.5 px-4 sm:px-5 pb-4">
+        {/* Side-by-side comparison bar: Expected Profit on Paper - Money Lost From Delays = Actual Profit After Delays */}
         <div className="grid grid-cols-1 sm:grid-cols-3 rounded-lg border border-border/60 bg-muted/15 divide-y sm:divide-y-0 sm:divide-x divide-border/50 overflow-hidden">
-          <div className="p-3.5">
+          {/* 1. Expected Profit on Paper */}
+          <div className="p-3">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Paper Margin (Accounting)
+              Expected Profit on Paper
             </p>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-xl font-bold font-mono tabular-nums text-foreground">
+            <div className="mt-0.5 flex items-baseline gap-1.5">
+              <span className="text-lg sm:text-xl font-bold font-mono tabular-nums text-foreground">
                 {paperMarginPercent}%
               </span>
-              <span className="text-xs text-muted-foreground tabular-nums font-mono">
+              <span className="text-xs text-muted-foreground tabular-nums font-mono font-medium">
                 ({formatMoney(paperMarginPaise)})
               </span>
             </div>
@@ -90,12 +93,13 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
             </p>
           </div>
 
-          <div className="p-3.5">
+          {/* 2. Money Lost From Delays */}
+          <div className="p-3">
             <p className="text-[11px] font-semibold text-destructive uppercase tracking-wider">
-              Ripple Contagion Drag
+              Money Lost From Delays (Late Fees & Halts)
             </p>
-            <div className="mt-1 flex items-baseline gap-1.5 text-destructive">
-              <span className="text-xl font-bold font-mono tabular-nums">
+            <div className="mt-0.5 flex items-baseline gap-1.5 text-destructive">
+              <span className="text-lg sm:text-xl font-bold font-mono tabular-nums">
                 -{formatMoney(totalContagionCostPaise)}
               </span>
             </div>
@@ -106,23 +110,25 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
             </p>
           </div>
 
-          <div className="p-3.5">
+          {/* 3. Actual Profit After Delays */}
+          <div className="p-3">
             <p className="text-[11px] font-semibold text-primary uppercase tracking-wider">
-              True Ripple Margin
+              Actual Profit After Delays
             </p>
-            <div className="mt-1 flex items-baseline gap-1.5">
+            <div className="mt-0.5 flex items-baseline gap-1.5">
               <span
-                className={`text-xl font-bold font-mono tabular-nums ${
+                className={cn(
+                  "text-lg sm:text-xl font-bold font-mono tabular-nums",
                   isNegative
                     ? "text-destructive"
                     : isSevere
                       ? "text-warning-foreground"
-                      : "text-primary"
-                }`}
+                      : "text-primary",
+                )}
               >
                 {trueRippleMarginPercent}%
               </span>
-              <span className="text-xs text-muted-foreground tabular-nums font-mono">
+              <span className="text-xs text-muted-foreground tabular-nums font-mono font-medium">
                 ({formatMoney(trueRippleMarginPaise)})
               </span>
             </div>
@@ -132,27 +138,28 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
           </div>
         </div>
 
-        {/* Visual comparison bar */}
-        <div className="space-y-1.5">
+        {/* Visual Realization Progress Bar */}
+        <div className="space-y-1">
           <div className="flex justify-between text-xs font-medium">
-            <span className="text-muted-foreground">Economic Realization</span>
-            <span className="tabular-nums">
-              {trueRippleMarginPercent}% realized / {paperMarginPercent}% nominal
+            <span className="text-muted-foreground text-[11px]">Profit Protection Gauge</span>
+            <span className="tabular-nums text-[11px] font-mono">
+              {trueRippleMarginPercent}% realized of {paperMarginPercent}% expected
             </span>
           </div>
-          <div className="relative h-2.5 w-full rounded-full bg-muted overflow-hidden flex">
+          <div className="relative h-2 w-full rounded-full bg-muted overflow-hidden flex">
             {/* Realized margin portion */}
             <div
-              className={`h-full transition-all ${
-                isNegative ? "bg-destructive" : isSevere ? "bg-warning" : "bg-primary"
-              }`}
+              className={cn(
+                "h-full transition-all duration-500",
+                isNegative ? "bg-destructive" : isSevere ? "bg-warning" : "bg-emerald-500",
+              )}
               style={{
                 width: `${Math.max(0, Math.min(100, (trueRippleMarginPaise / paperMarginPaise) * 100))}%`,
               }}
             />
             {/* Contagion lost portion */}
             <div
-              className="h-full bg-destructive/60 transition-all"
+              className="h-full bg-destructive/70 transition-all duration-500"
               style={{
                 width: `${Math.max(0, Math.min(100, (totalContagionCostPaise / paperMarginPaise) * 100))}%`,
               }}
@@ -160,76 +167,57 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
           </div>
         </div>
 
-        {/* Expandable Itemized Contagion Cost Breakdown */}
-        <div className="rounded-md border bg-card overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setIsBreakdownOpen((prev) => !prev)}
-            className="w-full flex items-center justify-between p-3 text-xs font-semibold text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
-          >
-            <span className="flex items-center gap-1.5">
+        {/* 4-Item Itemized Cost Breakdown Visible Right Inside Card */}
+        <div className="rounded-lg border border-border/60 bg-muted/10 p-3 space-y-2 text-xs">
+          <div className="flex items-center justify-between pb-1 border-b border-border/40">
+            <span className="font-semibold text-foreground text-[11px] uppercase tracking-wider flex items-center gap-1.5">
               <ShieldAlert className="h-3.5 w-3.5 text-warning" />
-              View calculation & cost breakdown
+              Where Did the Profit Go? (4 Breakdown Items)
             </span>
-            <span className="text-[11px] font-medium text-primary flex items-center gap-1">
-              {isBreakdownOpen ? (
-                <>
-                  Hide details <ChevronUp className="h-3.5 w-3.5" />
-                </>
-              ) : (
-                <>
-                  Show details <ChevronDown className="h-3.5 w-3.5" />
-                </>
-              )}
+            <span className="font-mono font-semibold text-destructive text-xs">
+              Total: -{formatMoney(totalContagionCostPaise)}
             </span>
-          </button>
+          </div>
 
-          <div
-            className={cn(
-              "p-3 border-t bg-muted/10 space-y-2 transition-all",
-              !isBreakdownOpen && "hidden",
-            )}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
-              <div className="flex items-center justify-between border-b pb-1">
-                <span className="text-muted-foreground">Lost Supplier Early Discount</span>
-                <span className="font-mono font-medium tabular-nums text-foreground">
-                  {formatMoney(breakdown.lostDiscountPaise)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between border-b pb-1">
-                <span className="text-muted-foreground">Supplier Late Penalties / Halt Fees</span>
-                <span className="font-mono font-medium tabular-nums text-foreground">
-                  {formatMoney(breakdown.supplierHaltFeesPaise)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between border-b pb-1 sm:border-b-0">
-                <span className="text-muted-foreground">Secondary Customer SLA Penalties</span>
-                <span className="font-mono font-medium tabular-nums text-foreground">
-                  {formatMoney(breakdown.slaPenaltiesPaise)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Working-Capital Float Drag</span>
-                <span className="font-mono font-medium tabular-nums text-foreground">
-                  {formatMoney(breakdown.workingCapitalDragPaise)}
-                </span>
-              </div>
-
-              {breakdown.floatFeePaise > 0 && (
-                <div className="flex items-center justify-between col-span-full border-t pt-1">
-                  <span className="text-muted-foreground">
-                    Tri-Party Split-Escrow Float Fee (2%)
-                  </span>
-                  <span className="font-mono font-medium tabular-nums text-primary">
-                    {formatMoney(breakdown.floatFeePaise)}
-                  </span>
-                </div>
-              )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+            <div className="flex items-center justify-between border-b sm:border-b-0 pb-1 sm:pb-0">
+              <span className="text-muted-foreground text-[11px]">Lost Supplier Early Discount</span>
+              <span className="font-mono font-semibold tabular-nums text-foreground">
+                {formatMoney(breakdown.lostDiscountPaise)}
+              </span>
             </div>
+
+            <div className="flex items-center justify-between border-b sm:border-b-0 pb-1 sm:pb-0">
+              <span className="text-muted-foreground text-[11px]">Supplier Late Penalties / Halt Fees</span>
+              <span className="font-mono font-semibold tabular-nums text-destructive">
+                {formatMoney(breakdown.supplierHaltFeesPaise)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between border-b sm:border-b-0 pb-1 sm:pb-0">
+              <span className="text-muted-foreground text-[11px]">Secondary Customer SLA Penalties</span>
+              <span className="font-mono font-semibold tabular-nums text-destructive">
+                {formatMoney(breakdown.slaPenaltiesPaise)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground text-[11px]">Working-Capital Float Drag</span>
+              <span className="font-mono font-semibold tabular-nums text-foreground">
+                {formatMoney(breakdown.workingCapitalDragPaise)}
+              </span>
+            </div>
+
+            {breakdown.floatFeePaise > 0 && (
+              <div className="flex items-center justify-between col-span-full border-t border-border/40 pt-1">
+                <span className="text-muted-foreground text-[11px]">
+                  Tri-Party Split-Escrow Float Fee (2%)
+                </span>
+                <span className="font-mono font-semibold tabular-nums text-primary">
+                  {formatMoney(breakdown.floatFeePaise)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

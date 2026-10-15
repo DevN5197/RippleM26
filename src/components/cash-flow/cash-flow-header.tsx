@@ -92,7 +92,8 @@ export function CashFlowHeader({
             </TooltipProvider>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Understand your future cash position before commitments become problems.
+            <span>Understand your future cash position before commitments become problems.</span>{" "}
+            <span className="text-xs opacity-90 hidden sm:inline">Track daily cash inflows and outflows over 30 to 90 days to prevent shortages before they happen.</span>
           </p>
         </div>
 

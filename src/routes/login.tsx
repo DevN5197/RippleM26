@@ -1,7 +1,19 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Waves, LogIn, Sparkles, ArrowRight, Server, Database, RefreshCw } from "lucide-react";
+import {
+  Waves,
+  LogIn,
+  Sparkles,
+  ArrowRight,
+  Server,
+  Database,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  ShieldCheck,
+  Lock,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -13,9 +25,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { authApi } from "@/lib/api/authApi";
 import { DATA_MODE, setDataMode, API_BASE_URL } from "@/lib/config";
 import { isNetworkError, toApiError } from "@/lib/errors";
+import { AuthVisualPanel } from "@/components/auth/auth-visual-panel";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -32,6 +47,39 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoProgress, setDemoProgress] = useState<string | null>(null);
+  const [serverStatus, setServerStatus] = useState<"checking" | "online" | "offline">("checking");
+
+  // Quietly check backend health to inform user and guarantee fail-safe demo mode
+  useEffect(() => {
+    let isMounted = true;
+    const checkHealth = async () => {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2000);
+        const res = await fetch(`${API_BASE_URL}/api/health`, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        if (isMounted) {
+          if (res.ok) {
+            setServerStatus("online");
+          } else {
+            setServerStatus("offline");
+          }
+        }
+      } catch {
+        if (isMounted) {
+          setServerStatus("offline");
+        }
+      }
+    };
+
+    void checkHealth();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,14 +92,15 @@ function LoginPage() {
     try {
       const session = await authApi.login(email, password);
       toast.success(`Welcome back, ${session.user.fullName}!`);
-      navigate({ to: "/dashboard" });
+      void navigate({ to: "/dashboard" });
     } catch (err) {
       const { message } = toApiError(err);
       if (isNetworkError(err)) {
         toast.error(
-          `${message ?? "Could not reach the server."} You can also click "Switch to Offline Demo Mode" below.`,
+          `${message ?? "Could not reach the server."} Switched to Offline Demo Mode for seamless evaluation.`,
           { duration: 6000 },
         );
+        setDataMode("mock");
       } else {
         toast.error(message || "Failed to sign in. Please verify your credentials.");
       }
@@ -60,159 +109,219 @@ function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async () => {
+  const handleInstantDemoLogin = async () => {
     setEmail("owner@rupiclothing.in");
     setPassword("password123");
     setLoading(true);
+    setDemoProgress("Connecting to Rupi Clothing Treasury...");
+
     try {
+      // Step 1: Simulated brief sync feel
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      setDemoProgress("Syncing Supplier & Customer Dependency Loop...");
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
       const session = await authApi.login("owner@rupiclothing.in", "password123");
-      toast.success(`Signed in as ${session.user.fullName} (Rupi Clothing)`);
-      navigate({ to: "/dashboard" });
+      toast.success(`Signed in as ${session.user.fullName} (Rupi Clothing)`, {
+        description: "Live treasury, cash forecast, and Ripple Simulator loaded.",
+      });
+      void navigate({ to: "/dashboard" });
     } catch (err) {
-      // If live backend is unreachable, gracefully fall back to local mock demo
-      if (DATA_MODE === "api" && isNetworkError(err)) {
-        toast.info("Live backend unreachable — switching to Offline Demo Mode for Rupi Clothing.");
+      // If live backend is unreachable, gracefully fall back to local mock demo instantly
+      if (isNetworkError(err)) {
+        toast.info("Live server unreachable — switched to local demo mode for Rupi Clothing.");
         setDataMode("mock");
+        const fallbackSession = await authApi.login("owner@rupiclothing.in", "password123");
+        toast.success(`Signed in as ${fallbackSession.user.fullName} (Demo Mode)`);
+        void navigate({ to: "/dashboard" });
         return;
       }
       toast.error(toApiError(err).message || "Demo login failed");
     } finally {
       setLoading(false);
+      setDemoProgress(null);
     }
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-muted/35 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-      <div className="absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-chart-2/10 blur-3xl" />
-      <div className="relative w-full max-w-md space-y-7">
-        <div className="flex flex-col items-center text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25 ring-4 ring-primary/10">
-            <Waves className="h-6 w-6 text-primary-foreground" aria-hidden />
+    <div className="flex min-h-screen w-full flex-col lg:flex-row bg-background">
+      {/* ── Left 55%: Interactive "Live Loop" Visual Storyteller ── */}
+      <AuthVisualPanel />
+
+      {/* ── Right 45%: Reactive Sign-In Cockpit ── */}
+      <div className="relative flex flex-1 items-center justify-center p-6 sm:p-10 lg:p-12 overflow-y-auto">
+        {/* Subtle background glow */}
+        <div className="pointer-events-none absolute -right-20 top-1/4 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
+
+        <div className="w-full max-w-md space-y-6 my-auto">
+          {/* Header Mobile / Right */}
+          <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/20 lg:hidden mb-3">
+              <Waves className="h-6 w-6 text-primary-foreground" aria-hidden />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Sign In to Your Business
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Coordination cockpit for cash flow, suppliers, and customer orders
+            </p>
           </div>
-          <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-            Welcome back
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Sign in to Ripple
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Small business cash-flow intelligence & coordination
-          </p>
-        </div>
 
-        <Card className="overflow-hidden border-border/70 bg-card/95 shadow-xl shadow-primary/5 backdrop-blur">
-          <CardHeader className="space-y-1 border-b border-border/60 bg-muted/25 pb-5">
-            <CardTitle className="text-xl tracking-tight">Account Credentials</CardTitle>
-            <CardDescription>
-              Enter your email and password to access your business workspace
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {/* Mode Switcher Banner */}
-            <div className="mb-4 flex items-center justify-between rounded-lg border border-border/70 bg-muted/40 p-2.5 text-xs">
-              <div className="flex items-center gap-2">
-                {DATA_MODE === "api" ? (
-                  <Server className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Database className="h-4 w-4 text-amber-600" />
+          {/* Live Connection Status Pill */}
+          <div className="flex items-center justify-between rounded-xl border border-border/80 bg-muted/40 px-3.5 py-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  DATA_MODE === "mock"
+                    ? "bg-amber-500 animate-pulse"
+                    : serverStatus === "online"
+                      ? "bg-emerald-500 ring-2 ring-emerald-500/20"
+                      : serverStatus === "checking"
+                        ? "bg-blue-500 animate-pulse"
+                        : "bg-amber-500",
                 )}
-                <div>
-                  <span className="font-semibold text-foreground">
-                    {DATA_MODE === "api" ? "Live API Mode" : "Offline Demo Mode"}
-                  </span>
-                  <p className="text-[11px] text-muted-foreground">
-                    {DATA_MODE === "api" ? API_BASE_URL : "In-memory demo store"}
-                  </p>
-                </div>
+              />
+              <span className="font-medium text-foreground">
+                {DATA_MODE === "mock"
+                  ? "Offline Demo Mode Ready"
+                  : serverStatus === "online"
+                    ? "Live API Connected"
+                    : serverStatus === "checking"
+                      ? "Checking Live API..."
+                      : "Server Offline (Demo Fallback Ready)"}
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const next = DATA_MODE === "api" ? "mock" : "api";
+                setDataMode(next);
+                toast.info(`Switched to ${next === "api" ? "Live API Mode" : "Offline Demo Mode"}`);
+              }}
+              className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              <RefreshCw className="mr-1 h-3 w-3" />
+              {DATA_MODE === "api" ? "Use Demo" : "Use API"}
+            </Button>
+          </div>
+
+          {/* ── 1-Click Instant Demo Login (Prominent & Glowing) ── */}
+          <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-indigo-500/10 to-primary/5 p-4 shadow-md shadow-primary/5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                <Sparkles className="h-4 w-4" />
+                <span>Presentation & Evaluation Mode</span>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs font-medium"
-                onClick={() => setDataMode(DATA_MODE === "api" ? "mock" : "api")}
-              >
-                <RefreshCw className="mr-1 h-3 w-3" />
-                {DATA_MODE === "api" ? "Use Demo Mode" : "Use Live API"}
-              </Button>
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary text-[10px] font-mono">
+                1-CLICK DEMO
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Instantly launch into <strong>Rupi Clothing</strong> with seeded suppliers, Apex Corp invoice
+              delay, and active Ripple Simulator.
+            </p>
+            <Button
+              type="button"
+              onClick={handleInstantDemoLogin}
+              disabled={loading}
+              className="w-full h-11 text-sm font-semibold shadow-md shadow-primary/25 transition-all hover:scale-[1.01]"
+            >
+              {demoProgress ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                  <span className="truncate">{demoProgress}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Instant Demo Sign-In (Rupi Clothing)</span>
+                  <ArrowRight className="h-4 w-4 ml-auto" />
+                </div>
+              )}
+            </Button>
+          </div>
+
+          {/* Divider */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border/80" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-3 text-muted-foreground font-medium">
+                Or sign in with email
+              </span>
+            </div>
+          </div>
+
+          {/* Standard Sign-In Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs font-medium text-foreground">
+                Email address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="h-10 text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary"
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                />
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-xs font-medium text-foreground">
+                  Password
+                </Label>
               </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-
-              <Button type="submit" className="h-10 w-full shadow-sm" disabled={loading}>
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                    <span>Signing in...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <LogIn className="h-4 w-4" />
-                    <span>Sign In</span>
-                  </div>
-                )}
-              </Button>
-            </form>
-
-            <div className="relative my-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or one-click demo</span>
-              </div>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                className="h-10 text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary"
+              />
             </div>
 
             <Button
-              type="button"
+              type="submit"
               variant="outline"
-              className="h-10 w-full border-dashed hover:border-primary hover:bg-primary/5"
-              onClick={handleDemoLogin}
+              className="h-10 w-full font-medium shadow-xs border-border/80 hover:bg-muted/50"
               disabled={loading}
             >
-              <Sparkles className="mr-2 h-4 w-4 text-primary" />
-              <span>Sign in as Rupi Clothing (Demo Owner)</span>
+              {loading && !demoProgress ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <span>Signing in...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  <span>Sign In</span>
+                </div>
+              )}
             </Button>
-          </CardContent>
+          </form>
 
-          <CardFooter className="flex justify-center border-t py-4 text-center text-sm text-muted-foreground">
+          {/* Footer Navigation */}
+          <div className="pt-2 text-center text-sm text-muted-foreground border-t border-border/60">
             Don't have an account yet?{" "}
-            <Link to="/register" className="ml-1.5 font-medium text-primary hover:underline">
+            <Link to="/register" className="font-semibold text-primary hover:underline">
               Create business account <ArrowRight className="inline h-3.5 w-3.5" />
             </Link>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

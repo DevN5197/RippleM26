@@ -112,7 +112,7 @@ export function InventorySummaryCards({
                   className={cn(
                     "text-[9px] px-1 py-0 h-4 uppercase font-semibold",
                     isLowStockActive
-                      ? "bg-warning text-warning-foreground border-warning"
+                      ? "bg-warning text-zinc-950 font-bold border-warning"
                       : "border-warning/30 text-warning-foreground bg-warning/20",
                   )}
                 >

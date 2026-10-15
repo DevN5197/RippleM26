@@ -14,7 +14,7 @@ export function SupplierHeader({ onAddSupplier, totalSuppliers }: SupplierHeader
       title="Suppliers"
       description={`Vendor directory, payment terms, outstanding balances, and delivery reliability${
         totalSuppliers !== undefined
-          ? ` · ${totalSuppliers} counterpoint${totalSuppliers === 1 ? "" : "s"}`
+          ? ` · ${totalSuppliers} supplier${totalSuppliers === 1 ? "" : "s"}`
           : ""
       }`}
       actions={

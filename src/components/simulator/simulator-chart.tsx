@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceLine,
+  ReferenceArea,
   ResponsiveContainer,
 } from "recharts";
 import { format, parseISO } from "date-fns";
@@ -134,8 +135,8 @@ export function SimulatorChart({
 
   return (
     <div className="space-y-2">
-      {/* Chart Canvas: 320px desktop height, responsive */}
-      <div className="h-72 sm:h-80 w-full" role="img" aria-label={ariaLabel}>
+      {/* Chart Canvas: compact 260px height for zero-scroll cockpit */}
+      <div className="h-[250px] sm:h-[260px] w-full" role="img" aria-label={ariaLabel}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 8, right: 12, left: -4, bottom: 0 }}>
             <defs>
@@ -176,24 +177,35 @@ export function SimulatorChart({
 
             <Tooltip content={(props) => <SimulatorTooltip {...props} view={view} />} />
 
+            {/* Shaded red danger zone below ₹0 */}
+            {minValue < 0 && (
+              <ReferenceArea
+                y1={minValue - padding}
+                y2={0}
+                fill="var(--color-destructive)"
+                fillOpacity={0.07}
+              />
+            )}
+
             {/* Zero line */}
             <ReferenceLine
               y={0}
               stroke="var(--color-destructive)"
               strokeDasharray="3 3"
-              strokeOpacity={0.5}
+              strokeOpacity={0.6}
             />
             {/* Safety threshold ₹5,000 */}
             <ReferenceLine
               y={5000}
               stroke="var(--color-warning)"
               strokeDasharray="2 2"
-              strokeOpacity={0.45}
+              strokeOpacity={0.6}
               label={{
-                value: "Safety buffer",
+                value: "₹5,000 Safety Buffer",
                 position: "insideTopRight",
                 fontSize: 10,
                 fill: "var(--color-muted-foreground)",
+                fontWeight: 500,
               }}
             />
 

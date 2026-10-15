@@ -244,7 +244,7 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
         </span>
       )}
       {isDownstream && (
-        <span className="absolute -top-3 right-4 rounded-full bg-warning px-2 py-0.5 text-[9px] font-bold text-warning-foreground shadow-xs tracking-wide uppercase">
+        <span className="absolute -top-3 right-4 rounded-full bg-warning px-2 py-0.5 text-[9px] font-bold text-zinc-950 shadow-xs tracking-wide uppercase">
           Downstream
         </span>
       )}
