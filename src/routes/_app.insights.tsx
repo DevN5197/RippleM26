@@ -31,29 +31,32 @@ const SUGGESTIONS = [
 const BOT_RESPONSES: Record<string, string> = {
   default:
     "I'm your Ripple AI assistant. I can help you understand your cash flow, receivables, payables, and financial risk. Ask me anything about your business finances!",
-  cash:
-    "💡 Your cash flow could be improved by following up on 3 overdue invoices totalling ₹1,24,500. Accelerating collections by even 7 days would add ~₹18,000 to your average daily balance.",
+  cash: "💡 Your cash flow could be improved by following up on 3 overdue invoices totalling ₹1,24,500. Accelerating collections by even 7 days would add ~₹18,000 to your average daily balance.",
   invoice:
     "📋 You have 4 overdue invoices. The oldest is 23 days past due from a key customer. Sending a reminder today could recover ₹54,000 within the week.",
-  risk:
-    "⚠️ Based on your current runway and upcoming payables, you may face a cash gap in ~18 days. Consider delaying a non-critical supplier payment or accelerating a pending receipt to bridge the gap.",
+  risk: "⚠️ Based on your current runway and upcoming payables, you may face a cash gap in ~18 days. Consider delaying a non-critical supplier payment or accelerating a pending receipt to bridge the gap.",
   supplier:
     "🤝 Your supplier payment health looks good — 92% on-time rate this quarter. However, one supplier is close to their credit limit. Paying ₹30,000 now would prevent a potential supply disruption.",
 };
 
+const DEFAULT_BOT_REPLY =
+  BOT_RESPONSES["default"] ?? "I'm here to help with your business finances.";
+
 function getBotReply(input: string): string {
   const lower = input.toLowerCase();
-  if (lower.includes("cash") || lower.includes("flow")) return BOT_RESPONSES.cash;
-  if (lower.includes("invoice") || lower.includes("overdue")) return BOT_RESPONSES.invoice;
-  if (lower.includes("risk") || lower.includes("crunch") || lower.includes("gap")) return BOT_RESPONSES.risk;
-  if (lower.includes("supplier") || lower.includes("payment") || lower.includes("health")) return BOT_RESPONSES.supplier;
-  return BOT_RESPONSES.default;
+  if (lower.includes("cash") || lower.includes("flow"))
+    return BOT_RESPONSES["cash"] ?? DEFAULT_BOT_REPLY;
+  if (lower.includes("invoice") || lower.includes("overdue"))
+    return BOT_RESPONSES["invoice"] ?? DEFAULT_BOT_REPLY;
+  if (lower.includes("risk") || lower.includes("crunch") || lower.includes("gap"))
+    return BOT_RESPONSES["risk"] ?? DEFAULT_BOT_REPLY;
+  if (lower.includes("supplier") || lower.includes("payment") || lower.includes("health"))
+    return BOT_RESPONSES["supplier"] ?? DEFAULT_BOT_REPLY;
+  return DEFAULT_BOT_REPLY;
 }
 
 function InsightsPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "bot", text: BOT_RESPONSES.default },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([{ role: "bot", text: DEFAULT_BOT_REPLY }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -85,7 +88,10 @@ function InsightsPage() {
       {/* Chat window */}
       <div className="flex-1 overflow-y-auto flex flex-col gap-3 bg-card rounded-2xl border border-border p-4 min-h-0 max-h-[calc(100vh-260px)]">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div
+            key={i}
+            className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          >
             {msg.role === "bot" && (
               <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                 <Bot className="w-4 h-4 text-primary" />
@@ -139,7 +145,10 @@ function InsightsPage() {
       {/* Input row */}
       <form
         className="flex gap-2"
-        onSubmit={(e) => { e.preventDefault(); send(input); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          send(input);
+        }}
       >
         <input
           value={input}

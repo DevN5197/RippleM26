@@ -19,6 +19,15 @@ export interface DashboardSummary {
   upcomingEvents: CashFlowEvent[];
 }
 
+interface DashboardActivity {
+  id: string;
+  type: string;
+  title: string;
+  amountPaise: number;
+  status: string;
+  date: string;
+}
+
 function computeSummary(): DashboardSummary {
   const forecast = buildForecast(db.cashFlowEvents, db.business.openingCashPaise);
   const cashOnHandPaise = forecast[0]?.projectedBalancePaise ?? db.business.openingCashPaise;
@@ -113,7 +122,7 @@ export const dashboardApi = {
     };
   },
 
-  async getRecentActivity(): Promise<{ activities: any[] }> {
+  async getRecentActivity(): Promise<{ activities: DashboardActivity[] }> {
     if (DATA_MODE === "mock") {
       await delay();
       return {
@@ -127,6 +136,6 @@ export const dashboardApi = {
         })),
       };
     }
-    return httpRequest<{ activities: any[] }>("/api/dashboard/recent-activity");
+    return httpRequest<{ activities: DashboardActivity[] }>("/api/dashboard/recent-activity");
   },
 };

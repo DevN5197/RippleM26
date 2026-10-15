@@ -7,6 +7,7 @@ import { addDays } from "date-fns";
 import type {
   SimulationScenario,
   SimulationResult,
+  SimulatorResult,
   SimulatorControls,
   SimulatorRecommendation,
   DependencyImpact,
@@ -30,11 +31,11 @@ import type {
 // ---------------------------------------------------------------------------
 
 export type {
+  SimulatorResult,
   SimulatorControls,
   SimulatorRecommendation,
   DependencyImpact,
   RippleScoreBreakdown,
-  SimulatorResult,
   ActiveRescue,
 } from "@/types";
 
@@ -847,12 +848,12 @@ export const simulatorApi = {
   /**
    * Get active rescues
    */
-  async getRescues(): Promise<any[]> {
+  async getRescues(): Promise<ActiveRescue[]> {
     if (DATA_MODE === "mock") {
       await delay(100);
       return [];
     }
-    return httpRequest<any[]>("/api/simulator/rescues");
+    return httpRequest<ActiveRescue[]>("/api/simulator/rescues");
   },
 
   /**

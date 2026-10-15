@@ -275,9 +275,8 @@ describe("Simulator Flagship Innovations — Unit & UI Tests", () => {
       mostFragileNodeAfter: "node-kaveri",
       mostFragileNodeLabel: "Kaveri Timber (PO-1)",
       mostFragileMultiplier: 13.75,
-      baselineTrueMargin: {} as any,
-      stressedTrueMargin: {} as any,
-      stressedResult: {},
+      baselineTrueMargin: {} as unknown as TrueMarginData,
+      stressedTrueMargin: {} as unknown as TrueMarginData,
       summary: "Chaos test applied +5d shock.",
     };
 

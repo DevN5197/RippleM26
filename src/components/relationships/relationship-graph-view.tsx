@@ -14,7 +14,12 @@ import {
 } from "@xyflow/react";
 import { Network, Sparkles, FilterX, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { adaptToReactFlow } from "./graph-adapter";
-import { RelationshipCustomNode, LaneHeaderNode, type CustomNodeData } from "./relationship-node";
+import {
+  RelationshipCustomNode,
+  LaneHeaderNode,
+  type CustomNodeData,
+  type LaneHeaderData,
+} from "./relationship-node";
 import { RelationshipCustomEdge } from "./relationship-edge";
 import { RelationshipToolbar, type FilterState } from "./relationship-toolbar";
 import { RelationshipDetailsPanel } from "./relationship-details-panel";
@@ -141,7 +146,8 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
     });
   }, [data, selectedNodeId, filteredNodeIds]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<CustomNodeData>>(flowNodes);
+  const [nodes, setNodes, onNodesChange] =
+    useNodesState<Node<CustomNodeData | LaneHeaderData>>(flowNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
   // Sync state when dependencies or selection changes

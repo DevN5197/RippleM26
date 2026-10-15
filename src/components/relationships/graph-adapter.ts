@@ -1,6 +1,6 @@
 import { MarkerType, type Node, type Edge } from "@xyflow/react";
 import type { RelationshipGraphData, RelationshipGraphNode, RelationshipGraphEdge } from "@/types";
-import type { CustomNodeData } from "./relationship-node";
+import type { CustomNodeData, LaneHeaderData } from "./relationship-node";
 
 // Deterministic stage positions (X-coordinates by process sequence)
 export const STAGE_X: Record<string, number> = {
@@ -140,7 +140,7 @@ export function adaptToReactFlow(
   data: RelationshipGraphData,
   options: GraphAdapterOptions = {},
 ): {
-  nodes: Node<CustomNodeData>[];
+  nodes: Node<CustomNodeData | LaneHeaderData>[];
   edges: Edge[];
 } {
   const { selectedNodeId, filteredNodeIds } = options;
@@ -181,7 +181,7 @@ export function adaptToReactFlow(
     });
 
   // Lane Header Annotations for structured swimlanes
-  const laneNodes: Node<CustomNodeData>[] = [
+  const laneNodes: Node<LaneHeaderData>[] = [
     {
       id: "lane_1",
       type: "lane_header",
