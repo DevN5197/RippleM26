@@ -143,15 +143,34 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
       {/* ── 4 Compact KPI Pills Directly Underneath Chart ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {/* 1. Closing Cash */}
-        <div className="rounded-lg border border-border/70 bg-card p-2.5 shadow-xs">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Closing Cash
-          </p>
+        <div
+          className={cn(
+            "rounded-lg border p-2.5 shadow-xs transition-all",
+            scenarioClosingPaise < 0
+              ? "emergency-card-critical border-destructive/80 bg-destructive/10"
+              : "border-border/70 bg-card",
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Closing Cash
+            </p>
+            {scenarioClosingPaise < 0 && (
+              <span className="relative inline-flex items-center gap-1 rounded bg-red-500/20 px-1.5 py-0.2 text-[9px] font-bold text-red-500 uppercase tracking-wide">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
+                CRITICAL DEFICIT
+              </span>
+            )}
+          </div>
           <div className="mt-0.5 flex items-baseline gap-1">
             <span
               className={cn(
                 "text-2xl sm:text-3xl font-bold font-mono tabular-nums",
-                hasShortfall ? "text-destructive" : "text-foreground",
+                scenarioClosingPaise < 0
+                  ? "text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.35)]"
+                  : hasShortfall
+                    ? "text-destructive"
+                    : "text-foreground",
               )}
             >
               {formatMoney(scenarioClosingPaise)}
@@ -174,15 +193,32 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
         </div>
 
         {/* 2. Lowest Cash Point */}
-        <div className="rounded-lg border border-border/70 bg-card p-2.5 shadow-xs">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Lowest Cash Point
-          </p>
+        <div
+          className={cn(
+            "rounded-lg border p-2.5 shadow-xs transition-all",
+            scenarioMinPaise < 0
+              ? "emergency-card-critical border-destructive/80 bg-destructive/10"
+              : isBelowThreshold
+                ? "emergency-card-warning border-amber-500/60 bg-amber-500/5"
+                : "border-border/70 bg-card",
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Lowest Cash Point
+            </p>
+            {scenarioMinPaise < 0 && (
+              <span className="relative inline-flex items-center gap-1 rounded bg-red-500/20 px-1.5 py-0.2 text-[9px] font-bold text-red-500 uppercase tracking-wide">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
+                CRITICAL DEFICIT
+              </span>
+            )}
+          </div>
           <p
             className={cn(
               "mt-0.5 text-2xl sm:text-3xl font-bold font-mono tabular-nums",
               scenarioMinPaise < 0
-                ? "text-destructive"
+                ? "text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.35)]"
                 : isBelowThreshold
                   ? "text-amber-600 dark:text-amber-400"
                   : "text-foreground",
@@ -219,9 +255,17 @@ export function SimulatorResults({ result }: SimulatorResultsProps) {
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Delayed Orders
           </p>
-          <p className="mt-0.5 text-2xl sm:text-3xl font-bold font-mono tabular-nums text-foreground">
-            {affectedDependencies.length > 0 ? affectedDependencies.length : (hasShortfall ? 2 : 0)}
-          </p>
+          <div className="mt-0.5 flex items-center gap-1.5">
+            <span className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-foreground">
+              {affectedDependencies.length > 0 ? affectedDependencies.length : (hasShortfall ? 2 : 0)}
+            </span>
+            {(affectedDependencies.length > 0 || hasShortfall) && (
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              </span>
+            )}
+          </div>
           <p className="text-[10px] text-muted-foreground truncate">
             {affectedDependencies.length > 0
               ? `${affectedDependencies.length} downstream shift${affectedDependencies.length !== 1 ? "s" : ""}`
@@ -575,8 +619,8 @@ export function SimulatorEventTimeline({
                   "rounded-lg border p-3 sm:p-3.5 transition-all duration-500 shadow-xs",
                   isRescuedSupplier
                     ? "border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30"
-                    : isDelayedCustomer
-                      ? "border-destructive/30 bg-destructive/5 ring-1 ring-destructive/20"
+                    : (node.fragility?.isKeystone || isDelayedCustomer || node.status.toLowerCase().includes("at risk"))
+                      ? "border-l-4 border-l-red-500 border-destructive/30 bg-destructive/5 ring-1 ring-destructive/20"
                       : "border-border/70 bg-card hover:bg-muted/10",
                 )}
               >
@@ -595,8 +639,12 @@ export function SimulatorEventTimeline({
                       {isDelayedCustomer && (
                         <Badge
                           variant="destructive"
-                          className="text-[9px] uppercase tracking-wider font-bold shadow-xs"
+                          className="text-[9px] uppercase tracking-wider font-bold shadow-xs flex items-center gap-1"
                         >
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
+                          </span>
                           Root Cause of Cash Crunch
                         </Badge>
                       )}
@@ -607,13 +655,20 @@ export function SimulatorEventTimeline({
                           variant="outline"
                           onClick={() => onInspectNode && onInspectNode(node)}
                           className={cn(
-                            "cursor-pointer text-[10px] font-semibold transition-all hover:scale-105",
+                            "cursor-pointer text-[10px] font-semibold transition-all hover:scale-105 flex items-center",
                             node.fragility.isKeystone
                               ? "border-destructive/40 bg-destructive/10 text-destructive"
                               : "border-warning/40 bg-warning/10 text-warning-foreground",
                           )}
                         >
-                          <Zap className="h-3 w-3 mr-1" />
+                          {node.fragility.isKeystone ? (
+                            <span className="relative flex h-2 w-2 mr-1.5 shrink-0">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                            </span>
+                          ) : (
+                            <Zap className="h-3 w-3 mr-1" />
+                          )}
                           <span>
                             {node.fragility.badgeText.includes("Critical Keystone") ||
                             node.fragility.badgeText.includes("20")
@@ -695,7 +750,7 @@ export function SimulatorEventTimeline({
                         <button
                           type="button"
                           onClick={() => onAutoPhaseClick(node)}
-                          className="w-full text-left p-3 rounded-lg border-2 border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary transition-all group/btn shadow-xs cursor-pointer"
+                          className="w-full text-left p-3 rounded-lg border-2 border-primary/50 bg-primary/10 hover:bg-primary/15 hover:border-primary transition-all group/btn shadow-md cursor-pointer shimmer-rescue-btn ring-1 ring-primary/40 hover:ring-primary shadow-[0_0_16px_rgba(99,102,241,0.25)]"
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-semibold text-sm text-primary flex items-center gap-1.5">
@@ -704,7 +759,7 @@ export function SimulatorEventTimeline({
                             </span>
                             <Badge
                               variant="outline"
-                              className="text-xs font-semibold bg-primary/10 text-primary border-primary/20 px-2 py-0.5"
+                              className="text-xs font-semibold bg-primary/20 text-primary border-primary/30 px-2 py-0.5"
                             >
                               1-Click Fix
                             </Badge>
@@ -721,7 +776,7 @@ export function SimulatorEventTimeline({
                         <button
                           type="button"
                           onClick={() => onSplitEscrowClick(node)}
-                          className="w-full text-left p-3 rounded-lg border-2 border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary transition-all group/btn shadow-xs cursor-pointer"
+                          className="w-full text-left p-3 rounded-lg border-2 border-primary/50 bg-primary/10 hover:bg-primary/15 hover:border-primary transition-all group/btn shadow-md cursor-pointer shimmer-rescue-btn ring-1 ring-primary/40 hover:ring-primary shadow-[0_0_16px_rgba(99,102,241,0.25)]"
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-semibold text-sm text-primary flex items-center gap-1.5">
@@ -730,7 +785,7 @@ export function SimulatorEventTimeline({
                             </span>
                             <Badge
                               variant="outline"
-                              className="text-xs font-semibold bg-primary/10 text-primary border-primary/20 px-2 py-0.5"
+                              className="text-xs font-semibold bg-primary/20 text-primary border-primary/30 px-2 py-0.5"
                             >
                               Zero Cash
                             </Badge>

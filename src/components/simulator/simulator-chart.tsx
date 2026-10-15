@@ -7,6 +7,7 @@ import {
   Tooltip,
   ReferenceLine,
   ReferenceArea,
+  ReferenceDot,
   ResponsiveContainer,
 } from "recharts";
 import { format, parseISO } from "date-fns";
@@ -115,6 +116,14 @@ export function SimulatorChart({
       scenario: (scenarioMap.get(date)?.projectedBalancePaise ?? 0) / 100,
     }));
 
+  const minScenarioPoint = scenarioPoints.reduce<ForecastPoint | null>((acc, p) => {
+    if (!acc || p.projectedBalancePaise < acc.projectedBalancePaise) return p;
+    return acc;
+  }, null);
+  const hasShortfall =
+    minScenarioPoint &&
+    (minScenarioPoint.projectedBalancePaise < 500_000 || minScenarioPoint.isShortfall);
+
   // Compute Y-axis domain from visible series only
   const visibleValues = chartData.flatMap((d) => {
     const vals: number[] = [];
@@ -191,23 +200,80 @@ export function SimulatorChart({
             <ReferenceLine
               y={0}
               stroke="var(--color-destructive)"
-              strokeDasharray="3 3"
-              strokeOpacity={0.6}
+              strokeWidth={2}
+              strokeDasharray="4 4"
+              strokeOpacity={0.9}
+              {...(hasShortfall
+                ? {
+                    label: {
+                      value: "₹0 DEFICIT LINE",
+                      position: "insideBottomLeft",
+                      fontSize: 10,
+                      fill: "#ef4444",
+                      fontWeight: 700,
+                    },
+                  }
+                : {})}
             />
             {/* Safety threshold ₹5,000 */}
             <ReferenceLine
               y={5000}
               stroke="var(--color-warning)"
-              strokeDasharray="2 2"
-              strokeOpacity={0.6}
+              strokeWidth={1.5}
+              strokeDasharray="3 3"
+              strokeOpacity={0.9}
               label={{
-                value: "₹5,000 Safety Buffer",
-                position: "insideTopRight",
+                value: hasShortfall
+                  ? "⚠️ DANGER ZONE: BELOW SAFETY RESERVE"
+                  : "₹5,000 Safety Buffer",
+                position: "insideTopLeft",
                 fontSize: 11,
-                fill: "var(--color-muted-foreground)",
-                fontWeight: 600,
+                fill: hasShortfall ? "#f59e0b" : "var(--color-muted-foreground)",
+                fontWeight: 700,
               }}
             />
+
+            {/* Pulsing Red Target Marker at Minimum Cash Point */}
+            {showScenario &&
+              minScenarioPoint &&
+              (minScenarioPoint.isShortfall ||
+                minScenarioPoint.projectedBalancePaise < 500_000) && (
+                <ReferenceDot
+                  x={minScenarioPoint.date}
+                  y={minScenarioPoint.projectedBalancePaise / 100}
+                  isFront
+                  shape={(props: any) => {
+                    const { cx, cy } = props;
+                    if (typeof cx !== "number" || typeof cy !== "number") return <g />;
+                    return (
+                      <g>
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={10}
+                          fill="none"
+                          stroke="#ef4444"
+                          strokeWidth={2.5}
+                        >
+                          <animate
+                            attributeName="r"
+                            values="6;16;6"
+                            dur="1.8s"
+                            repeatCount="indefinite"
+                          />
+                          <animate
+                            attributeName="opacity"
+                            values="0.9;0.1;0.9"
+                            dur="1.8s"
+                            repeatCount="indefinite"
+                          />
+                        </circle>
+                        <circle cx={cx} cy={cy} r={5} fill="#ef4444" />
+                      </g>
+                    );
+                  }}
+                />
+              )}
 
             {showBaseline && (
               <Area

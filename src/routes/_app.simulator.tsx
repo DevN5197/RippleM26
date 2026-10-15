@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { FlaskConical, BookOpen } from "lucide-react";
+import { FlaskConical, BookOpen, AlertTriangle, ArrowDown } from "lucide-react";
+import { formatMoney } from "@/lib/formatters";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -447,6 +448,63 @@ function SimulatorPage() {
           onSelectPreset={handleSelectPreset}
         />
       </div>
+
+      {/* ── Top Emergency Contagion Alert Banner ── */}
+      {result &&
+        !result.hasAutoPhaseRescue &&
+        !result.hasSplitEscrowRescue &&
+        (result.scenarioMinPaise < 0 ||
+          (result.trueMargin && result.trueMargin.contagionDays > 0) ||
+          (result.trueMargin && result.trueMargin.totalContagionCostPaise > 0) ||
+          result.shortfallPaise < 0) && (
+          <div
+            id="emergency-contagion-banner"
+            className="emergency-card-critical rounded-xl border border-destructive/60 bg-destructive/10 p-3.5 sm:p-4 shadow-lg text-foreground flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
+          >
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive/20 text-destructive shadow-xs">
+                <AlertTriangle className="h-5 w-5 bell-ring text-destructive" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge className="bg-destructive text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide flex items-center gap-1.5 shadow-xs">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                    </span>
+                    CRITICAL LIQUIDITY CONTAGION
+                  </Badge>
+                  <span className="text-xs font-semibold text-destructive font-mono">
+                    Cash plunges to {formatMoney(result.scenarioMinPaise)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground font-medium">
+                  🚨 <strong className="text-foreground">CRITICAL LIQUIDITY CONTAGION DETECTED:</strong> Cash plunges to{" "}
+                  <span className="text-destructive font-bold font-mono">{formatMoney(result.scenarioMinPaise)}</span> and{" "}
+                  <span className="text-destructive font-bold font-mono">
+                    {formatMoney(
+                      result.trueMargin?.totalContagionCostPaise || Math.abs(result.shortfallPaise || 0) || 2000000,
+                    )}
+                  </span>{" "}
+                  of profit is being destroyed by cascading supplier & SLA penalties!
+                </p>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                const el = document.getElementById("timeline-rescues-section");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="shrink-0 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold text-xs h-9 px-4 gap-1.5 shadow-md shimmer-rescue-btn"
+            >
+              <span>Jump to 1-Click Rescues ↓</span>
+              <ArrowDown className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
 
       {/* ── Main Split Workspace (Zero-Scroll Cockpit: 7 cols Chart+Margin / 5 cols Timeline) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">

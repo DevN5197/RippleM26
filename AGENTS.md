@@ -13,7 +13,7 @@
 
 # Ripple — Architecture Rules
 
-- Routing: TanStack Router file-based routes. App pages live under the pathless layout `src/routes/_app.tsx` (sidebar + header shell); leaf pages are `src/routes/_app.<name>.tsx`. `/` redirects to `/dashboard`.
+- Routing: TanStack Router file-based routes. App pages live under the pathless layout `src/routes/_app.tsx` (sidebar + header shell); leaf pages are `src/routes/_app.<name>.tsx`. `/` redirects to `/login`.
 - Data layer: all data goes through typed modules in `src/lib/api/*Api.ts`. Each module branches on `DATA_MODE` (from `src/lib/config.ts`): mock mode reads/mutates the in-memory store in `src/mocks/store.ts`; api mode calls the FastAPI backend via `src/lib/api/client.ts` using `VITE_API_BASE_URL`. Never fetch directly from components.
 - Money: integer paise everywhere (`*Paise` fields); format with `src/lib/formatters.ts` (`formatMoney`, INR, en-IN grouping). No floating-point financial math in the frontend.
 - Dates: ISO 8601 strings in data; format only at display time with date-fns helpers in `src/lib/formatters.ts`.

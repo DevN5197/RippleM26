@@ -208,13 +208,17 @@ export function SimulatorControlPanel({
 
         {/* ── Active Chaos Stress-Test Banner ── */}
         {chaosStressTestResult?.isStressTestActive && (
-          <div className="rounded-lg border border-purple-200/80 bg-purple-50/50 dark:bg-purple-950/20 p-3 space-y-2 text-xs">
+          <div className="rounded-lg border border-purple-400/80 bg-purple-50/50 dark:bg-purple-950/20 p-3 space-y-2 text-xs emergency-card-stress">
             <div className="flex items-center justify-between font-medium text-purple-900 dark:text-purple-100">
               <div className="flex items-center gap-2">
                 <Badge
                   variant="outline"
-                  className="border-purple-300 bg-purple-100 text-purple-800 text-[10px] font-semibold uppercase"
+                  className="border-purple-400 bg-purple-100 text-purple-800 text-[10px] font-semibold uppercase flex items-center gap-1"
                 >
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-purple-600" />
+                  </span>
                   Stress Mode
                 </Badge>
                 <span className="flex items-center gap-1.5 font-semibold text-xs">
@@ -273,7 +277,7 @@ export function SimulatorControlPanel({
                 <span>Most Fragile:</span>
                 <Badge
                   variant="outline"
-                  className="border-purple-300 bg-purple-100/80 text-purple-800 text-[10px] block truncate"
+                  className="border-purple-400 bg-purple-100/90 text-purple-800 text-[10px] block truncate emergency-card-stress font-semibold"
                 >
                   {chaosStressTestResult.mostFragileNodeLabel} ({chaosStressTestResult.mostFragileMultiplier}x)
                 </Badge>

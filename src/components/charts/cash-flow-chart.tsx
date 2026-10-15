@@ -3,6 +3,7 @@ import {
   AreaChart,
   CartesianGrid,
   ReferenceLine,
+  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -60,6 +61,13 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
     balance: p.projectedBalancePaise / 100,
   }));
 
+  const minPoint = data.reduce<ForecastPoint | null>((acc, p) => {
+    if (!acc || p.projectedBalancePaise < acc.projectedBalancePaise) return p;
+    return acc;
+  }, null);
+
+  const hasShortfall = data.some((p) => p.isShortfall || p.projectedBalancePaise < 500_000);
+
   return (
     <div
       className="h-72 w-full"
@@ -91,7 +99,75 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
             width={56}
           />
           <Tooltip content={<ChartTooltip />} />
-          <ReferenceLine y={0} stroke="var(--color-destructive)" strokeDasharray="4 4" />
+
+          {/* Highlighted Danger Zone Below ₹0 / Safety Buffer */}
+          <ReferenceLine
+            y={0}
+            stroke="var(--color-destructive)"
+            strokeWidth={2}
+            strokeDasharray="4 4"
+            {...(hasShortfall
+              ? {
+                  label: {
+                    value: "₹0 DEFICIT LINE",
+                    fill: "#ef4444",
+                    fontSize: 10,
+                    position: "insideBottomLeft",
+                    fontWeight: 700,
+                  },
+                }
+              : {})}
+          />
+          <ReferenceLine
+            y={5000}
+            stroke="#f59e0b"
+            strokeWidth={1.5}
+            strokeDasharray="3 3"
+            {...(hasShortfall
+              ? {
+                  label: {
+                    value: "⚠️ DANGER ZONE: BELOW SAFETY RESERVE",
+                    fill: "#f59e0b",
+                    fontSize: 10,
+                    position: "insideTopLeft",
+                    fontWeight: 700,
+                  },
+                }
+              : {})}
+          />
+
+          {/* Pulsing Red Target Marker at Minimum Cash Point */}
+          {minPoint && (minPoint.isShortfall || minPoint.projectedBalancePaise < 500_000) && (
+            <ReferenceDot
+              x={minPoint.date}
+              y={minPoint.projectedBalancePaise / 100}
+              isFront
+              shape={(props: any) => {
+                const { cx, cy } = props;
+                if (typeof cx !== "number" || typeof cy !== "number") return <g />;
+                return (
+                  <g>
+                    <circle cx={cx} cy={cy} r={10} fill="none" stroke="#ef4444" strokeWidth={2.5}>
+                      <animate
+                        attributeName="r"
+                        values="6;16;6"
+                        dur="1.8s"
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0.9;0.1;0.9"
+                        dur="1.8s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                    <circle cx={cx} cy={cy} r={5} fill="#ef4444" />
+                  </g>
+                );
+              }}
+            />
+          )}
+
           <Area
             type="monotone"
             dataKey="balance"

@@ -1,4 +1,5 @@
 import { Bell, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,12 +42,17 @@ export function AppHeader() {
             aria-label={`Notifications (${alerts.length})`}
             className="relative rounded-full text-muted-foreground hover:text-foreground"
           >
-            <Bell className="h-4.5 w-4.5" />
+            <Bell
+              className={cn(
+                "h-4.5 w-4.5 transition-colors",
+                hasAlerts && "bell-ring text-destructive",
+              )}
+            />
             {hasAlerts && (
-              <span
-                className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-card"
-                aria-hidden
-              />
+              <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive ring-2 ring-card" />
+              </span>
             )}
           </Button>
         </DropdownMenuTrigger>

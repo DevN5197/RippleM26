@@ -42,7 +42,16 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
   const isNegative = trueRippleMarginPaise < 0;
 
   return (
-    <Card className="shadow-xs border-border/70 rounded-xl bg-card overflow-hidden">
+    <Card
+      className={cn(
+        "shadow-xs rounded-xl bg-card overflow-hidden transition-all",
+        totalContagionCostPaise > 0
+          ? isNegative || isSevere
+            ? "emergency-card-critical border-destructive/60 bg-destructive/[0.03]"
+            : "emergency-card-warning border-amber-500/50 bg-amber-500/[0.03]"
+          : "border-border/70",
+      )}
+    >
       <CardHeader className="pb-2.5 pt-3.5 px-4 sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -71,14 +80,21 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
             </Button>
             <Badge
               variant="outline"
-              className={
+              className={cn(
+                "font-semibold text-xs flex items-center",
                 isNegative
-                  ? "bg-destructive/10 text-destructive border-destructive/20 font-semibold text-xs"
+                  ? "bg-destructive/10 text-destructive border-destructive/30"
                   : isSevere
-                    ? "bg-warning/15 text-warning-foreground border-warning/30 font-semibold text-xs"
-                    : "bg-success/10 text-success border-success/30 font-semibold text-xs"
-              }
+                    ? "bg-warning/15 text-warning-foreground border-warning/30"
+                    : "bg-success/10 text-success border-success/30",
+              )}
             >
+              {(isNegative || isSevere) && (
+                <span className="relative flex h-2 w-2 mr-1.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                </span>
+              )}
               {isNegative
                 ? "Negative Margin Risk"
                 : isSevere
@@ -162,7 +178,7 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
               {trueRippleMarginPercent}% realized of {paperMarginPercent}% expected
             </span>
           </div>
-          <div className="relative h-2 w-full rounded-full bg-muted overflow-hidden flex">
+          <div className="relative h-2.5 w-full rounded-full bg-muted overflow-hidden flex shadow-inner">
             {/* Realized margin portion */}
             <div
               className={cn(
@@ -173,9 +189,9 @@ export function SimulatorTrueMarginCard({ margin }: SimulatorTrueMarginCardProps
                 width: `${Math.max(0, Math.min(100, (trueRippleMarginPaise / paperMarginPaise) * 100))}%`,
               }}
             />
-            {/* Contagion lost portion */}
+            {/* Contagion lost portion with animated diagonal stripes */}
             <div
-              className="h-full bg-destructive/70 transition-all duration-500"
+              className="h-full bg-destructive transition-all duration-500 bg-[linear-gradient(45deg,rgba(255,255,255,0.25)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.25)_50%,rgba(255,255,255,0.25)_75%,transparent_75%,transparent)] bg-[length:14px_14px] animate-[shimmer-sweep_2.5s_linear_infinite]"
               style={{
                 width: `${Math.max(0, Math.min(100, (totalContagionCostPaise / paperMarginPaise) * 100))}%`,
               }}

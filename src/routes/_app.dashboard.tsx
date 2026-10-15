@@ -236,13 +236,19 @@ function DashboardPage() {
                 variant="outline"
                 className={
                   summary.cashOnHandPaise > 5_000_000
-                    ? "bg-success/10 text-success border-success/30 font-medium text-xs"
-                    : "bg-warning/15 text-warning-foreground border-warning/30 font-semibold text-xs"
+                    ? "bg-success/10 text-success border-success/30 font-medium text-xs flex items-center gap-1.5"
+                    : "bg-warning/15 text-warning-foreground border-warning/30 font-semibold text-xs flex items-center gap-1.5"
                 }
               >
+                {summary.cashOnHandPaise <= 5_000_000 && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                  </span>
+                )}
                 {summary.cashOnHandPaise > 5_000_000
                   ? "Safe Reserve"
-                  : "Close to ₹5,000 Safety Limit"}
+                  : "Near Minimum Reserve"}
               </Badge>
             </div>
             <div className="mt-1 flex items-baseline gap-2">
@@ -315,22 +321,57 @@ function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Card 3: #1 Urgent Action Needed */}
-        <Card className="shadow-xs border-amber-500/40 bg-amber-500/5 ring-1 ring-amber-500/20">
+        {/* Card 3: #1 Urgent Action Needed / Primary Cash Risk */}
+        <Card
+          className={cn(
+            "shadow-xs transition-all relative overflow-hidden",
+            hasRisk
+              ? minPoint.isShortfall
+                ? "emergency-card-critical border-destructive/60 bg-destructive/5"
+                : "emergency-card-warning border-amber-500/50 bg-amber-500/5"
+              : "border-border/70 bg-card",
+          )}
+        >
+          {hasRisk && (
+            <div className="h-1 w-full bg-gradient-to-r from-red-500 via-amber-500 to-red-500 animate-pulse" />
+          )}
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-                #1 Urgent Action Needed
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Primary Cash Risk & Action
               </span>
-              <Badge className="bg-amber-600 text-white text-[10px] uppercase font-bold shadow-xs">
-                {hasRisk ? "Action Required" : "Healthy"}
-              </Badge>
+              {hasRisk ? (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge className="bg-destructive text-white text-[10px] font-bold shadow-xs flex items-center gap-1.5 px-2 py-0.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                    </span>
+                    <span>🚨 URGENT: CASH SHORTFALL RISK</span>
+                  </Badge>
+                  <span className="bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded">
+                    ⚡ In 10 Days
+                  </span>
+                </div>
+              ) : (
+                <Badge className="bg-success text-white text-[10px] uppercase font-bold shadow-xs">
+                  Healthy
+                </Badge>
+              )}
             </div>
             <CardTitle className="text-sm font-semibold mt-1 text-foreground leading-snug">
               {hasRisk
-                ? isDemo
-                  ? "Cash drops to -₹2,500 on 25 Oct because Shop Lease is due 11 days before Urban Threads pays ₹8,000"
-                  : primaryRiskTitle
+                ? isDemo ? (
+                    <span>
+                      Cash drops to{" "}
+                      <span className="bg-red-500/15 text-red-500 dark:text-red-400 px-1.5 py-0.5 rounded font-mono font-bold inline-block">
+                        -₹2,500
+                      </span>{" "}
+                      on 25 Oct because Shop Lease is due 11 days before Urban Threads pays ₹8,000
+                    </span>
+                  ) : (
+                    primaryRiskTitle
+                  )
                 : "Cash flows are balanced. No immediate action required."}
             </CardTitle>
           </CardHeader>
@@ -346,7 +387,7 @@ function DashboardPage() {
               <Button
                 size="sm"
                 asChild
-                className="w-full gap-1.5 font-medium shadow-xs h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/95"
+                className="w-full gap-1.5 font-semibold shadow-md shadow-primary/20 h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/95 shimmer-rescue-btn"
               >
                 <Link to="/simulator">
                   Fix Timing in Ripple Simulator →

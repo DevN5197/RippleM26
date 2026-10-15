@@ -58,12 +58,34 @@ const labelByStatus: Record<string, string> = {
   incoming_stock: "Incoming stock",
 };
 
+const alertStatuses = new Set([
+  "overdue",
+  "delayed",
+  "at_risk",
+  "shortfall",
+  "stockout_risk",
+  "out_of_stock",
+  "critical",
+  "failed",
+]);
+
 export function StatusBadge({ status }: { status: string }) {
   const tone = toneByStatus[status] ?? "neutral";
   const formattedDefault = status.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
   const label = labelByStatus[status] ?? formattedDefault;
+  const isAlert = alertStatuses.has(status.toLowerCase());
+
   return (
-    <Badge variant="outline" className={cn("font-medium", toneClasses[tone])}>
+    <Badge
+      variant="outline"
+      className={cn("font-medium inline-flex items-center", toneClasses[tone])}
+    >
+      {isAlert && (
+        <span className="relative flex h-1.5 w-1.5 mr-1.5 shrink-0">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+        </span>
+      )}
       {label}
     </Badge>
   );
