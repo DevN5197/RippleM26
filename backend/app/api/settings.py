@@ -82,7 +82,15 @@ def update_settings(
     biz_patch = payload.get("business", {})
     if "name" in biz_patch: business.name = biz_patch["name"]
     if "openingCashPaise" in biz_patch: business.opening_cash_paise = biz_patch["openingCashPaise"]
-    if "safetyThresholdPaise" in biz_patch: business.safety_threshold_paise = biz_patch["safetyThresholdPaise"]
+    if "safetyThresholdPaise" in biz_patch:
+        st = biz_patch["safetyThresholdPaise"]
+        if st is not None:
+            if st < 0 or st > 10_000_000_000:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Safety threshold exceeds the permitted maximum working-capital limit",
+                )
+            business.safety_threshold_paise = st
     if "industry" in biz_patch: business.industry = biz_patch["industry"]
     if "ownerName" in biz_patch: business.owner_name = biz_patch["ownerName"]
     if "ownerEmail" in biz_patch: business.owner_email = biz_patch["ownerEmail"]
@@ -127,3 +135,23 @@ def reset_demo_data(
     from app.seed import seed_rupi_clothing
     seed_rupi_clothing(db, overwrite=True)
     return {"success": True, "message": "Demo data has been reset to its initial state."}
+
+MAX_SAFETY_THRESHOLD_PAISE = 10_000_000_000
+
+@router.patch("/business/safety-threshold")
+@router.patch("/api/business/safety-threshold")
+def update_business_safety_threshold(
+    payload: dict,
+    business: Business = Depends(get_current_business),
+    db: Session = Depends(get_db),
+):
+    threshold = payload.get("safetyThresholdPaise")
+    if threshold is None or threshold < 0 or threshold > MAX_SAFETY_THRESHOLD_PAISE:
+        raise HTTPException(
+            status_code=400,
+            detail="Safety threshold exceeds the permitted maximum working-capital limit",
+        )
+
+    business.safety_threshold_paise = threshold
+    db.commit()
+    return {"success": True, "safetyThresholdPaise": threshold}

@@ -36,6 +36,8 @@ def get_forecast(
     )
     return forecast
 
+MAX_SAFETY_THRESHOLD_PAISE = 10_000_000_000
+
 @router.patch("/api/business/safety-threshold")
 def update_safety_threshold(
     payload: dict,
@@ -45,6 +47,11 @@ def update_safety_threshold(
     threshold = payload.get("safetyThresholdPaise")
     if threshold is None or threshold < 0:
         raise HTTPException(status_code=400, detail="Invalid safety threshold amount")
+    if threshold > MAX_SAFETY_THRESHOLD_PAISE:
+        raise HTTPException(
+            status_code=400,
+            detail="Safety threshold exceeds the permitted maximum working-capital limit",
+        )
 
     business.safety_threshold_paise = threshold
     db.commit()
