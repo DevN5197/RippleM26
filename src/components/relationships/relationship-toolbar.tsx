@@ -30,6 +30,8 @@ interface RelationshipToolbarProps {
   onResetFilters: () => void;
   matchCount: number;
   totalCount: number;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
 export function RelationshipToolbar({
@@ -39,6 +41,8 @@ export function RelationshipToolbar({
   onResetFilters,
   matchCount,
   totalCount,
+  isFullscreen,
+  onToggleFullscreen,
 }: RelationshipToolbarProps) {
   const isFiltered =
     Boolean(filters.search) ||
@@ -73,14 +77,27 @@ export function RelationshipToolbar({
 
         {/* View Controls & Simulator CTA */}
         <div className="flex items-center gap-2 shrink-0">
+          {onToggleFullscreen && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleFullscreen}
+              className="h-9 gap-1.5 text-xs font-medium cursor-pointer"
+              title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand Graph to Fullscreen"}
+            >
+              <Maximize2 className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
+            </Button>
+          )}
+
           <Button
             variant="outline"
             size="sm"
             onClick={onResetView}
             className="h-9 gap-1.5 text-xs font-medium"
-            title="Fit graph to screen"
+            title="Fit entire graph in viewport"
           >
-            <Maximize2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="hidden md:inline">Fit view</span>
           </Button>
 

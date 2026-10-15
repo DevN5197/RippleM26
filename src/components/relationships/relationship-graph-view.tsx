@@ -12,7 +12,7 @@ import {
   type NodeMouseHandler,
   type Node,
 } from "@xyflow/react";
-import { Network, Sparkles, FilterX, Maximize2, Minimize2 } from "lucide-react";
+import { Network, Sparkles, FilterX, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { adaptToReactFlow } from "./graph-adapter";
 import { RelationshipCustomNode, LaneHeaderNode, type CustomNodeData } from "./relationship-node";
 import { RelationshipCustomEdge } from "./relationship-edge";
@@ -199,6 +199,14 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
   // Check if active selection exists in filtered results
   const isSelectedVisible = selectedNodeId && filteredNodeIds.has(selectedNodeId);
 
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => {
+      const next = !prev;
+      setTimeout(() => reactFlowInstance?.fitView({ padding: 0.15, duration: 300 }), 150);
+      return next;
+    });
+  }, [reactFlowInstance]);
+
   return (
     <div className="flex flex-col gap-4 w-full">
       {/* Top Toolbar */}
@@ -209,6 +217,8 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
         onResetFilters={handleResetFilters}
         matchCount={filteredNodeIds.size}
         totalCount={data.nodes.length}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
       />
 
       {/* Main Workspace: Graph Canvas + Details Panel */}
@@ -217,7 +227,7 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
         <div
           className={
             isFullscreen
-              ? "fixed inset-0 z-50 h-screen w-screen bg-background p-4 flex flex-col overflow-hidden"
+              ? "fixed inset-0 z-50 h-screen w-screen bg-background/95 backdrop-blur-md p-4 flex flex-col overflow-hidden"
               : "lg:col-span-8 xl:col-span-8 flex flex-col rounded-xl border bg-card shadow-xs overflow-hidden h-[620px] sm:h-[680px] relative"
           }
         >
@@ -234,33 +244,33 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
           ) : (
             <>
               {isFullscreen && (
-                <div className="flex items-center justify-between pb-3 border-b mb-3">
+                <div className="flex items-center justify-between pb-3 border-b mb-3 shrink-0">
                   <div className="flex items-center gap-2">
                     <Network className="h-5 w-5 text-primary" />
-                    <span className="font-bold text-foreground text-sm">
-                      Business Relationship Graph — Fullscreen View
-                    </span>
+                    <div>
+                      <span className="font-bold text-foreground text-sm">
+                        Business Relationship Graph — Fullscreen View
+                      </span>
+                      <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">
+                        (Press Esc to exit)
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleResetView}
-                      className="h-8 text-xs"
+                      className="h-8 text-xs cursor-pointer"
                     >
-                      Reset View
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Fit view
                     </Button>
                     <Button
                       variant="default"
                       size="sm"
-                      onClick={() => {
-                        setIsFullscreen(false);
-                        setTimeout(
-                          () => reactFlowInstance?.fitView({ padding: 0.15, duration: 300 }),
-                          100,
-                        );
-                      }}
-                      className="h-8 gap-1.5 text-xs"
+                      onClick={toggleFullscreen}
+                      className="h-8 gap-1.5 text-xs cursor-pointer"
                     >
                       <Minimize2 className="h-3.5 w-3.5" />
                       <span>Exit Fullscreen</span>
@@ -374,16 +384,30 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                   </div>
                 </div>
 
-                {/* Collapsible Legend mounted at top-right inside canvas */}
-                <div className="absolute top-3 right-3 z-10 max-w-sm">
-                  <RelationshipLegend />
-                </div>
+                {/* Collapsible Legend mounted at top-right inside canvas (hidden if details panel is open in fullscreen) */}
+                {(!isFullscreen || !isSelectedVisible) && (
+                  <div className="absolute top-3 right-3 z-10 max-w-sm">
+                    <RelationshipLegend />
+                  </div>
+                )}
 
                 {/* Canvas status hint bar */}
                 <div className="absolute bottom-3 left-16 z-10 hidden sm:flex items-center gap-2 rounded-full border bg-card/90 px-3 py-1 text-[11px] text-muted-foreground shadow-xs backdrop-blur-xs">
                   <Network className="h-3 w-3 text-primary" />
                   <span>Scroll to zoom · Drag to pan · Click any node to trace impact</span>
                 </div>
+
+                {/* Floating Details Drawer in Fullscreen Mode */}
+                {isFullscreen && isSelectedVisible && (
+                  <div className="absolute top-3 right-3 z-20 w-96 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl rounded-xl">
+                    <RelationshipDetailsPanel
+                      nodeId={selectedNodeId}
+                      graph={data}
+                      onSelectNode={handleSelectNode}
+                      onClose={() => setSelectedNodeId(null)}
+                    />
+                  </div>
+                )}
               </div>
             </>
           )}
