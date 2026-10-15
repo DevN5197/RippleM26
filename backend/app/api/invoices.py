@@ -162,6 +162,18 @@ def create_invoice(
     if inv_type == "payable" and not supplier_id:
         raise HTTPException(status_code=400, detail="A supplier must be selected for accounts payable vendor bills.")
 
+    counterparty_name = "Counterparty"
+    if inv_type == "receivable" and customer_id:
+        cust = db.query(Customer).filter(Customer.id == customer_id, Customer.business_id == business.id).first()
+        if not cust:
+            raise HTTPException(status_code=404, detail="Customer not found in this business.")
+        counterparty_name = cust.name
+    elif inv_type == "payable" and supplier_id:
+        supp = db.query(Supplier).filter(Supplier.id == supplier_id, Supplier.business_id == business.id).first()
+        if not supp:
+            raise HTTPException(status_code=404, detail="Supplier not found in this business.")
+        counterparty_name = supp.name
+
     inv_id = f"invc_{uuid.uuid4().hex[:12]}"
     inv_number = payload.get("invoiceNumber") or (
         f"INV-2026-{uuid.uuid4().hex[:4].upper()}" if inv_type == "receivable"
@@ -171,60 +183,64 @@ def create_invoice(
     issue_date = payload.get("issueDate") or to_iso_date(date.today())
     due_date = payload.get("dueDate") or issue_date
 
-    invoice = Invoice(
-        id=inv_id,
-        business_id=business.id,
-        invoice_number=inv_number,
-        type=inv_type,
-        customer_id=customer_id if inv_type == "receivable" else None,
-        customer_order_id=payload.get("customerOrderId"),
-        supplier_id=supplier_id if inv_type == "payable" else None,
-        purchase_order_id=payload.get("purchaseOrderId"),
-        amount_paise=amount,
-        amount_paid_paise=0,
-        status=payload.get("status", "sent"),
-        issue_date=issue_date,
-        due_date=due_date,
-        notes=payload.get("notes"),
-        created_at=to_iso_date(date.today()),
-        updated_at=to_iso_date(date.today()),
-    )
-    db.add(invoice)
-
-    counterparty_name = "Counterparty"
-    # Update counterparty balance & fetch name
-    if inv_type == "receivable" and customer_id:
-        cust = db.query(Customer).filter(Customer.id == customer_id).first()
-        if cust:
-            counterparty_name = cust.name
-            cust.outstanding_paise = (cust.outstanding_paise or 0) + amount
-    elif inv_type == "payable" and supplier_id:
-        supp = db.query(Supplier).filter(Supplier.id == supplier_id).first()
-        if supp:
-            counterparty_name = supp.name
-            supp.outstanding_paise = (supp.outstanding_paise or 0) + amount
-
-    # Record projected CashFlowEvent for real-time forecast calculations
-    if invoice.status not in ("void", "cancelled"):
-        cfe = CashFlowEvent(
-            id=f"cfe_{uuid.uuid4().hex[:12]}",
+    try:
+        invoice = Invoice(
+            id=inv_id,
             business_id=business.id,
-            type="customer_payment" if inv_type == "receivable" else "supplier_payment",
-            label=f"{'Expected Customer Receipt' if inv_type == 'receivable' else 'Scheduled Supplier Bill'} - {counterparty_name} ({inv_number})",
-            direction="incoming" if inv_type == "receivable" else "outgoing",
+            invoice_number=inv_number,
+            type=inv_type,
+            customer_id=customer_id if inv_type == "receivable" else None,
+            customer_order_id=payload.get("customerOrderId"),
+            supplier_id=supplier_id if inv_type == "payable" else None,
+            purchase_order_id=payload.get("purchaseOrderId"),
             amount_paise=amount,
-            date=due_date,
-            related_invoice_id=invoice.id,
-            is_projected=True,
-            counterparty_name=counterparty_name,
-            status="projected" if inv_type == "receivable" else "scheduled",
+            amount_paid_paise=0,
+            status=payload.get("status", "sent"),
+            issue_date=issue_date,
+            due_date=due_date,
+            notes=payload.get("notes"),
             created_at=to_iso_date(date.today()),
+            updated_at=to_iso_date(date.today()),
         )
-        db.add(cfe)
+        db.add(invoice)
 
-    db.commit()
-    db.refresh(invoice)
-    return enrich_invoice(invoice, db)
+        # Update counterparty balance
+        if inv_type == "receivable" and customer_id:
+            cust = db.query(Customer).filter(Customer.id == customer_id, Customer.business_id == business.id).first()
+            if cust:
+                cust.outstanding_paise = (cust.outstanding_paise or 0) + amount
+        elif inv_type == "payable" and supplier_id:
+            supp = db.query(Supplier).filter(Supplier.id == supplier_id, Supplier.business_id == business.id).first()
+            if supp:
+                supp.outstanding_paise = (supp.outstanding_paise or 0) + amount
+
+        # Record projected CashFlowEvent for real-time forecast calculations
+        if invoice.status not in ("void", "cancelled"):
+            cfe = CashFlowEvent(
+                id=f"cfe_{uuid.uuid4().hex[:12]}",
+                business_id=business.id,
+                type="customer_payment" if inv_type == "receivable" else "supplier_payment",
+                label=f"{'Expected Customer Receipt' if inv_type == 'receivable' else 'Scheduled Supplier Bill'} - {counterparty_name} ({inv_number})",
+                direction="incoming" if inv_type == "receivable" else "outgoing",
+                amount_paise=amount,
+                date=due_date,
+                related_invoice_id=invoice.id,
+                is_projected=True,
+                counterparty_name=counterparty_name,
+                status="projected" if inv_type == "receivable" else "scheduled",
+                created_at=to_iso_date(date.today()),
+            )
+            db.add(cfe)
+
+        db.commit()
+        db.refresh(invoice)
+        return enrich_invoice(invoice, db)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
 @router.patch("/{id}")
 def update_invoice(

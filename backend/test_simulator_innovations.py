@@ -1,7 +1,8 @@
-import requests
 import sys
+from fastapi.testclient import TestClient
+from app.main import app
 
-BASE_URL = "http://127.0.0.1:8000"
+client = TestClient(app)
 
 def run_tests():
     print("==================================================")
@@ -9,7 +10,7 @@ def run_tests():
     print("==================================================")
 
     # 1. Login as demo user
-    login_resp = requests.post(f"{BASE_URL}/api/auth/login", json={
+    login_resp = client.post("/api/auth/login", json={
         "email": "owner@rupiclothing.in",
         "password": "password123"
     })
@@ -19,10 +20,10 @@ def run_tests():
     print("[OK] Logged in as demo owner.")
 
     # Reset any active rescues
-    requests.post(f"{BASE_URL}/api/simulator/rescues/revert-all", headers=headers)
+    client.post("/api/simulator/rescues/revert-all", headers=headers)
 
     # 2. Test Simulation Execution with Fragility & True Margin
-    sim_resp = requests.post(f"{BASE_URL}/api/simulator/simulate", json={
+    sim_resp = client.post("/api/simulator/simulate", json={
         "supplierDeliveryDelayDays": 0,
         "customerPaymentDelayDays": 16, # Apex Corp delayed +16d to Day 31
         "horizonDays": 30
@@ -48,7 +49,7 @@ def run_tests():
     print(f"[OK] Fragility Multiplier verified: {apex_node['fragility']['badgeText']}")
 
     # 3. Test Chaos Stress-Test
-    stress_resp = requests.post(f"{BASE_URL}/api/simulator/chaos-test", json={
+    stress_resp = client.post("/api/simulator/chaos-test", json={
         "customerPaymentDelayDays": 16,
         "supplierDeliveryDelayDays": 0,
         "horizonDays": 30
@@ -65,7 +66,7 @@ def run_tests():
     print(f"[OK] Chaos Stress-Test verified: Identified {stressed_fragile['label']} as {stressed_fragile['stressBadge']}")
 
     # 4. Test Auto-Phase Inventory Preview & Apply
-    ap_preview_resp = requests.post(f"{BASE_URL}/api/simulator/rescues/auto-phase/preview", json={
+    ap_preview_resp = client.post("/api/simulator/rescues/auto-phase/preview", json={
         "supplierCommitmentPaise": 12_000_000,
         "actualAvailableCashPaise": 15_000_000,
         "originalPaymentDate": "Day 18",
@@ -79,7 +80,7 @@ def run_tests():
     assert ap_preview["batch2"]["date"] == "Day 32"
     print("[OK] Auto-Phase Preview verified: Batch 1 INR 100,000 (Day 18) + Batch 2 INR 20,000 (Day 32)")
 
-    ap_apply_resp = requests.post(f"{BASE_URL}/api/simulator/rescues/auto-phase/apply", json={
+    ap_apply_resp = client.post("/api/simulator/rescues/auto-phase/apply", json={
         "supplierCommitmentPaise": 12_000_000,
         "actualAvailableCashPaise": 15_000_000,
         "originalPaymentDate": "Day 18",
@@ -89,7 +90,7 @@ def run_tests():
     ap_rescue_id = ap_apply_resp.json()["rescueId"]
 
     # Re-run simulation with Auto-Phase active
-    sim_ap_resp = requests.post(f"{BASE_URL}/api/simulator/simulate", json={
+    sim_ap_resp = client.post("/api/simulator/simulate", json={
         "customerPaymentDelayDays": 16,
         "horizonDays": 30
     }, headers=headers)
@@ -101,12 +102,12 @@ def run_tests():
     print("[OK] Auto-Phase Application verified: True Margin restored to 25.0% and Batch 2 scheduled.")
 
     # Revert Auto-Phase
-    revert_resp = requests.post(f"{BASE_URL}/api/simulator/rescues/{ap_rescue_id}/revert", headers=headers)
+    revert_resp = client.post(f"/api/simulator/rescues/{ap_rescue_id}/revert", headers=headers)
     assert revert_resp.status_code == 200
     print("[OK] Auto-Phase Reverted cleanly.")
 
     # 5. Test Zero-Cash Tri-Party Split-Escrow Preview & Apply
-    esc_preview_resp = requests.post(f"{BASE_URL}/api/simulator/rescues/split-escrow/preview", json={
+    esc_preview_resp = client.post("/api/simulator/rescues/split-escrow/preview", json={
         "customerInvoicePaise": 50_000_000,
         "supplierCommitmentPaise": 12_000_000,
     }, headers=headers)
@@ -116,7 +117,7 @@ def run_tests():
     assert esc_preview["netProceedsPaise"] == 37_760_000 # ₹3,77,600
     print("[OK] Split-Escrow Preview verified: Float Fee INR 2,400, Net Proceeds INR 377,600")
 
-    esc_apply_resp = requests.post(f"{BASE_URL}/api/simulator/rescues/split-escrow/apply", json={
+    esc_apply_resp = client.post("/api/simulator/rescues/split-escrow/apply", json={
         "customerInvoicePaise": 50_000_000,
         "supplierCommitmentPaise": 12_000_000,
     }, headers=headers)
@@ -124,7 +125,7 @@ def run_tests():
     esc_rescue_id = esc_apply_resp.json()["rescueId"]
 
     # Re-run simulation with Split-Escrow active
-    sim_esc_resp = requests.post(f"{BASE_URL}/api/simulator/simulate", json={
+    sim_esc_resp = client.post("/api/simulator/simulate", json={
         "customerPaymentDelayDays": 16,
         "horizonDays": 30
     }, headers=headers)
@@ -144,14 +145,14 @@ def run_tests():
     print("[OK] Split-Escrow Application verified: Bypass Arc established, Day 18 Outflow = INR 0, True Margin protected.")
 
     # Revert Escrow
-    revert_esc_resp = requests.post(f"{BASE_URL}/api/simulator/rescues/{esc_rescue_id}/revert", headers=headers)
+    revert_esc_resp = client.post(f"/api/simulator/rescues/{esc_rescue_id}/revert", headers=headers)
     assert revert_esc_resp.status_code == 200
     print("[OK] Split-Escrow Reverted cleanly.")
 
     # 6. Test Multi-Tenant Security on Rescues
     import uuid
     hack_email = f"hacker_{uuid.uuid4().hex[:6]}@otherbusiness.com"
-    reg_resp = requests.post(f"{BASE_URL}/api/auth/register", json={
+    reg_resp = client.post("/api/auth/register", json={
         "email": hack_email,
         "password": "Password123!",
         "full_name": "Intruder User",
@@ -164,7 +165,7 @@ def run_tests():
     other_headers = {"Authorization": f"Bearer {other_token}", "x-business-id": other_biz}
 
     # Intruder tries to revert demo owner's rescue
-    fake_revert = requests.post(f"{BASE_URL}/api/simulator/rescues/{esc_rescue_id}/revert", headers=other_headers)
+    fake_revert = client.post(f"/api/simulator/rescues/{esc_rescue_id}/revert", headers=other_headers)
     assert fake_revert.status_code == 404, f"Expected 404 for cross-tenant revert, got {fake_revert.status_code}"
     print("[OK] Cross-tenant rescue security strictly verified (404 Not Found on foreign rescue).")
 

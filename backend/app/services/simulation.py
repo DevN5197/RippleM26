@@ -21,6 +21,16 @@ WORKING_CAPITAL_DRAG_PAISE_PER_DAY = 140_000    # ₹1,400 / day
 LOST_EARLY_DISCOUNT_PAISE = 360_000             # ₹3,600
 ESCROW_FLOAT_FEE_RATE = 0.02                    # 2% of supplier commitment (₹2,400 on ₹1,20,000)
 
+def safe_div(n: float | int, d: float | int, default: float = 0.0) -> float:
+    """Safe division preventing ZeroDivisionError and NaN/Infinity crashes."""
+    try:
+        if d is None or float(d) == 0.0:
+            return default
+        res = float(n) / float(d)
+        return default if math.isnan(res) or math.isinf(res) else res
+    except (ZeroDivisionError, ValueError, TypeError):
+        return default
+
 def calculate_true_margin(
     revenue_paise: int = 50_000_000,
     direct_cogs_paise: int = 37_500_000,
@@ -37,7 +47,7 @@ def calculate_true_margin(
       True Ripple Margin = Paper Margin - Contagion Cost
     """
     paper_margin_paise = revenue_paise - direct_cogs_paise
-    paper_margin_percent = round((paper_margin_paise / revenue_paise * 100), 2) if revenue_paise > 0 else 0.0
+    paper_margin_percent = round(safe_div(paper_margin_paise, revenue_paise) * 100, 2)
 
     if is_split_escrow:
         # Supplier funded on time via escrow: zero halt fees, zero SLA penalties, zero lost discount
@@ -72,7 +82,7 @@ def calculate_true_margin(
     )
 
     true_ripple_margin_paise = paper_margin_paise - total_contagion_cost_paise
-    true_ripple_margin_percent = round((true_ripple_margin_paise / revenue_paise * 100), 2) if revenue_paise > 0 else 0.0
+    true_ripple_margin_percent = round(safe_div(true_ripple_margin_paise, revenue_paise) * 100, 2)
 
     return {
         "revenuePaise": revenue_paise,
@@ -104,12 +114,9 @@ def calculate_fragility(
 ) -> dict[str, Any]:
     """
     Computes Fragility Multiplier = Downstream Order Value at Risk / Invoice Amount
-    Handles 0 safely.
+    Handles 0 safely via safe_div.
     """
-    if invoice_or_commitment_paise <= 0:
-        multiplier = 0.0
-    else:
-        multiplier = round(downstream_order_value_paise / invoice_or_commitment_paise, 1)
+    multiplier = round(safe_div(downstream_order_value_paise, invoice_or_commitment_paise, 0.0), 1)
 
     is_keystone = multiplier >= 5.0
 
@@ -655,12 +662,12 @@ def run_simulation(
         })
 
     # 8. Ripple score calculation
-    cash_shortfall_factor = min(40, round((shortfall / 500_000) * 40)) if shortfall > 0 else 0
+    cash_shortfall_factor = min(40, round(safe_div(shortfall, 500_000) * 40)) if shortfall > 0 else 0
     delay_mag = abs(sup_delay) + abs(cust_delay)
-    delay_factor = min(25, round((delay_mag / 20) * 25))
+    delay_factor = min(25, round(safe_div(delay_mag, 20) * 25))
     downstream_factor = min(20, (1 if contagion_days > 0 else 0) * 20)
     gap = abs(baseline["closingBalancePaise"] - scenario["closingBalancePaise"])
-    liquidity_gap_factor = min(15, round((gap / 1_000_000) * 15))
+    liquidity_gap_factor = min(15, round(safe_div(gap, 1_000_000) * 15))
     total_score = min(100, cash_shortfall_factor + delay_factor + downstream_factor + liquidity_gap_factor)
 
     return {

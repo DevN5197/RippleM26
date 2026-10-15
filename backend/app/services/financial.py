@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, date, timedelta
 from typing import Any
 from sqlalchemy.orm import Session
@@ -10,6 +11,16 @@ from app.models.order import PurchaseOrder, CustomerOrder
 from app.models.invoice import Invoice
 from app.models.payment import Payment
 from app.models.cash_flow import CashFlowEvent
+
+def safe_div(n: float | int, d: float | int, default: float = 0.0) -> float:
+    """Safe division preventing ZeroDivisionError and NaN/Infinity crashes."""
+    try:
+        if d is None or float(d) == 0.0:
+            return default
+        res = float(n) / float(d)
+        return default if math.isnan(res) or math.isinf(res) else res
+    except (ZeroDivisionError, ValueError, TypeError):
+        return default
 
 def parse_date(date_str: str | None) -> date:
     if not date_str:

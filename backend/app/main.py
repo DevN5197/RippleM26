@@ -1,9 +1,16 @@
-from fastapi import FastAPI
+import logging
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.config import settings
 from app.database import engine, Base, SessionLocal
 from app.models import *  # Import all models to ensure registration
 from app.seed import seed_rupi_clothing
+from app.middleware import SecurityHardeningMiddleware
+
+logger = logging.getLogger("ripple.server")
 
 # Routers
 from app.api import auth
@@ -17,12 +24,16 @@ from app.api import relationships
 from app.api import settings as settings_api
 from app.api import dashboard
 from app.api import simulator
+from app.api import ai
 
 app = FastAPI(
     title="Ripple Cash-Flow Intelligence API",
     description="Backend API for Ripple small-business financial coordination & cash-flow intelligence platform.",
     version="1.0.0",
 )
+
+# Global Security Hardening Middleware (Rate limiting, 1MB size cap, security headers)
+app.add_middleware(SecurityHardeningMiddleware)
 
 # CORS setup
 origins = settings.cors_origin_list
@@ -38,6 +49,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Global Exception Handler (Prevents unhandled crashes and white screens)
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # Pass through standard HTTP and validation errors without turning them into 500s
+    if isinstance(exc, (StarletteHTTPException, RequestValidationError)):
+        raise exc
+    logger.error(f"Unhandled server error on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": True,
+            "message": "An internal server error occurred. Deterministic fallback data is active.",
+            "fallbackAvailable": True,
+        },
+    )
+
 # Include API Routers
 app.include_router(auth.router)
 app.include_router(suppliers.router)
@@ -50,6 +77,7 @@ app.include_router(simulator.router)
 app.include_router(relationships.router)
 app.include_router(settings_api.router)
 app.include_router(dashboard.router)
+app.include_router(ai.router)
 
 @app.on_event("startup")
 def on_startup():

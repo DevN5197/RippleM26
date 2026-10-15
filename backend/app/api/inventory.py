@@ -291,54 +291,67 @@ def create_product(
         raise HTTPException(status_code=400, detail=f'SKU "{sku}" already exists.')
 
     prod_id = f"prod_{uuid.uuid4().hex[:12]}"
-    product = Product(
-        id=prod_id,
-        business_id=business.id,
-        sku=sku,
-        name=name,
-        category=payload.get("category", "General"),
-        description=payload.get("description"),
-        unit_of_measure=payload.get("unitOfMeasure", "units"),
-        reorder_point=payload.get("reorderPoint", 10),
-        preferred_supplier_id=payload.get("preferredSupplierId"),
-        unit_cost_paise=payload.get("unitCostPaise", 0),
-        unit_price_paise=round(payload.get("unitCostPaise", 0) * 1.5),
-        currency=payload.get("currency", "INR"),
-        created_at=to_iso_date(date.today()),
-        updated_at=to_iso_date(date.today()),
-    )
-    db.add(product)
-    db.flush()
+    pref_sup_id = payload.get("preferredSupplierId")
+    if pref_sup_id:
+        sup = db.query(Supplier).filter(Supplier.id == pref_sup_id, Supplier.business_id == business.id).first()
+        if not sup:
+            raise HTTPException(status_code=404, detail="Preferred supplier not found in this business.")
 
-    init_qty = payload.get("initialStockQuantity", 0)
-    inv = InventoryItem(
-        id=f"inv_{uuid.uuid4().hex[:12]}",
-        business_id=business.id,
-        product_id=prod_id,
-        quantity_on_hand=init_qty,
-        quantity_reserved=0,
-        quantity_on_order=0,
-        updated_at=to_iso_date(date.today()),
-    )
-    db.add(inv)
+    try:
+        product = Product(
+            id=prod_id,
+            business_id=business.id,
+            sku=sku,
+            name=name,
+            category=payload.get("category", "General"),
+            description=payload.get("description"),
+            unit_of_measure=payload.get("unitOfMeasure", "units"),
+            reorder_point=payload.get("reorderPoint", 10),
+            preferred_supplier_id=pref_sup_id,
+            unit_cost_paise=payload.get("unitCostPaise", 0),
+            unit_price_paise=round(payload.get("unitCostPaise", 0) * 1.5),
+            currency=payload.get("currency", "INR"),
+            created_at=to_iso_date(date.today()),
+            updated_at=to_iso_date(date.today()),
+        )
+        db.add(product)
+        db.flush()
 
-    if init_qty > 0:
-        mov = InventoryMovement(
-            id=f"mov_{uuid.uuid4().hex[:12]}",
+        init_qty = payload.get("initialStockQuantity", 0)
+        inv = InventoryItem(
+            id=f"inv_{uuid.uuid4().hex[:12]}",
             business_id=business.id,
             product_id=prod_id,
-            type="adjustment",
-            quantity=init_qty,
-            resulting_balance=init_qty,
-            date=to_iso_date(date.today()),
-            note="Initial inventory setup",
-            created_at=to_iso_date(date.today()),
+            quantity_on_hand=init_qty,
+            quantity_reserved=0,
+            quantity_on_order=0,
+            updated_at=to_iso_date(date.today()),
         )
-        db.add(mov)
+        db.add(inv)
 
-    db.commit()
-    db.refresh(product)
-    return enrich_inventory_item(product, db)
+        if init_qty > 0:
+            mov = InventoryMovement(
+                id=f"mov_{uuid.uuid4().hex[:12]}",
+                business_id=business.id,
+                product_id=prod_id,
+                type="adjustment",
+                quantity=init_qty,
+                resulting_balance=init_qty,
+                date=to_iso_date(date.today()),
+                note="Initial inventory setup",
+                created_at=to_iso_date(date.today()),
+            )
+            db.add(mov)
+
+        db.commit()
+        db.refresh(product)
+        return enrich_inventory_item(product, db)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
 @router.patch("/{productId}")
 def update_product(
@@ -372,27 +385,39 @@ def update_product(
     if "reorderPoint" in payload and payload["reorderPoint"] is not None:
         product.reorder_point = payload["reorderPoint"]
     if "preferredSupplierId" in payload:
-        product.preferred_supplier_id = payload["preferredSupplierId"]
+        pref_id = payload["preferredSupplierId"]
+        if pref_id:
+            sup = db.query(Supplier).filter(Supplier.id == pref_id, Supplier.business_id == business.id).first()
+            if not sup:
+                raise HTTPException(status_code=404, detail="Preferred supplier not found in this business.")
+        product.preferred_supplier_id = pref_id
     if "unitCostPaise" in payload and payload["unitCostPaise"] is not None:
         product.unit_cost_paise = payload["unitCostPaise"]
 
-    product.updated_at = to_iso_date(date.today())
-    db.commit()
-    db.refresh(product)
-    return {
-        "id": product.id,
-        "businessId": product.business_id,
-        "sku": product.sku,
-        "name": product.name,
-        "unitCostPaise": product.unit_cost_paise,
-        "unitPricePaise": product.unit_price_paise,
-        "reorderPoint": product.reorder_point,
-        "category": product.category,
-        "description": product.description,
-        "unitOfMeasure": product.unit_of_measure,
-        "preferredSupplierId": product.preferred_supplier_id,
-        "currency": product.currency,
-    }
+    try:
+        product.updated_at = to_iso_date(date.today())
+        db.commit()
+        db.refresh(product)
+        return {
+            "id": product.id,
+            "businessId": product.business_id,
+            "sku": product.sku,
+            "name": product.name,
+            "unitCostPaise": product.unit_cost_paise,
+            "unitPricePaise": product.unit_price_paise,
+            "reorderPoint": product.reorder_point,
+            "category": product.category,
+            "description": product.description,
+            "unitOfMeasure": product.unit_of_measure,
+            "preferredSupplierId": product.preferred_supplier_id,
+            "currency": product.currency,
+        }
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
 @router.post("/transactions")
 def record_movement(
@@ -413,65 +438,72 @@ def record_movement(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    inv = db.query(InventoryItem).filter(InventoryItem.product_id == prod_id).first()
-    if not inv:
-        inv = InventoryItem(
-            id=f"inv_{uuid.uuid4().hex[:12]}",
+    try:
+        inv = db.query(InventoryItem).filter(InventoryItem.product_id == prod_id, InventoryItem.business_id == business.id).first()
+        if not inv:
+            inv = InventoryItem(
+                id=f"inv_{uuid.uuid4().hex[:12]}",
+                business_id=business.id,
+                product_id=prod_id,
+                quantity_on_hand=0,
+                quantity_reserved=0,
+                quantity_on_order=0,
+                updated_at=to_iso_date(date.today()),
+            )
+            db.add(inv)
+            db.flush()
+
+        if mov_type == "receipt":
+            inv.quantity_on_hand += qty
+            inv.quantity_on_order = max(0, inv.quantity_on_order - qty)
+        elif mov_type == "sale":
+            inv.quantity_on_hand = max(0, inv.quantity_on_hand - qty)
+            inv.quantity_reserved = max(0, inv.quantity_reserved - qty)
+        elif mov_type == "reservation":
+            inv.quantity_reserved += qty
+        elif mov_type == "reservation_release":
+            inv.quantity_reserved = max(0, inv.quantity_reserved - qty)
+        elif mov_type == "adjustment":
+            inv.quantity_on_hand += qty
+        elif mov_type == "return":
+            inv.quantity_on_hand += qty
+
+        mov_date = payload.get("date") or to_iso_date(date.today())
+        inv.updated_at = mov_date
+
+        movement = InventoryMovement(
+            id=f"mov_{uuid.uuid4().hex[:12]}",
             business_id=business.id,
             product_id=prod_id,
-            quantity_on_hand=0,
-            quantity_reserved=0,
-            quantity_on_order=0,
-            updated_at=to_iso_date(date.today()),
+            type=mov_type,
+            quantity=qty,
+            resulting_balance=inv.quantity_on_hand,
+            date=mov_date,
+            reference_type=payload.get("referenceType"),
+            reference_id=payload.get("referenceId"),
+            note=payload.get("note"),
+            created_at=to_iso_date(date.today()),
         )
-        db.add(inv)
-        db.flush()
+        db.add(movement)
+        db.commit()
+        db.refresh(movement)
 
-    if mov_type == "receipt":
-        inv.quantity_on_hand += qty
-        inv.quantity_on_order = max(0, inv.quantity_on_order - qty)
-    elif mov_type == "sale":
-        inv.quantity_on_hand = max(0, inv.quantity_on_hand - qty)
-        inv.quantity_reserved = max(0, inv.quantity_reserved - qty)
-    elif mov_type == "reservation":
-        inv.quantity_reserved += qty
-    elif mov_type == "reservation_release":
-        inv.quantity_reserved = max(0, inv.quantity_reserved - qty)
-    elif mov_type == "adjustment":
-        inv.quantity_on_hand += qty
-    elif mov_type == "return":
-        inv.quantity_on_hand += qty
-
-    mov_date = payload.get("date") or to_iso_date(date.today())
-    inv.updated_at = mov_date
-
-    movement = InventoryMovement(
-        id=f"mov_{uuid.uuid4().hex[:12]}",
-        business_id=business.id,
-        product_id=prod_id,
-        type=mov_type,
-        quantity=qty,
-        resulting_balance=inv.quantity_on_hand,
-        date=mov_date,
-        reference_type=payload.get("referenceType"),
-        reference_id=payload.get("referenceId"),
-        note=payload.get("note"),
-        created_at=to_iso_date(date.today()),
-    )
-    db.add(movement)
-    db.commit()
-    db.refresh(movement)
-
-    return {
-        "id": movement.id,
-        "businessId": movement.business_id,
-        "productId": movement.product_id,
-        "type": movement.type,
-        "quantity": movement.quantity,
-        "resultingBalance": movement.resulting_balance,
-        "date": movement.date,
-        "referenceType": movement.reference_type,
-        "referenceId": movement.reference_id,
-        "note": movement.note,
-        "createdAt": movement.created_at,
-    }
+        return {
+            "id": movement.id,
+            "businessId": movement.business_id,
+            "productId": movement.product_id,
+            "type": movement.type,
+            "quantity": movement.quantity,
+            "resultingBalance": movement.resulting_balance,
+            "date": movement.date,
+            "referenceType": movement.reference_type,
+            "referenceId": movement.reference_id,
+            "note": movement.note,
+            "createdAt": movement.created_at,
+        }
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise

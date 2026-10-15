@@ -69,17 +69,6 @@ def get_dependencies(
         for d in deps
     ]
 
-@router.post("/api/simulate")
-def simulate(
-    controls: dict,
-    business: Business = Depends(get_current_business),
-    db: Session = Depends(get_db),
-):
-    events = db.query(CashFlowEvent).filter(CashFlowEvent.business_id == business.id).all()
-    opening_cash = business.opening_cash_paise or 1_000_000
-    result = run_simulation(events, opening_cash, controls, business=business)
-    return result
-
 @router.post("/api/scenarios")
 def save_scenario(
     payload: dict,

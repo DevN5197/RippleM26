@@ -1,6 +1,9 @@
+import { API_BASE_URL } from "@/lib/config";
+import { getAuthToken } from "@/lib/api/client";
+
 /**
  * Google AI Studio (Gemini API) Client for Ripple AI Financial Copilot.
- * Connects to Google AI Studio v1beta REST endpoints with resilient multi-model failover.
+ * Connects via the secure backend AI proxy (/api/ai/chat) with server-side API key shielding.
  */
 
 const LOCAL_STORAGE_KEY = "rupi_gemini_api_key";
@@ -93,11 +96,42 @@ export interface GeminiResponse {
 }
 
 /**
- * Call the official Google AI Studio Gemini API endpoint with model failover.
- * Tries the available active models (gemini-3.5-flash-lite, gemini-3.5-flash, gemini-3.8-flash).
- * Throws only if all models or network fail so callers seamlessly fall back to local deterministic generation.
+ * Call the Ripple backend AI proxy endpoint (/api/ai/chat) with server-side key shielding
+ * and circuit-breaker fallback. If offline, falls back to direct client call if key available.
  */
 export async function callGeminiAPI(options: GeminiGenerateOptions): Promise<GeminiResponse> {
+  // 1. Try secure backend AI proxy first
+  try {
+    const token = getAuthToken();
+    const proxyRes = await fetch(`${API_BASE_URL}/api/ai/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        prompt: options.prompt,
+        systemInstruction: options.systemInstruction,
+        history: options.history,
+      }),
+    });
+
+    if (proxyRes.ok) {
+      const data = await proxyRes.json();
+      if (data && data.text) {
+        return {
+          text: data.text,
+          model: data.model || "gemini-backend-proxy",
+          promptTokens: data.promptTokens,
+          candidatesTokens: data.candidatesTokens,
+        };
+      }
+    }
+  } catch (proxyErr) {
+    console.warn("Backend AI proxy connection failed or timed out, trying direct fallback...", proxyErr);
+  }
+
+  // 2. Direct client fallback (if user supplied local API key)
   const apiKey =
     options.apiKeyOverride !== undefined ? options.apiKeyOverride.trim() : getGeminiApiKey();
 
@@ -117,7 +151,6 @@ export async function callGeminiAPI(options: GeminiGenerateOptions): Promise<Gem
     }
   }
 
-  // Append latest user message
   contents.push({
     role: "user",
     parts: [{ text: options.prompt }],

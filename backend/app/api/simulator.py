@@ -19,10 +19,29 @@ from app.services.simulation import (
 
 router = APIRouter(tags=["simulator"])
 
-def _validate_horizon(controls: dict) -> None:
+def _validate_controls(controls: dict) -> None:
     horizon = controls.get("horizonDays", 30)
     if not isinstance(horizon, int) or isinstance(horizon, bool) or not 10 <= horizon <= 90:
         raise HTTPException(status_code=422, detail="horizonDays must be a whole number from 10 to 90.")
+    
+    # Validate delays if present
+    cust_delays = controls.get("customerDelayDays", {})
+    if isinstance(cust_delays, dict):
+        for k, v in cust_delays.items():
+            if not isinstance(v, (int, float)) or v < 0 or v > 365:
+                raise HTTPException(status_code=422, detail=f"Invalid customer delay for {k}: must be between 0 and 365 days.")
+    elif isinstance(cust_delays, (int, float)):
+        if cust_delays < 0 or cust_delays > 365:
+            raise HTTPException(status_code=422, detail="customerDelayDays must be between 0 and 365.")
+
+    sup_delays = controls.get("supplierDelayDays", {})
+    if isinstance(sup_delays, dict):
+        for k, v in sup_delays.items():
+            if not isinstance(v, (int, float)) or v < 0 or v > 365:
+                raise HTTPException(status_code=422, detail=f"Invalid supplier delay for {k}: must be between 0 and 365 days.")
+    elif isinstance(sup_delays, (int, float)):
+        if sup_delays < 0 or sup_delays > 365:
+            raise HTTPException(status_code=422, detail="supplierDelayDays must be between 0 and 365.")
 
 def _get_active_rescues(business_id: str, db: Session) -> list[dict]:
     records = db.query(ScenarioRescue).filter(
@@ -57,7 +76,7 @@ def simulate(
     """
     Authoritative simulation endpoint evaluating controls and active rescues.
     """
-    _validate_horizon(controls)
+    _validate_controls(controls)
 
     events = db.query(CashFlowEvent).filter(CashFlowEvent.business_id == business.id).all()
     opening_cash = business.opening_cash_paise or 15_000_000 # default ₹1,50,000 for scenario
@@ -74,25 +93,28 @@ def chaos_stress_test(
     Chaos Stress-Test: Applies isolated +5-day delay to evaluate resilience,
     identifying the most fragile single point of failure under stress.
     """
-    _validate_horizon(controls)
+    _validate_controls(controls)
     events = db.query(CashFlowEvent).filter(CashFlowEvent.business_id == business.id).all()
     opening_cash = business.opening_cash_paise or 15_000_000
     rescues = _get_active_rescues(business.id, db)
     stress_result = run_chaos_stress_test(events, opening_cash, controls, rescues=rescues, business=business)
 
-    # Persist the stress test run audit
-    stress_record = ScenarioStressTest(
-        id=f"stress_{uuid.uuid4().hex[:12]}",
-        business_id=business.id,
-        baseline_min_paise=stress_result["baselineMinCashPaise"],
-        stressed_min_paise=stress_result["stressedMinCashPaise"],
-        additional_shortfall_paise=stress_result["additionalShortfallPaise"],
-        most_fragile_node_id=stress_result["mostFragileNodeAfter"],
-        most_fragile_multiplier=stress_result["mostFragileMultiplier"],
-        created_at=to_iso_date(date.today()),
-    )
-    db.add(stress_record)
-    db.commit()
+    try:
+        stress_record = ScenarioStressTest(
+            id=f"stress_{uuid.uuid4().hex[:12]}",
+            business_id=business.id,
+            baseline_min_paise=stress_result["baselineMinCashPaise"],
+            stressed_min_paise=stress_result["stressedMinCashPaise"],
+            additional_shortfall_paise=stress_result["additionalShortfallPaise"],
+            most_fragile_node_id=stress_result["mostFragileNodeAfter"],
+            most_fragile_multiplier=stress_result["mostFragileMultiplier"],
+            created_at=to_iso_date(date.today()),
+        )
+        db.add(stress_record)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
     return stress_result
 
@@ -106,6 +128,9 @@ def preview_auto_phase(
     actual_available_cash = payload.get("actualAvailableCashPaise", 15_000_000)
     safety_buffer = payload.get("safetyBufferPaise") or 5_000_000
     customer_payment_date = payload.get("customerPaymentDate", "Day 31")
+
+    if supplier_commitment < 0 or actual_available_cash < 0 or safety_buffer < 0:
+        raise HTTPException(status_code=422, detail="Financial amounts must be non-negative.")
 
     return calculate_auto_phase(
         supplier_commitment_paise=supplier_commitment,
@@ -122,32 +147,50 @@ def apply_auto_phase(
     db: Session = Depends(get_db),
 ):
     preview = preview_auto_phase(payload, business, db)
-    rescue_id = f"res_ap_{uuid.uuid4().hex[:10]}"
+    target_supplier = payload.get("supplierId", "sup_kaveri")
 
-    rescue = ScenarioRescue(
-        id=rescue_id,
-        business_id=business.id,
-        scenario_id=payload.get("scenarioId"),
-        rescue_type="auto_phase",
-        status="active",
-        target_supplier_id=payload.get("supplierId", "sup_kaveri"),
-        batch1_amount_paise=preview["batch1"]["amountPaise"],
-        batch1_date=preview["batch1"]["date"],
-        batch2_amount_paise=preview["batch2"]["amountPaise"],
-        batch2_date=preview["batch2"]["date"],
-        metadata_json=json.dumps(preview),
-        created_at=to_iso_date(date.today()),
-    )
-    db.add(rescue)
-    db.commit()
-    db.refresh(rescue)
+    try:
+        # Idempotency: deactivate any prior active auto_phase rescues for this supplier
+        prior_active = db.query(ScenarioRescue).filter(
+            ScenarioRescue.business_id == business.id,
+            ScenarioRescue.rescue_type == "auto_phase",
+            ScenarioRescue.target_supplier_id == target_supplier,
+            ScenarioRescue.status == "active",
+        ).all()
+        for par in prior_active:
+            par.status = "reverted"
 
-    return {
-        "success": True,
-        "rescueId": rescue.id,
-        "rescue": preview,
-        "message": "Auto-Phase Inventory applied. Batch 1 and Batch 2 scheduled with safety buffer intact.",
-    }
+        rescue_id = f"res_ap_{uuid.uuid4().hex[:10]}"
+        rescue = ScenarioRescue(
+            id=rescue_id,
+            business_id=business.id,
+            scenario_id=payload.get("scenarioId"),
+            rescue_type="auto_phase",
+            status="active",
+            target_supplier_id=target_supplier,
+            batch1_amount_paise=preview["batch1"]["amountPaise"],
+            batch1_date=preview["batch1"]["date"],
+            batch2_amount_paise=preview["batch2"]["amountPaise"],
+            batch2_date=preview["batch2"]["date"],
+            metadata_json=json.dumps(preview),
+            created_at=to_iso_date(date.today()),
+        )
+        db.add(rescue)
+        db.commit()
+        db.refresh(rescue)
+
+        return {
+            "success": True,
+            "rescueId": rescue.id,
+            "rescue": preview,
+            "message": "Auto-Phase Inventory applied. Batch 1 and Batch 2 scheduled with safety buffer intact.",
+        }
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
 @router.post("/api/simulator/rescues/split-escrow/preview")
 def preview_split_escrow(
