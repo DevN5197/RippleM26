@@ -15,7 +15,7 @@ def get_current_user(
     if not credentials or not credentials.credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication token required",
+            detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
     

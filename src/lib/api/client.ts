@@ -182,12 +182,19 @@ export async function httpRequest<T>(path: string, options: RequestOptions = {})
       // non-JSON error body
     }
 
-    // Handle 401 unauthorized
-    if (response.status === 401 && typeof window !== "undefined") {
+    // Handle 401 Unauthorized or 403 Forbidden: automatically clear expired tokens & redirect to /login
+    if ((response.status === 401 || response.status === 403) && typeof window !== "undefined") {
       const currentPath = window.location.pathname;
       if (!currentPath.includes("/login") && !currentPath.includes("/register")) {
         setAuthToken(null);
-        // Dispatch custom event or redirect
+        try {
+          window.localStorage?.removeItem("access_token");
+          window.localStorage?.removeItem("ripple_auth_user");
+          window.localStorage?.removeItem("ripple_auth_biz");
+          window.localStorage?.removeItem("ripple_auth_token");
+        } catch {
+          // ignore storage errors
+        }
         window.location.href = "/login";
       }
     }
