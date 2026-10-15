@@ -10,10 +10,13 @@ import { isUserAuthenticated } from "@/lib/api/authApi";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: () => {
-    // The session token lives in localStorage, which is unavailable during SSR.
-    // Checking it on the server would redirect a valid browser session on refresh.
-    if (typeof window !== "undefined" && !isUserAuthenticated()) {
-      throw redirect({ to: "/login" });
+    // Check if access_token exists in localStorage and session is valid.
+    // If token is missing or expired, redirect to /login immediately.
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (!token || !isUserAuthenticated()) {
+        throw redirect({ to: "/login" });
+      }
     }
   },
   component: AppLayout,

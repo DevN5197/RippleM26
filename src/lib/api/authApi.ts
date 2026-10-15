@@ -53,12 +53,14 @@ import { syncSimulatorStoreWithBusiness } from "@/lib/simulatorStore";
 export function setStoredSession(session: AuthSession | null): void {
   if (typeof window === "undefined") return;
   if (session) {
+    localStorage.setItem("access_token", session.token);
     setAuthToken(session.token);
     setActiveBusinessId(session.business.id);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(session.user));
     localStorage.setItem(AUTH_BIZ_KEY, JSON.stringify(session.business));
     syncSimulatorStoreWithBusiness(session.business.id, session.business.name);
   } else {
+    localStorage.removeItem("access_token");
     setAuthToken(null);
     setActiveBusinessId(null);
     localStorage.removeItem(AUTH_USER_KEY);
@@ -78,8 +80,24 @@ export function updateStoredBusiness(biz: Partial<BusinessSummary>): void {
 }
 
 export function isUserAuthenticated(): boolean {
-  if (DATA_MODE === "mock") return true;
-  return !!getAuthToken();
+  if (typeof window === "undefined") return false;
+  const token = localStorage.getItem("access_token") || getAuthToken();
+  if (!token) return false;
+
+  // Verify JWT expiration if applicable
+  try {
+    const parts = token.split(".");
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1]));
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        setStoredSession(null);
+        return false;
+      }
+    }
+  } catch {
+    // Non-JWT token (e.g. mock session token), consider valid as long as token exists
+  }
+  return true;
 }
 
 export const authApi = {

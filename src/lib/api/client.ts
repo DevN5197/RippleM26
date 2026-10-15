@@ -24,18 +24,32 @@ function safeStorage(): Storage | null {
   return null;
 }
 
+const ACCESS_TOKEN_KEY = "access_token";
+
 export function getAuthToken(): string | null {
   const storage = safeStorage();
-  return storage ? storage.getItem(AUTH_TOKEN_KEY) : null;
+  if (!storage) return null;
+  return storage.getItem(ACCESS_TOKEN_KEY) || storage.getItem(AUTH_TOKEN_KEY) || null;
 }
 
 export function setAuthToken(token: string | null): void {
   const storage = safeStorage();
-  if (!storage) return;
   if (token) {
-    storage.setItem(AUTH_TOKEN_KEY, token);
+    if (storage) {
+      storage.setItem(ACCESS_TOKEN_KEY, token);
+      storage.setItem(AUTH_TOKEN_KEY, token);
+    }
+    if (typeof document !== "undefined") {
+      document.cookie = `access_token=${encodeURIComponent(token)}; path=/; max-age=86400; SameSite=Lax`;
+    }
   } else {
-    storage.removeItem(AUTH_TOKEN_KEY);
+    if (storage) {
+      storage.removeItem(ACCESS_TOKEN_KEY);
+      storage.removeItem(AUTH_TOKEN_KEY);
+    }
+    if (typeof document !== "undefined") {
+      document.cookie = `access_token=; path=/; max-age=0`;
+    }
   }
 }
 

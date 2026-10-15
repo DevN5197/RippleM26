@@ -41,6 +41,7 @@ function LoginPage() {
     setLoading(true);
     try {
       const session = await authApi.login(email, password);
+      localStorage.setItem("access_token", session.token);
       toast.success(`Welcome back, ${session.user.fullName}!`);
       void navigate({ to: "/dashboard" });
     } catch (err) {
@@ -59,6 +60,7 @@ function LoginPage() {
 
     try {
       const session = await authApi.login("owner@rupiclothing.in", "password123");
+      localStorage.setItem("access_token", session.token);
       toast.success(`Signed in as ${session.user.fullName} (Rupi Clothing)`, {
         description: "Live treasury, cash forecast, and Ripple Simulator loaded.",
       });
