@@ -61,6 +61,10 @@ def clean_database():
         # 3. Reset demo business (biz_1) back to pristine initial state
         print("Resetting demo business 'Rupi Clothing' (biz_1) to pristine state...")
         seed_rupi_clothing(db, overwrite=True)
+        demo_user = db.query(User).filter(User.id == "usr_owner").first()
+        if demo_user:
+            demo_user.is_email_verified = True
+            demo_user.is_phone_verified = True
         db.commit()
 
         # Check final counts

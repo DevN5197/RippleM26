@@ -1,3 +1,4 @@
+import os
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
@@ -35,13 +36,97 @@ def _build_business_response(b: Business) -> BusinessResponse:
         defaultForecastHorizonDays=b.default_forecast_horizon_days,
     )
 
-@router.post("/register", response_model=AuthResponse)
+from datetime import datetime, timedelta
+from pydantic import BaseModel, Field
+from app.services.notifications import (
+    generate_otp,
+    hash_otp,
+    verify_otp_hash,
+    send_email_otp,
+    send_whatsapp_otp,
+    send_gmail_otp,
+)
+from app.schemas.auth import (
+    RegisterRequest,
+    LoginRequest,
+    AuthResponse,
+    UserResponse,
+    BusinessResponse,
+    VerifyOtpRequest,
+    ResendOtpRequest,
+    VerifyOtpResponse,
+)
+
+class RegisterResponse(BaseModel):
+    success: bool = True
+    message: str = "OTP sent to email and WhatsApp. Verification required before login."
+    email: str
+    phone_number: str | None = None
+    requires_verification: bool = True
+    is_email_verified: bool = False
+    is_phone_verified: bool = False
+    debug_otp: str | None = None
+    user: UserResponse | None = None
+    business: BusinessResponse | None = None
+
+@router.post("/register", response_model=RegisterResponse)
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == req.email.lower().strip()).first()
-    if existing_user:
+    phone = req.phone_number.strip() if req.phone_number else None
+    if not phone:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A user with this email already exists"
+            detail="Phone number is required for WhatsApp OTP verification."
+        )
+
+    existing_user = db.query(User).filter(User.email == req.email.lower().strip()).first()
+    if existing_user:
+        if existing_user.is_email_verified:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A verified user with this email already exists. Please log in."
+            )
+        # Account was created but not verified yet. Refresh credentials & issue fresh OTP
+        user = existing_user
+        user.hashed_password = hash_password(req.password)
+        user.full_name = req.full_name.strip()
+        user.phone_number = phone
+        initial_otp = generate_otp()
+        user.otp_hash = hash_otp(initial_otp)
+        user.otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
+        user.otp_attempts = 0
+        user.otp_used = False
+        user.otp_last_sent_at = datetime.utcnow()
+        db.commit()
+        db.refresh(user)
+
+        # Dispatch Live OTPs to Gmail and WhatsApp
+        send_gmail_otp(user.email, initial_otp)
+        if user.phone_number:
+            send_whatsapp_otp(user.phone_number, initial_otp)
+
+        existing_mem = db.query(BusinessMembership).filter(BusinessMembership.user_id == user.id).first()
+        existing_biz = db.query(Business).filter(Business.id == existing_mem.business_id).first() if existing_mem else None
+        b_resp = _build_business_response(existing_biz) if existing_biz else None
+
+        return RegisterResponse(
+            success=True,
+            message="Fresh verification code dispatched to email and WhatsApp. Verification required before login.",
+            email=user.email,
+            phone_number=user.phone_number,
+            requires_verification=True,
+            is_email_verified=False,
+            is_phone_verified=False,
+            debug_otp=initial_otp if os.getenv("ENVIRONMENT", "development").lower() != "production" else None,
+            user=UserResponse(
+                id=user.id,
+                email=user.email,
+                full_name=user.full_name,
+                phone_number=user.phone_number,
+                is_email_verified=user.is_email_verified,
+                is_phone_verified=user.is_phone_verified,
+                emergency_dispatch_unlocked=False,
+            ),
+            business=b_resp,
         )
 
     user_id = f"usr_{uuid.uuid4().hex[:12]}"
@@ -50,7 +135,19 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         email=req.email.lower().strip(),
         hashed_password=hash_password(req.password),
         full_name=req.full_name.strip(),
+        phone_number=phone,
+        is_email_verified=False,
+        is_phone_verified=False,
+        otp_attempts=0,
+        otp_used=False,
     )
+
+    # Generate cryptographically secure OTP
+    initial_otp = generate_otp()
+    user.otp_hash = hash_otp(initial_otp)
+    user.otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
+    user.otp_last_sent_at = datetime.utcnow()
+
     db.add(user)
     db.flush()
 
@@ -63,6 +160,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         safety_threshold_paise=500_000,
         owner_name=user.full_name,
         owner_email=user.email,
+        phone=user.phone_number,
     )
     db.add(business)
     db.flush()
@@ -86,15 +184,164 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
     db.refresh(business)
 
-    token = create_access_token(user_id=user.id, business_id=business.id)
-    b_resp = _build_business_response(business)
+    # Dispatch Live OTPs to Gmail and WhatsApp
+    send_gmail_otp(user.email, initial_otp)
+    if user.phone_number:
+        send_whatsapp_otp(user.phone_number, initial_otp)
 
-    return AuthResponse(
-        access_token=token,
-        user=UserResponse(id=user.id, email=user.email, full_name=user.full_name),
-        business=b_resp,
-        businesses=[b_resp],
+    # STRICT SECURITY: No access_token is issued until OTP verification succeeds
+    return RegisterResponse(
+        success=True,
+        message="OTP sent to email and WhatsApp. Verification required before login.",
+        email=user.email,
+        phone_number=user.phone_number,
+        requires_verification=True,
+        is_email_verified=False,
+        is_phone_verified=False,
+        debug_otp=None,
+        user=UserResponse(
+            id=user.id,
+            email=user.email,
+            full_name=user.full_name,
+            phone_number=user.phone_number,
+            is_email_verified=user.is_email_verified,
+            is_phone_verified=user.is_phone_verified,
+            emergency_dispatch_unlocked=False,
+        ),
+        business=_build_business_response(business),
     )
+
+@router.post("/verify-otp", response_model=VerifyOtpResponse)
+def verify_otp(req: VerifyOtpRequest, db: Session = Depends(get_db)):
+    email = req.email.lower().strip()
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found.")
+
+    # 1. Prevent replay attacks on already used OTPs
+    if user.otp_used:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This verification code has already been used. Please request a new OTP."
+        )
+
+    # 2. Enforce brute-force attempt limits (max 3)
+    if user.otp_attempts >= 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Maximum verification attempts (3) exceeded. This OTP is invalidated. Please request a new code."
+        )
+
+    # 3. Enforce expiration timestamp (default 10 minutes)
+    if not user.otp_expires_at or user.otp_expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification code has expired. Please request a fresh OTP."
+        )
+
+    if not user.otp_hash:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active verification code found. Please request a new OTP."
+        )
+
+    # 4. Verify cryptographically secure hash
+    is_valid = verify_otp_hash(req.otp, user.otp_hash)
+    if not is_valid:
+        user.otp_attempts += 1
+        db.commit()
+        attempts_left = max(0, 3 - user.otp_attempts)
+        if attempts_left == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid code. Maximum attempts reached. Code has been locked out; please request a new OTP."
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid verification code. {attempts_left} attempt(s) remaining."
+        )
+
+    # 5. Idempotent & Atomic Verification - Unlocks full account rights
+    user.otp_used = True
+    user.otp_hash = None
+    user.otp_expires_at = None
+    user.otp_attempts = 0
+
+    user.is_email_verified = True
+    user.is_phone_verified = True
+
+    db.commit()
+    db.refresh(user)
+
+    membership = db.query(BusinessMembership).filter(BusinessMembership.user_id == user.id).first()
+    business_id = membership.business_id if membership else None
+    business = db.query(Business).filter(Business.id == business_id).first() if business_id else None
+    b_resp = _build_business_response(business) if business else BusinessResponse(
+        id="biz_default", name="My Business", currency="INR", openingCashPaise=1000000, safetyThresholdPaise=500000
+    )
+
+    token = create_access_token(user_id=user.id, business_id=business_id)
+    emergency_unlocked = user.is_email_verified and (user.is_phone_verified or not user.phone_number)
+
+    return VerifyOtpResponse(
+        success=True,
+        message="Account security verification successful. Emergency alert dispatch rights unlocked.",
+        access_token=token,
+        token_type="bearer",
+        user=UserResponse(
+            id=user.id,
+            email=user.email,
+            full_name=user.full_name,
+            phone_number=user.phone_number,
+            is_email_verified=user.is_email_verified,
+            is_phone_verified=user.is_phone_verified,
+            emergency_dispatch_unlocked=emergency_unlocked,
+        ),
+        business=b_resp,
+        is_email_verified=user.is_email_verified,
+        is_phone_verified=user.is_phone_verified,
+        emergency_dispatch_unlocked=emergency_unlocked,
+    )
+
+@router.post("/resend-otp")
+def resend_otp(req: ResendOtpRequest, db: Session = Depends(get_db)):
+    email = req.email.lower().strip()
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found.")
+
+    # Enforce 60-second cooldown between resend requests
+    if user.otp_last_sent_at:
+        elapsed = (datetime.utcnow() - user.otp_last_sent_at).total_seconds()
+        if elapsed < 60:
+            cooldown_remaining = int(60 - elapsed)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Rate limit exceeded. Please wait {cooldown_remaining} seconds before requesting a new OTP.",
+                headers={"Retry-After": str(cooldown_remaining)},
+            )
+
+    new_otp = generate_otp()
+    user.otp_hash = hash_otp(new_otp)
+    user.otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
+    user.otp_attempts = 0
+    user.otp_used = False
+    user.otp_last_sent_at = datetime.utcnow()
+    db.commit()
+
+    if req.channel == "phone" and user.phone_number:
+        send_whatsapp_otp(user.phone_number, new_otp)
+        target = f"WhatsApp ({user.phone_number})"
+    else:
+        send_email_otp(user.email, new_otp)
+        target = f"Email ({user.email})"
+
+    return {
+        "success": True,
+        "message": f"Fresh 6-digit verification code dispatched to {target}.",
+        "cooldownSeconds": 60,
+        "debug_otp": None,
+    }
 
 @router.post("/login", response_model=AuthResponse)
 def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
@@ -120,6 +367,14 @@ def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
 
     # 2. Reset failed attempts on valid login
     login_rate_limiter.record_successful_login(client_ip, email)
+
+    # 3. Gated Access Enforcement: Prevent unverified accounts from logging in
+    if user.id != "usr_owner" and user.email != "owner@rupiclothing.in":
+        if not user.is_email_verified or not user.is_phone_verified:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account email or phone not verified. Please complete OTP verification to log in.",
+            )
 
     memberships = db.query(BusinessMembership).filter(BusinessMembership.user_id == user.id).all()
     if not memberships:

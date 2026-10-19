@@ -91,12 +91,12 @@ export const RelationshipCustomEdge = memo(
               className={cn(
                 "rounded-md border px-2.5 py-1 text-[10px] font-semibold shadow-xs select-none backdrop-blur-md whitespace-nowrap",
                 isHighlighted
-                  ? "bg-card/98 text-foreground border-primary ring-2 ring-primary/30 shadow-md font-bold"
+                  ? "bg-[#18181b] text-white border-white/60 ring-2 ring-white/30 shadow-md font-bold"
                   : isAtRisk
-                    ? "bg-warning/20 text-warning-foreground border-warning ring-1 ring-warning/40 shadow-xs"
+                    ? "bg-amber-950/80 text-amber-200 border-amber-400 ring-1 ring-amber-400/40 shadow-xs font-semibold"
                     : isDelayed
-                      ? "bg-destructive/20 text-destructive border-destructive ring-1 ring-destructive/40 shadow-xs"
-                      : "bg-card/95 text-muted-foreground border-border",
+                      ? "bg-rose-950/80 text-rose-200 border-rose-400 ring-1 ring-rose-400/40 shadow-xs font-semibold"
+                      : "bg-[#18181b] text-white/90 border-white/20 font-medium",
               )}
             >
               {description}

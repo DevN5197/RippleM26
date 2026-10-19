@@ -20,8 +20,6 @@ import { formatMoney } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { SimulatorControls } from "@/lib/api/simulationApi";
 import type { ChaosStressTestResult } from "@/types";
-import { getStoredBusiness } from "@/lib/api/authApi";
-import { isDemoAccount } from "@/lib/crossPageState";
 
 interface SimulatorControlsProps {
   controls: SimulatorControls;
@@ -59,11 +57,7 @@ export function SimulatorControlPanel({
   const setField = <K extends keyof SimulatorControls>(key: K, value: SimulatorControls[K]) =>
     onChange({ ...controls, [key]: value });
 
-  const isFlagship = controls.customerPaymentDelayDays === 16 && !chaosStressTestResult?.isStressTestActive;
   const isBaseline = controls.customerPaymentDelayDays === 0 && !chaosStressTestResult?.isStressTestActive;
-
-  const storedBiz = typeof window !== "undefined" ? getStoredBusiness() : null;
-  const isDemo = isDemoAccount(storedBiz);
 
   return (
     <Card className="shadow-xs border-border/70 bg-card rounded-xl overflow-hidden">
@@ -87,22 +81,6 @@ export function SimulatorControlPanel({
             >
               Reset Baseline
             </Button>
-            {isDemo && (
-              <Button
-                type="button"
-                variant={isFlagship ? "default" : "outline"}
-                size="sm"
-                onClick={() => onSelectPreset?.("flagship")}
-                className={cn(
-                  "h-8 text-xs font-medium transition-all",
-                  isFlagship
-                    ? "shadow-xs bg-primary text-primary-foreground font-semibold"
-                    : "border-border/70 text-foreground hover:border-primary/40",
-                )}
-              >
-                Apex Flagship (+16d)
-              </Button>
-            )}
 
             {chaosStressTestResult?.isStressTestActive ? (
               <Button

@@ -54,22 +54,22 @@ export function RelationshipToolbar({
     filters.riskOnly;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border bg-card p-3 sm:p-4 shadow-xs">
+    <div className="flex flex-col gap-3 rounded-xl border border-white/15 bg-[#111115] p-3 sm:p-4 shadow-sm text-white">
       {/* Top Row: Search + Primary Actions */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Search Input */}
         <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
           <Input
             placeholder="Search suppliers, orders, invoices (INV-2001, PO-1)..."
             value={filters.search}
             onChange={(e) => onFilterChange({ ...filters, search: e.target.value })}
-            className="pl-9 pr-8 h-9 text-sm bg-background"
+            className="pl-9 pr-8 h-9 text-xs bg-black/60 border-white/20 text-white placeholder:text-white/40 focus-visible:ring-white/30"
           />
           {filters.search && (
             <button
               onClick={() => onFilterChange({ ...filters, search: "" })}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
               aria-label="Clear search"
             >
               <X className="h-3.5 w-3.5" />
@@ -84,10 +84,10 @@ export function RelationshipToolbar({
               variant="outline"
               size="sm"
               onClick={onToggleFullscreen}
-              className="h-9 gap-1.5 text-xs font-medium cursor-pointer"
+              className="h-9 gap-1.5 text-xs font-semibold cursor-pointer border-white/20 bg-white/5 text-white hover:bg-white/15"
               title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand Graph to Fullscreen"}
             >
-              <Maximize2 className="h-3.5 w-3.5 text-muted-foreground" />
+              <Maximize2 className="h-3.5 w-3.5 text-white/70" />
               <span>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
             </Button>
           )}
@@ -96,10 +96,10 @@ export function RelationshipToolbar({
             variant="outline"
             size="sm"
             onClick={onResetView}
-            className="h-9 gap-1.5 text-xs font-medium"
+            className="h-9 gap-1.5 text-xs font-semibold border-white/20 bg-white/5 text-white hover:bg-white/15"
             title="Fit entire graph in viewport"
           >
-            <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+            <RotateCcw className="h-3.5 w-3.5 text-white/70" />
             <span className="hidden md:inline">Fit view</span>
           </Button>
 
@@ -108,16 +108,16 @@ export function RelationshipToolbar({
               variant="ghost"
               size="sm"
               onClick={onResetFilters}
-              className="h-9 gap-1 text-xs text-muted-foreground hover:text-foreground"
+              className="h-9 gap-1 text-xs text-white/80 hover:text-white hover:bg-white/10"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset filters
             </Button>
           )}
 
-          <Button size="sm" asChild className="h-9 gap-1.5 shadow-xs">
+          <Button size="sm" asChild className="h-9 gap-1.5 shadow-xs bg-white text-black font-semibold hover:bg-white/90">
             <Link to="/simulator">
-              <FlaskConical className="h-4 w-4" />
+              <FlaskConical className="h-4 w-4 text-black" />
               <span>Ripple Simulator</span>
             </Link>
           </Button>
@@ -125,10 +125,10 @@ export function RelationshipToolbar({
       </div>
 
       {/* Bottom Filter Row */}
-      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50 text-xs">
-        <div className="flex items-center gap-1.5 text-muted-foreground mr-1">
-          <Filter className="h-3.5 w-3.5" />
-          <span className="font-medium hidden sm:inline">Filters:</span>
+      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10 text-xs">
+        <div className="flex items-center gap-1.5 text-white/80 mr-1">
+          <Filter className="h-3.5 w-3.5 text-emerald-400" />
+          <span className="font-semibold hidden sm:inline">Filters:</span>
         </div>
 
         {/* Node Type Selector */}
@@ -136,10 +136,10 @@ export function RelationshipToolbar({
           value={filters.type}
           onValueChange={(val) => onFilterChange({ ...filters, type: val })}
         >
-          <SelectTrigger className="h-8 text-xs w-[140px] bg-background">
+          <SelectTrigger className="h-8 text-xs w-[140px] bg-black/60 border-white/20 text-white">
             <SelectValue placeholder="Event Type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#18181b] border-white/20 text-white">
             <SelectItem value="all">All event types</SelectItem>
             <SelectItem value="supplier">Suppliers</SelectItem>
             <SelectItem value="purchase_order">Purchase orders</SelectItem>
@@ -159,10 +159,10 @@ export function RelationshipToolbar({
           value={filters.status}
           onValueChange={(val) => onFilterChange({ ...filters, status: val })}
         >
-          <SelectTrigger className="h-8 text-xs w-[130px] bg-background">
+          <SelectTrigger className="h-8 text-xs w-[130px] bg-black/60 border-white/20 text-white">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#18181b] border-white/20 text-white">
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="upcoming">Upcoming</SelectItem>
@@ -176,10 +176,10 @@ export function RelationshipToolbar({
           value={filters.partner}
           onValueChange={(val) => onFilterChange({ ...filters, partner: val })}
         >
-          <SelectTrigger className="h-8 text-xs w-[140px] bg-background">
+          <SelectTrigger className="h-8 text-xs w-[140px] bg-black/60 border-white/20 text-white">
             <SelectValue placeholder="Partner" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-[#18181b] border-white/20 text-white">
             <SelectItem value="all">All partners</SelectItem>
             {partnerOptions && partnerOptions.length > 0
               ? partnerOptions.map((p) => (
@@ -192,7 +192,7 @@ export function RelationshipToolbar({
         </Select>
 
         {/* Risk Only Toggle */}
-        <div className="flex items-center gap-2 rounded-md border bg-background px-2.5 py-1 text-xs ml-auto">
+        <div className="flex items-center gap-2 rounded-md border border-white/20 bg-black/60 px-2.5 py-1 text-xs ml-auto">
           <Switch
             id="risk-toggle"
             checked={filters.riskOnly}
@@ -201,15 +201,15 @@ export function RelationshipToolbar({
           />
           <Label
             htmlFor="risk-toggle"
-            className="flex items-center gap-1 cursor-pointer font-normal text-xs text-foreground"
+            className="flex items-center gap-1 cursor-pointer font-medium text-xs text-white"
           >
-            <AlertTriangle className="h-3 w-3 text-warning shrink-0" />
+            <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" />
             <span>Risk only</span>
           </Label>
         </div>
 
         {/* Results Counter Badge */}
-        <Badge variant="secondary" className="text-[11px] font-normal tabular-nums ml-1">
+        <Badge variant="outline" className="text-[11px] font-mono tabular-nums ml-1 border-white/25 bg-white/10 text-white">
           {matchCount} of {totalCount} events
         </Badge>
       </div>

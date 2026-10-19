@@ -24,8 +24,8 @@ def _validate_controls(controls: dict) -> None:
     if not isinstance(horizon, int) or isinstance(horizon, bool) or not 10 <= horizon <= 90:
         raise HTTPException(status_code=422, detail="horizonDays must be a whole number from 10 to 90.")
     
-    # Validate delays if present
-    cust_delays = controls.get("customerDelayDays", {})
+    # Validate customer delay if present (accepts customerDelayDays or customerPaymentDelayDays)
+    cust_delays = controls.get("customerDelayDays") if "customerDelayDays" in controls else controls.get("customerPaymentDelayDays", {})
     if isinstance(cust_delays, dict):
         for k, v in cust_delays.items():
             if not isinstance(v, (int, float)) or v < 0 or v > 365:
@@ -34,7 +34,8 @@ def _validate_controls(controls: dict) -> None:
         if cust_delays < 0 or cust_delays > 365:
             raise HTTPException(status_code=422, detail="customerDelayDays must be between 0 and 365.")
 
-    sup_delays = controls.get("supplierDelayDays", {})
+    # Validate supplier delay if present (accepts supplierDelayDays or supplierDeliveryDelayDays)
+    sup_delays = controls.get("supplierDelayDays") if "supplierDelayDays" in controls else controls.get("supplierDeliveryDelayDays", {})
     if isinstance(sup_delays, dict):
         for k, v in sup_delays.items():
             if not isinstance(v, (int, float)) or v < 0 or v > 365:
@@ -248,6 +249,20 @@ def apply_split_escrow(
         "rescue": preview,
         "message": "Tri-Party Split-Escrow arrangement locked. Supplier obligation funded with zero ordinary cash outlay.",
     }
+
+@router.post("/api/simulator/rescue")
+def apply_rescue_generic(
+    payload: dict,
+    business: Business = Depends(get_current_business),
+    db: Session = Depends(get_db),
+):
+    rescue_type = payload.get("rescueType") or payload.get("rescue_type") or payload.get("type", "auto_phase")
+    action = payload.get("action", "apply")
+    if action == "revert":
+        return revert_all_rescues(business, db)
+    if rescue_type == "split_escrow":
+        return apply_split_escrow(payload, business, db)
+    return apply_auto_phase(payload, business, db)
 
 @router.post("/api/simulator/rescues/{rescue_id}/revert")
 def revert_rescue(

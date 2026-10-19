@@ -100,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900&family=Instrument+Serif:ital@1&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
@@ -113,25 +113,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 const themeInitScript = `(function() {
   try {
-    var stored = localStorage.getItem("ripple_theme");
-    var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var isDark = stored === "dark" || ((!stored || stored === "system") && prefersDark);
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("ripple_theme", "dark");
   } catch (e) {}
 })();`;
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" style={{ background: "#000000", color: "#ffffff" }} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
       </head>
-      <body>
+      <body style={{ background: "#000000", color: "#ffffff" }}>
         {children}
         <Scripts />
       </body>

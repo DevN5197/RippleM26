@@ -751,6 +751,12 @@ export const simulatorApi = {
     const normalizedControls = {
       ...controls,
       horizonDays: normalizeHorizonDays(controls.horizonDays),
+      customerPaymentDelayDays: controls.customerPaymentDelayDays ?? 0,
+      customerDelayDays: controls.customerPaymentDelayDays ?? 0,
+      supplierDeliveryDelayDays: controls.supplierDeliveryDelayDays ?? 0,
+      supplierDelayDays: controls.supplierDeliveryDelayDays ?? 0,
+      supplierAdvanceMultiplier: (controls as any).supplierAdvanceMultiplier ?? 1.0,
+      orderQuantityMultiplier: controls.orderQuantityMultiplier ?? 1.0,
     };
     if (DATA_MODE === "mock") {
       await delay(700);

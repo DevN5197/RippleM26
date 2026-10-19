@@ -383,10 +383,10 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                     <span>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
                   </Button>
 
-                  <div className="hidden sm:flex items-center rounded-lg border bg-card/90 p-0.5 shadow-xs backdrop-blur-xs text-xs">
+                  <div className="hidden sm:flex items-center rounded-lg border border-white/20 bg-[#121216]/95 p-0.5 shadow-xs backdrop-blur-xs text-xs">
                     <button
                       onClick={() => reactFlowInstance?.fitView({ padding: 0.15, duration: 400 })}
-                      className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      className="rounded px-2.5 py-1 text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                       title="Fit all workflows"
                     >
                       Fit All
@@ -395,28 +395,28 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                       onClick={() =>
                         reactFlowInstance?.setCenter(1840, 160, { zoom: 0.5, duration: 450 })
                       }
-                      className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      className="rounded px-2.5 py-1 text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                       title="Focus on Primary Operating Cycle"
                     >
-                      Chain 1
+                      Cycle 1
                     </button>
                     <button
                       onClick={() =>
                         reactFlowInstance?.setCenter(665, 850, { zoom: 0.8, duration: 450 })
                       }
-                      className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      className="rounded px-2.5 py-1 text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                       title="Focus on Mehta Fabrics cycle"
                     >
-                      Chain 2
+                      Cycle 2
                     </button>
                     <button
                       onClick={() =>
                         reactFlowInstance?.setCenter(900, 1450, { zoom: 0.75, duration: 450 })
                       }
-                      className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      className="rounded px-2.5 py-1 text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                       title="Focus on Style Mart receivables"
                     >
-                      Chain 3
+                      Cycle 3
                     </button>
                   </div>
                 </div>
@@ -429,8 +429,8 @@ function InnerGraphView({ data, initialSelectedId }: RelationshipGraphViewProps)
                 )}
 
                 {/* Canvas status hint bar */}
-                <div className="absolute bottom-3 left-16 z-10 hidden sm:flex items-center gap-2 rounded-full border bg-card/90 px-3 py-1 text-[11px] text-muted-foreground shadow-xs backdrop-blur-xs">
-                  <Network className="h-3 w-3 text-primary" />
+                <div className="absolute bottom-3 left-16 z-10 hidden sm:flex items-center gap-2 rounded-full border border-white/20 bg-[#121216]/90 px-3 py-1 text-[11px] text-white/80 shadow-xs backdrop-blur-xs">
+                  <Network className="h-3 w-3 text-emerald-400" />
                   <span>Scroll to zoom · Drag to pan · Click any node to trace impact</span>
                 </div>
 

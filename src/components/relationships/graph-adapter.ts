@@ -204,57 +204,8 @@ export function adaptToReactFlow(
     };
   });
 
-  // Lane Header Annotations for structured swimlanes (only on pristine demo graph)
-  const isDemoGraph = data.nodes.some((n) => n.id === "node_sup_1");
-
-  const laneNodes: Node<LaneHeaderData>[] = isDemoGraph
-    ? [
-        {
-          id: "lane_1",
-          type: "lane_header",
-          position: { x: 60, y: -260 },
-          data: {
-            title: "Chain 1: Primary Operating Cycle",
-            subtitle: "Shree Textiles → Fabrication → Urban Threads Boutique · Risk Point Day 5",
-            badge: "Critical Path",
-            badgeVariant: "destructive",
-          },
-          selectable: false,
-          draggable: false,
-        },
-        {
-          id: "lane_2",
-          type: "lane_header",
-          position: { x: 60, y: 570 },
-          data: {
-            title: "Chain 2: Secondary Procurement",
-            subtitle: "Mehta Fabrics → Linen Shirt PO-2 & Day 11 Delivery · Net-45 Terms",
-            badge: "Active Restock",
-            badgeVariant: "secondary",
-          },
-          selectable: false,
-          draggable: false,
-        },
-        {
-          id: "lane_3",
-          type: "lane_header",
-          position: { x: 60, y: 1150 },
-          data: {
-            title: "Chain 3: Receivables & Collections",
-            subtitle: "Style Mart → Overdue INV-1999 Collection & Day 39 Settlement",
-            badge: "Overdue Attention",
-            badgeVariant: "warning",
-          },
-          selectable: false,
-          draggable: false,
-        },
-      ]
-    : [];
-
-  const allNodes =
-    filteredNodeIds && filteredNodeIds.size < data.nodes.length
-      ? nodes
-      : [...laneNodes, ...nodes];
+  // All nodes without background chain headers
+  const allNodes = nodes;
 
   // Transform Edges
   const validNodeIds = new Set(nodes.map((n) => n.id));

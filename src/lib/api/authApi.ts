@@ -87,7 +87,7 @@ export function isUserAuthenticated(): boolean {
   // Verify JWT expiration if applicable
   try {
     const parts = token.split(".");
-    if (parts.length === 3) {
+    if (parts.length === 3 && parts[1]) {
       const payload = JSON.parse(atob(parts[1]));
       if (payload.exp && payload.exp * 1000 < Date.now()) {
         setStoredSession(null);
@@ -98,6 +98,19 @@ export function isUserAuthenticated(): boolean {
     // Non-JWT token (e.g. mock session token), consider valid as long as token exists
   }
   return true;
+}
+
+export interface RegisterResult {
+  success: boolean;
+  message: string;
+  email: string;
+  phoneNumber?: string;
+  requiresVerification: boolean;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  debugOtp?: string;
+  user: User;
+  business: BusinessSummary;
 }
 
 export const authApi = {
@@ -162,56 +175,65 @@ export const authApi = {
     password: string,
     fullName: string,
     businessName: string = "My Business",
-  ): Promise<AuthSession> {
+    phoneNumber?: string,
+  ): Promise<RegisterResult> {
     if (DATA_MODE === "mock") {
-      await delay(300);
-      db.business = {
-        ...db.business,
-        id: "biz_registered",
-        name: businessName,
-        currency: "INR",
-        openingCashPaise: 1_000_000,
-        safetyThresholdPaise: 500_000,
-      };
-      db.invoices = [];
-      db.payments = [];
-      db.cashFlowEvents = [];
-      db.suppliers = [];
+      await delay(100);
       db.customers = [];
-      db.products = [];
-      db.inventory = [];
-      db.inventoryMovements = [];
+      db.suppliers = [];
+      db.invoices = [];
       db.purchaseOrders = [];
       db.customerOrders = [];
-      db.simulationScenarios = [];
+      db.inventoryItems = [];
+      db.inventory = [];
+      db.inventoryMovements = [];
+      db.products = [];
+      db.payments = [];
       db.riskAlerts = [];
       db.recommendations = [];
-      const session: AuthSession = {
-        token: "demo_mock_jwt_token",
-        user: {
-          id: "usr_registered",
-          email,
-          fullName,
-        },
-        business: {
-          id: "biz_registered",
-          name: businessName,
-          currency: "INR",
-          openingCashPaise: 1_000_000,
-          safetyThresholdPaise: 500_000,
-        },
-        businesses: [],
+      db.cashFlowEvents = [];
+      db.business = {
+        ...db.business,
+        id: "biz_fresh",
+        name: businessName,
       };
-      setStoredSession(session);
-      return session;
+      const user: User = {
+        id: "usr_mock_new",
+        email,
+        fullName,
+      };
+      const business: BusinessSummary = {
+        id: db.business.id,
+        name: db.business.name,
+        currency: db.business.currency,
+        openingCashPaise: db.business.openingCashPaise,
+        safetyThresholdPaise: db.business.safetyThresholdPaise ?? 500_000,
+      };
+      return {
+        success: true,
+        message: "OTP sent to email and WhatsApp",
+        email,
+        phoneNumber,
+        requiresVerification: true,
+        isEmailVerified: false,
+        isPhoneVerified: false,
+        debugOtp: "123456",
+        user,
+        business,
+      };
     }
 
     const res = await httpRequest<{
-      access_token: string;
-      token_type: string;
-      user: { id: string; email: string; full_name: string };
-      business: BusinessSummary;
-      businesses: BusinessSummary[];
+      success?: boolean;
+      message?: string;
+      email?: string;
+      phone_number?: string;
+      requires_verification?: boolean;
+      is_email_verified?: boolean;
+      is_phone_verified?: boolean;
+      debug_otp?: string;
+      user?: { id: string; email: string; full_name: string };
+      business?: BusinessSummary;
     }>("/api/auth/register", {
       method: "POST",
       body: {
@@ -219,7 +241,79 @@ export const authApi = {
         password,
         full_name: fullName,
         business_name: businessName,
+        phone_number: phoneNumber || null,
       },
+    });
+
+    const user: User = {
+      id: res.user?.id || `usr_${res.email || email}`,
+      email: res.user?.email || res.email || email,
+      fullName: res.user?.full_name || fullName,
+    };
+    const business: BusinessSummary = res.business || {
+      id: "biz_registered",
+      name: businessName,
+      currency: "INR",
+      openingCashPaise: 1_000_000,
+      safetyThresholdPaise: 500_000,
+    };
+
+    return {
+      success: res.success ?? true,
+      message: res.message || "OTP sent to email and WhatsApp. Verification required before login.",
+      email: res.email || email,
+      phoneNumber: res.phone_number || phoneNumber,
+      requiresVerification: res.requires_verification ?? true,
+      isEmailVerified: res.is_email_verified ?? false,
+      isPhoneVerified: res.is_phone_verified ?? false,
+      debugOtp: res.debug_otp,
+      user,
+      business,
+    };
+  },
+
+  async verifyOtp(
+    email: string,
+    otp: string,
+    channel: "email" | "phone" = "email",
+  ): Promise<AuthSession & { emergencyDispatchUnlocked?: boolean }> {
+    if (DATA_MODE === "mock") {
+      await delay(300);
+      if (!otp || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+        throw new Error("Verification code must be exactly 6 digits.");
+      }
+      const existingUser = getStoredUser();
+      const existingBiz = getStoredBusiness();
+      const session: AuthSession = {
+        token: "demo_mock_verified_jwt_token",
+        user: {
+          id: existingUser?.id || "usr_verified",
+          email: email || existingUser?.email || "owner@rupiclothing.in",
+          fullName: existingUser?.fullName || "Verified Owner",
+        },
+        business: existingBiz || {
+          id: db.business.id,
+          name: db.business.name,
+          currency: db.business.currency,
+          openingCashPaise: db.business.openingCashPaise,
+          safetyThresholdPaise: db.business.safetyThresholdPaise ?? 500_000,
+        },
+        businesses: [],
+      };
+      setStoredSession(session);
+      return { ...session, emergencyDispatchUnlocked: true };
+    }
+
+    const res = await httpRequest<{
+      success: boolean;
+      message: string;
+      access_token: string;
+      user: { id: string; email: string; full_name: string; phone_number?: string };
+      business: BusinessSummary;
+      emergency_dispatch_unlocked: boolean;
+    }>("/api/auth/verify-otp", {
+      method: "POST",
+      body: { email, otp, channel },
     });
 
     const session: AuthSession = {
@@ -230,10 +324,33 @@ export const authApi = {
         fullName: res.user.full_name,
       },
       business: res.business,
-      businesses: res.businesses || [res.business],
+      businesses: [res.business],
     };
     setStoredSession(session);
-    return session;
+    return { ...session, emergencyDispatchUnlocked: res.emergency_dispatch_unlocked };
+  },
+
+  async resendOtp(
+    email: string,
+    channel: "email" | "phone" = "email",
+  ): Promise<{ success: boolean; message: string; cooldownSeconds?: number; debug_otp?: string }> {
+    if (DATA_MODE === "mock") {
+      await delay(200);
+      return {
+        success: true,
+        message: `Fresh 6-digit verification code dispatched to ${channel}.`,
+        cooldownSeconds: 60,
+        debug_otp: "123456",
+      };
+    }
+
+    return httpRequest<{ success: boolean; message: string; cooldownSeconds?: number; debug_otp?: string }>(
+      "/api/auth/resend-otp",
+      {
+        method: "POST",
+        body: { email, channel },
+      },
+    );
   },
 
   async getMe(): Promise<{ user: User; business: BusinessSummary; businesses: BusinessSummary[] }> {
@@ -314,7 +431,7 @@ export const authApi = {
   logout(): void {
     setStoredSession(null);
     if (typeof window !== "undefined") {
-      window.location.href = "/login";
+      window.location.href = "/";
     }
   },
 };

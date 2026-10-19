@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as VerifyOtpRouteImport } from './routes/verify-otp'
 import { Route as AppCashFlowRouteImport } from './routes/_app.cash-flow'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -44,9 +46,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyOtpRoute = VerifyOtpRouteImport.update({
+  id: '/verify-otp',
+  path: '/verify-otp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppCashFlowRoute = AppCashFlowRouteImport.update({
@@ -133,7 +145,9 @@ const AppSuppliersSupplierIdRoute = AppSuppliersSupplierIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
+  '/verify-otp': typeof VerifyOtpRoute
   '/cash-flow': typeof AppCashFlowRoute
   '/customers': typeof AppCustomersRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
@@ -154,7 +168,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
+  '/verify-otp': typeof VerifyOtpRoute
   '/cash-flow': typeof AppCashFlowRoute
   '/dashboard': typeof AppDashboardRoute
   '/insights': typeof AppInsightsRoute
@@ -174,7 +190,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
+  '/verify-otp': typeof VerifyOtpRoute
   '/_app/cash-flow': typeof AppCashFlowRoute
   '/_app/customers': typeof AppCustomersRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
@@ -197,7 +215,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/onboarding'
     | '/register'
+    | '/verify-otp'
     | '/cash-flow'
     | '/customers'
     | '/dashboard'
@@ -218,7 +238,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/onboarding'
     | '/register'
+    | '/verify-otp'
     | '/cash-flow'
     | '/dashboard'
     | '/insights'
@@ -237,7 +259,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/login'
+    | '/onboarding'
     | '/register'
+    | '/verify-otp'
     | '/_app/cash-flow'
     | '/_app/customers'
     | '/_app/dashboard'
@@ -260,7 +284,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
   RegisterRoute: typeof RegisterRoute
+  VerifyOtpRoute: typeof VerifyOtpRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -286,11 +312,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-otp': {
+      id: '/verify-otp'
+      path: '/verify-otp'
+      fullPath: '/verify-otp'
+      preLoaderRoute: typeof VerifyOtpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/cash-flow': {
@@ -482,7 +522,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
   RegisterRoute: RegisterRoute,
+  VerifyOtpRoute: VerifyOtpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

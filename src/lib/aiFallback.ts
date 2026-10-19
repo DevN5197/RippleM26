@@ -47,37 +47,14 @@ export function generateSmartLocalResponse(
     q.includes("who are you") ||
     q.includes("what can you do")
   ) {
-    if (!isDemo) {
-      return {
-        text: `Hello! I am **Ripple**, your AI Financial Copilot for **${overview.businessName}**.
-
-I have real-time visibility into your business accounts, liquidity, and operating cycle:
-• **Current Treasury**: **${overview.availableCashOnHandFormatted}** available cash (${overview.cashStatus})
-• **Safety Reserve**: **${overview.safetyReserveFormatted}** protected
-• **Receivables / Payables**: **₹0** (0 open invoices) — baseline reserves are secure.
-
-How can I help you manage your cash position today? You can ask about forecasting, create invoices, or stress-test payment delays in the Ripple Simulator.`,
-        actionPills: [
-          { id: "open_simulator", label: "Open in Ripple Simulator →" },
-          { id: "load_apex", label: "Load Demo Flagship (+16d) Scenario" },
-        ],
-        isFallback: true,
-        model: "Ripple AI Copilot (Deterministic Engine)",
-      };
-    }
-
     return {
-      text: `Hello! I am **Ripple**, your AI Financial Copilot for **${overview.businessName}**.
+      text: `Hello! I am **Ask Ripple**, your AI financial copilot for **${overview.businessName}**.
 
-I have real-time visibility into your supplier commitments, receivables, and operating cycle:
-• **Current Treasury**: **${overview.availableCashOnHandFormatted}** available cash (${overview.cashStatus})
-• **Upcoming Cash Deficit**: Balance dips to **${overview.projectedDipAmountFormatted}** around **${overview.projectedDipDate}**
-• **Simulation Preset**: **${simulator.activePreset}** (True Margin: **${simulator.trueRippleMarginPercent}** vs **${simulator.paperMarginPercent}** Paper Margin)
+• **Current Cash**: **${overview.availableCashOnHandFormatted}** (${overview.cashStatus})
+• **Safety Reserve**: **${overview.safetyReserveFormatted}** protected
 
-How can I help you manage your cash position today? You can ask about overdue receivables, stress-test supply delays, or deploy our zero-debt autonomous rescues.`,
+Ask me any specific question about your cash balance, receivables, margins, or supplier commitments.`,
       actionPills: [
-        { id: "load_apex", label: "Load Apex Flagship (+16d) Scenario" },
-        { id: "apply_split_escrow", label: "Lock Tri-Party Split-Escrow" },
         { id: "open_simulator", label: "Open in Ripple Simulator →" },
       ],
       isFallback: true,
@@ -90,52 +67,42 @@ How can I help you manage your cash position today? You can ask about overdue re
     q.includes("improve") ||
     (q.includes("cash") && q.includes("flow")) ||
     q.includes("boost") ||
-    q.includes("liquidity")
+    q.includes("liquidity") ||
+    q.includes("balance")
   ) {
     if (!isDemo) {
       return {
-        text: `### Cash Flow Optimization for **${overview.businessName}**
+        text: `### Cash Flow Summary for **${overview.businessName}**
 
-Your current treasury sits at **${overview.availableCashOnHandFormatted}** (Safety Reserve: **${overview.safetyReserveFormatted}**). Because your registered account has 0 outstanding debt liabilities, your baseline liquidity is strong.
+• **Available Cash**: **${overview.availableCashOnHandFormatted}**
+• **Safety Buffer**: **${overview.safetyReserveFormatted}**
+• **Outstanding Invoices**: ₹0 (0 open)
 
-**Key Recommendations to Scale Safely:**
-1. **Invoice Promptly**: Set standard customer terms (e.g. Net 15) to maintain regular cash inflows.
-2. **Auto-Phase Procurement**: When ordering raw materials or stock, negotiate splitting large purchase orders into phased delivery batches.
-3. **Tri-Party Split-Escrow**: For high-volume wholesale orders, pledge customer receipts directly to suppliers to unlock inventory with ₹0 upfront working capital outlay.
-
-**Recommended Next Action:**
-Open the **Ripple Simulator** to run stress tests on hypothetical customer payment delays.`,
+**Direct Advice**: Keep customer payment terms to 15 days or less to sustain steady cash inflows before taking on inventory commitments.`,
         actionPills: [
           { id: "open_simulator", label: "Open in Ripple Simulator →" },
-          { id: "load_apex", label: "Load Demo Flagship (+16d) Scenario" },
         ],
         isFallback: true,
-        model: "gemini-2.5-flash (Safety Net)",
+        model: "Ripple AI Copilot",
       };
     }
 
-    const isAutoPhaseDone = simulator.activeRescues.autoPhaseApplied;
-    const isEscrowDone = simulator.activeRescues.splitEscrowLocked;
-
     return {
-      text: `### Cash Flow Optimization for **${overview.businessName}**
+      text: `### Cash Flow Breakdown for **${overview.businessName}**
 
-Your current treasury sits at **${overview.availableCashOnHandFormatted}** (Safety Reserve: **${overview.safetyReserveFormatted}**). While you have **${overview.incomingReceivablesFormatted}** across **${overview.openInvoiceCount} open invoices**, you face **${overview.committedPayablesFormatted}** in scheduled supplier bills, creating an immediate liquidity squeeze.
+• **Available Cash**: **${overview.availableCashOnHandFormatted}** (Safety Reserve: **${overview.safetyReserveFormatted}**)
+• **Incoming Receivables**: **${overview.incomingReceivablesFormatted}** (${overview.openInvoiceCount} open invoices)
+• **Scheduled Payables**: **${overview.committedPayablesFormatted}**
+• **Cash Trajectory**: Balance dips to **${overview.projectedDipAmountFormatted}** around **${overview.projectedDipDate}**
 
-**Critical Live Observations:**
-• **Imminent Deficit**: Cash dips to **${overview.projectedDipAmountFormatted}** around **${overview.projectedDipDate}** primarily due to the **Bandhra West Shop Lease (-₹2,500)** and **Shree Textiles PO-1 Advance (-₹5,000)** on 16 Oct.
-• **Paper vs. True Margin**: On paper, your accounting margin is **${simulator.paperMarginPercent} (${simulator.paperMarginFormatted})**. However, supply chain friction creates **${simulator.rippleContagionDragFormatted}** in contagion drag, compressing your **True Ripple Margin to ${simulator.trueRippleMarginPercent} (${simulator.trueRippleMarginFormatted})**.
-• **Immediate Inflow Acceleration**: Urban Threads owes **+₹8,000** scheduled for 5 Nov. Offering a 2% prompt-pay discount could bring this forward 10 days to replenish reserves before 25 Oct.
-
-**Recommended Next Action:**
-Avoid traditional high-interest working capital loans. Deploy our zero-debt **Tri-Party Split-Escrow** on Metro Retail's **+₹1,65,000** order or **Auto-Phase Inventory** on Kaveri Timber's **-₹1,20,000** commitment.`,
+**Action Required**: Accelerate Urban Threads collection (+₹8,00,000) or deploy **Auto-Phase Inventory** or **Tri-Party Split-Escrow** on Kaveri Timber to avoid buffer deficit.`,
       actionPills: [
         { id: "apply_split_escrow", label: "Lock Tri-Party Split-Escrow" },
         { id: "apply_auto_phase", label: "Execute Auto-Phase Inventory" },
         { id: "open_simulator", label: "Open in Ripple Simulator →" },
       ],
       isFallback: true,
-      model: "gemini-2.5-flash (Safety Net)",
+      model: "Ripple AI Copilot",
     };
   }
 
@@ -150,42 +117,37 @@ Avoid traditional high-interest working capital loans. Deploy our zero-debt **Tr
   ) {
     if (!isDemo) {
       return {
-        text: `### Live Invoice & Receivables Audit for **${overview.businessName}**
+        text: `### Receivables Status for **${overview.businessName}**
 
-You currently hold **₹0** in receivables across **0 open invoices**. All accounts are in good standing with zero overdue payments.
+• **Total Outstanding**: ₹0
+• **Overdue Invoices**: 0
+• **Status**: All customer accounts in good standing.
 
-Once you register customer invoices in the Ledger, Ripple will automatically monitor payment due dates, calculate Keystone Fragility, and protect your cash buffer against delayed collections.
-
-**Recommended Next Action:**
-Create your first invoice in the Ledger, or load the demo scenario in Ripple Simulator to see how delayed payments impact operating loops.`,
+Create invoices in the Invoices tab to monitor future receivables.`,
         actionPills: [
           { id: "open_simulator", label: "Open in Ripple Simulator →" },
-          { id: "load_apex", label: "Load Demo Flagship (+16d) Scenario" },
         ],
         isFallback: true,
-        model: "gemini-2.5-flash (Safety Net)",
+        model: "Ripple AI Copilot",
       };
     }
 
     return {
-      text: `### Live Invoice & Receivables Audit
+      text: `### Live Receivables Breakdown
 
-You currently hold **${overview.incomingReceivablesFormatted}** in total receivables across **${overview.openInvoiceCount} open invoices**, with key receivables creating systemic counterparty exposure across your network.
+• **Total Receivables**: **${overview.incomingReceivablesFormatted}** (${overview.openInvoiceCount} open invoices)
+• **Urban Threads (INV-2001)**: **+₹8,000** due 5 Nov 2026 (Priority collection)
+• **Apex Corp (#INV-APEX)**: **+₹5,00,000** (Day 32, 20.0x Ripple Risk Multiplier (Critical Keystone))
+• **Metro Retail**: **+₹1,65,000** (Day 29)
 
-**Account Breakdown & Keystone Fragility:**
-• **Urban Threads (INV-2001)**: **+₹8,000** expected on **5 Nov 2026**. This receipt is pivotal to absorbing the store staff payroll run (-₹3,000 on 12 Nov).
-• **Apex Corp (#INV-APEX)**: **+₹5,00,000** scheduled (Day 32). Apex Corp carries a **20.0x Ripple Risk Multiplier (Critical Keystone)**. A payment delay of even 16 days compromises **${simulator.revenueFormatted}** in downstream delivery commitments and triggers **${simulator.rippleContagionDragFormatted}** in cascading penalty costs.
-• **Metro Retail Wholesale Order**: **+₹1,65,000** (Day 29) currently serves as an active **Fulfillment Gate** with **₹3,000/day SLA penalty exposure** if inventory is starved.
-
-**Recommended Next Action:**
-Prioritize urgent follow-up on Urban Threads, and lock **Tri-Party Split-Escrow** against Metro Retail to bypass liquidity dependence on Apex Corp.`,
+**Action**: Follow up with Urban Threads to lock in incoming liquidity ahead of monthly lease payouts.`,
       actionPills: [
         { id: "load_apex", label: "Load Apex Flagship (+16d) Scenario" },
         { id: "apply_split_escrow", label: "Lock Tri-Party Split-Escrow" },
         { id: "open_simulator", label: "Open in Ripple Simulator →" },
       ],
       isFallback: true,
-      model: "gemini-2.5-flash (Safety Net)",
+      model: "Ripple AI Copilot",
     };
   }
 
@@ -201,45 +163,33 @@ Prioritize urgent follow-up on Urban Threads, and lock **Tri-Party Split-Escrow*
       return {
         text: `### Cash Risk Assessment for **${overview.businessName}**
 
-✅ **Reserves Stable**: Your treasury holds **${overview.availableCashOnHandFormatted}** with a protected safety buffer of **${overview.safetyReserveFormatted}**.
+• **Current Cash**: **${overview.availableCashOnHandFormatted}**
+• **Safety Buffer**: **${overview.safetyReserveFormatted}**
+• **Risk Level**: **Low (Zero Deficit Projected)**
 
-No cash deficits or delayed commitments are detected. Your cash position remains above safety thresholds across the 30-day forecast horizon.
-
-**Recommended Next Action:**
-Open the Ripple Simulator to model how hypothetical supplier delivery delays or delayed customer receipts would impact your cash runway.`,
+Your cash balance remains safely above threshold over the 30-day horizon.`,
         actionPills: [
           { id: "open_simulator", label: "Open in Ripple Simulator →" },
-          { id: "load_apex", label: "Load Demo Flagship (+16d) Scenario" },
         ],
         isFallback: true,
-        model: "gemini-2.5-flash (Safety Net)",
+        model: "Ripple AI Copilot",
       };
     }
 
     return {
-      text: `### Cash Crunch Alert & Fragility Assessment
+      text: `### Cash Risk Assessment
 
-⚠️ **Critical Shortage Detected**: Rupi Clothing faces a projected balance dip to **${overview.projectedDipAmountFormatted}** around **${overview.projectedDipDate}**, breaching your minimum safety buffer of **${overview.safetyReserveFormatted}**.
+• **Projected Deficit**: Dips to **${overview.projectedDipAmountFormatted}** around **${overview.projectedDipDate}**
+• **Breach Cause**: **Bandhra West Shop Lease** (**-₹2,500**) and **Shree Textiles (PO-1)** (**-₹5,000**) drain initial cash
+• **Contagion Drag**: Lost Supplier Early Discount, halt fees & SLA penalty costs
 
-**Root Cause Cascade:**
-1. **16 Oct 2026**: Supplier Advance to **Shree Textiles (PO-1)** requires **-₹5,000**, reducing treasury from ₹10,000 to **${overview.availableCashOnHandFormatted}**.
-2. **25 Oct 2026**: Fixed showroom overhead — **Bandhra West Shop Lease** consumes **-₹2,500**, pushing cash below zero into a net deficit.
-3. **Contagion Spillover**: Under your active **${simulator.activePreset}** simulation, delays on customer receipts push your minimum cash balance to **${simulator.minCashBalanceFormatted}** with **${simulator.affectedEventsCount} affected downstream events**.
-4. **Profit Erosion**: The delay triggers **${simulator.rippleContagionDragFormatted}** in contagion drag:
-   - Lost Supplier Early Discount: **${simulator.lostSupplierEarlyDiscountFormatted}**
-   - Supplier Halt Fees: **${simulator.supplierHaltFeesFormatted}**
-   - Secondary Customer SLA Penalties: **${simulator.secondarySlaPenaltiesFormatted}**
-   - Working-Capital Float Drag: **${simulator.workingCapitalFloatDragFormatted}**
-
-**Recommended Next Action:**
-Do not borrow. Split the **Kaveri Timber (-₹1,20,000)** commitment into micro-batches via **Auto-Phase Inventory** to maintain buffer integrity throughout October.`,
+**Solution**: Execute **Auto-Phase Inventory** to split Kaveri Timber's commitment across two batches.`,
       actionPills: [
         { id: "apply_auto_phase", label: "Execute Auto-Phase Inventory" },
-        { id: "load_apex", label: "Load Apex Flagship (+16d) Scenario" },
         { id: "open_simulator", label: "Open in Ripple Simulator →" },
       ],
       isFallback: true,
-      model: "gemini-2.5-flash (Safety Net)",
+      model: "Ripple AI Copilot",
     };
   }
 
@@ -256,70 +206,54 @@ Do not borrow. Split the **Kaveri Timber (-₹1,20,000)** commitment into micro-
       return {
         text: `### Supplier Payment Health for **${overview.businessName}**
 
-You currently have **₹0 in scheduled supplier payables**. All procurement channels are clean and zero vendor debt is due.
+• **Total Payables**: ₹0
+• **Overdue Vendor Bills**: 0
+• **Status**: Zero supplier liabilities.
 
-Once you register suppliers and create purchase orders, Ripple will track credit terms, early payment discounts, and delivery deadlines.
-
-**Recommended Next Action:**
-Register your primary suppliers in the Supplier Directory, or explore Auto-Phase micro-batching in the simulator.`,
+Add purchase orders or bills in the Suppliers tab to track credit terms.`,
         actionPills: [
           { id: "open_simulator", label: "Open in Ripple Simulator →" },
-          { id: "load_apex", label: "Load Demo Flagship (+16d) Scenario" },
         ],
         isFallback: true,
-        model: "gemini-2.5-flash (Safety Net)",
+        model: "Ripple AI Copilot",
       };
     }
 
     return {
-      text: `### Supplier Payment Health & Procurement Risk
+      text: `### Supplier Payment Health
 
-Your total committed accounts payable stand at **${overview.committedPayablesFormatted}**. The supplier tier is vulnerable to cascading payment halts:
+• **Scheduled Payables**: **${overview.committedPayablesFormatted}**
+• **Shree Textiles (PO-1)**: -₹5,000 advance due 16 Oct (Restocks Cotton Kurti)
+• **Kaveri Timber**: **-₹1,20,000** due Day 25 (**1.4x Ripple Risk Multiplier**)
 
-**Supplier Obligations & Multipliers:**
-• **Shree Textiles (PO-1)**: Advance of **-₹5,000** due **16 Oct 2026**. Balance payment of ₹30,000 is gated by delivery. Delaying this risks shutting down Cotton Kurti inventory restocks.
-• **Kaveri Timber**: Raw material procurement commitment of **-₹1,20,000** due on Day 25. Carries a **1.4x Ripple Risk Multiplier**.
-• **Discount Forfeiture**: Delayed supplier disbursement forfeits **${simulator.lostSupplierEarlyDiscountFormatted}** in prompt payment discounts and risks **${simulator.supplierHaltFeesFormatted}** in equipment halt charges.
-
-**Autonomous Rescue Pathway:**
-Rather than defaulting or seeking bridge loans, use **Auto-Phase Inventory** to divide Kaveri Timber's bill into:
-- **Batch 1 (₹1,00,000)**: Dispatched immediately out of verified free cash.
-- **Batch 2 (₹20,000)**: Synchronized with customer collection on Day 32.
-
-**Recommended Next Action:**
-Execute Auto-Phase Inventory now to keep Kaveri Timber manufacturing without draining working capital.`,
+**Recommendation**: Deploy **Auto-Phase** to pay Kaveri Timber in two stages:
+• **Batch 1 (₹1,00,000)** from cash
+• **Batch 2 (₹20,000)** from receivables.`,
       actionPills: [
         { id: "apply_auto_phase", label: "Execute Auto-Phase Inventory" },
         { id: "apply_split_escrow", label: "Lock Tri-Party Split-Escrow" },
         { id: "open_simulator", label: "Open in Ripple Simulator →" },
       ],
       isFallback: true,
-      model: "gemini-2.5-flash (Safety Net)",
+      model: "Ripple AI Copilot",
     };
   }
 
   // 5. APEX CORP / SIMULATOR / TRUE MARGIN / RESCUES / DEFAULT
   if (!isDemo && simulator.activePreset === "Baseline") {
     return {
-      text: `### Ripple AI Executive Briefing for **${overview.businessName}**
+      text: `### Summary for **${overview.businessName}**
 
-**Live Financial Position:**
-• **Available Treasury**: **${overview.availableCashOnHandFormatted}** (Status: **${overview.cashStatus}** | Reserve: **${overview.safetyReserveFormatted}**)
-• **Open Receivables**: **₹0** (0 invoices) vs. **Committed Payables**: **₹0**
-• **Active Scenario**: Baseline operating conditions (0 delays, zero debt liabilities)
+• **Available Cash**: **${overview.availableCashOnHandFormatted}** (Reserve: **${overview.safetyReserveFormatted}**)
+• **Open Invoices**: 0 | **Active Bills**: 0
+• **Status**: Reserves fully intact with zero debt.
 
-**Operating Health:**
-• **Liquidity Buffer**: Your initial reserves are fully intact and exceed minimum thresholds.
-• **Simulation Engine**: Ready to stress-test your Supplier-Business-Customer loop as soon as you record transactions.
-
-**Recommended Next Action:**
-Explore the **Ripple Simulator** to model what-if customer payment delays, or load the **Demo Flagship (+16d)** scenario to see cascading contagion in action.`,
+Ask a question about your cash flow or test what-if scenarios in the Ripple Simulator.`,
       actionPills: [
         { id: "open_simulator", label: "Open in Ripple Simulator →" },
-        { id: "load_apex", label: "Load Demo Flagship (+16d) Scenario" },
       ],
       isFallback: true,
-      model: "Ripple AI Copilot (Deterministic Engine)",
+      model: "Ripple AI Copilot",
     };
   }
 

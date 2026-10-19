@@ -39,68 +39,68 @@ const typeConfig: Record<
   supplier: {
     label: "Supplier",
     icon: Truck,
-    accentClass: "text-primary",
-    badgeBg: "bg-primary/10 text-primary",
+    accentClass: "text-indigo-400",
+    badgeBg: "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30",
   },
   supplier_payment: {
     label: "Supplier Payment",
     icon: CreditCard,
-    accentClass: "text-chart-5",
-    badgeBg: "bg-chart-5/10 text-chart-5",
+    accentClass: "text-sky-400",
+    badgeBg: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
   },
   purchase_order: {
     label: "Purchase Order",
     icon: Package,
-    accentClass: "text-primary",
-    badgeBg: "bg-primary/10 text-primary",
+    accentClass: "text-blue-400",
+    badgeBg: "bg-blue-500/20 text-blue-300 border border-blue-500/30",
   },
   inventory_delivery: {
     label: "Inventory Delivery",
     icon: Boxes,
-    accentClass: "text-chart-2",
-    badgeBg: "bg-chart-2/15 text-chart-2",
+    accentClass: "text-teal-400",
+    badgeBg: "bg-teal-500/20 text-teal-300 border border-teal-500/30",
   },
   inventory_stock: {
     label: "Inventory Stock",
     icon: Layers,
-    accentClass: "text-warning",
-    badgeBg: "bg-warning/15 text-warning-foreground",
+    accentClass: "text-amber-400",
+    badgeBg: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
   },
   customer: {
     label: "Customer",
     icon: Users,
-    accentClass: "text-primary",
-    badgeBg: "bg-primary/10 text-primary",
+    accentClass: "text-emerald-400",
+    badgeBg: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
   },
   sale: {
     label: "Customer Sale",
     icon: ShoppingCart,
-    accentClass: "text-chart-1",
-    badgeBg: "bg-chart-1/10 text-chart-1",
+    accentClass: "text-emerald-400",
+    badgeBg: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
   },
   customer_invoice: {
     label: "Customer Invoice",
     icon: FileText,
-    accentClass: "text-chart-1",
-    badgeBg: "bg-chart-1/10 text-chart-1",
+    accentClass: "text-cyan-400",
+    badgeBg: "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30",
   },
   expected_receipt: {
     label: "Expected Receipt",
     icon: ArrowDownToLine,
-    accentClass: "text-success",
-    badgeBg: "bg-success/15 text-success",
+    accentClass: "text-emerald-400",
+    badgeBg: "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40",
   },
   recorded_payment: {
     label: "Recorded Payment",
     icon: CheckCircle2,
-    accentClass: "text-success",
-    badgeBg: "bg-success/15 text-success",
+    accentClass: "text-emerald-400",
+    badgeBg: "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40",
   },
   cash_flow_risk: {
     label: "Cash-flow Risk",
     icon: AlertTriangle,
-    accentClass: "text-destructive",
-    badgeBg: "bg-destructive/10 text-destructive",
+    accentClass: "text-rose-400",
+    badgeBg: "bg-rose-500/25 text-rose-300 border border-rose-500/40",
   },
 };
 
@@ -125,19 +125,19 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
   return (
     <div
       className={cn(
-        "group relative flex w-[270px] flex-col rounded-xl border bg-card text-card-foreground shadow-xs transition-all duration-200 select-none cursor-pointer overflow-visible",
+        "group relative flex w-[270px] flex-col rounded-xl border bg-[#111115] text-white shadow-md transition-all duration-200 select-none cursor-pointer overflow-visible",
         isSelected
-          ? "border-primary ring-2 ring-primary/60 shadow-lg -translate-y-0.5 bg-card ring-offset-2 ring-offset-background"
+          ? "border-white ring-2 ring-white/60 shadow-xl -translate-y-0.5 bg-[#16161b] ring-offset-2 ring-offset-black"
           : isUpstream
-            ? "border-primary/80 ring-2 ring-primary/25 shadow-sm bg-primary/[0.02]"
+            ? "border-emerald-400 ring-2 ring-emerald-400/30 shadow-md bg-[#121816]"
             : isDownstream
-              ? "border-warning/90 ring-2 ring-warning/30 shadow-sm bg-warning/[0.02]"
+              ? "border-amber-400 ring-2 ring-amber-400/35 shadow-md bg-[#191610]"
               : isAtRisk
-                ? "border-warning/60 hover:border-warning shadow-xs"
+                ? "border-amber-500/80 hover:border-amber-400 shadow-sm"
                 : isDelayed
-                  ? "border-destructive/60 hover:border-destructive shadow-xs"
-                  : "border-border hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5",
-        isDimmed && "opacity-60",
+                  ? "border-rose-500/80 hover:border-rose-400 shadow-sm"
+                  : "border-white/20 hover:border-white/50 hover:shadow-lg hover:-translate-y-0.5",
+        isDimmed && "opacity-45",
       )}
     >
       {/* React Flow ER Multi-Handles */}
@@ -250,8 +250,8 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
       )}
 
       {/* ER Card Header Banner */}
-      <div className="flex items-center justify-between border-b border-border/80 bg-muted/40 px-3.5 py-2 rounded-t-xl">
-        <div className="flex items-center gap-1.5 min-w-0">
+      <div className="flex items-center justify-between border-b border-white/15 bg-white/[0.06] px-3.5 py-2.5 rounded-t-xl">
+        <div className="flex items-center gap-2 min-w-0">
           <span
             className={cn(
               "flex h-5 w-5 shrink-0 items-center justify-center rounded-md",
@@ -260,7 +260,7 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
           >
             <Icon className="h-3 w-3" />
           </span>
-          <span className="truncate text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
+          <span className="truncate text-[11px] font-bold uppercase tracking-wider text-white/90 font-mono">
             {config.label}
           </span>
         </div>
@@ -269,7 +269,7 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
         <div className="flex items-center shrink-0">
           {isCompleted && (
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success"
+              className="inline-flex items-center gap-1 rounded-full bg-emerald-500/25 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
               title="Event completed"
             >
               <CheckCircle2 className="h-2.5 w-2.5" />
@@ -278,7 +278,7 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
           )}
           {isUpcoming && (
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary"
+              className="inline-flex items-center gap-1 rounded-full bg-blue-500/25 border border-blue-500/40 px-2 py-0.5 text-[10px] font-semibold text-blue-300"
               title="Upcoming event"
             >
               <Clock className="h-2.5 w-2.5" />
@@ -287,7 +287,7 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
           )}
           {isDelayed && (
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive"
+              className="inline-flex items-center gap-1 rounded-full bg-rose-500/25 border border-rose-500/40 px-2 py-0.5 text-[10px] font-semibold text-rose-300"
               title="Delayed event"
             >
               <AlertCircle className="h-2.5 w-2.5" />
@@ -296,7 +296,7 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
           )}
           {isAtRisk && (
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-warning/20 px-2 py-0.5 text-[10px] font-semibold text-warning-foreground"
+              className="inline-flex items-center gap-1 rounded-full bg-amber-500/25 border border-amber-500/40 px-2 py-0.5 text-[10px] font-semibold text-amber-300"
               title="Potential cash-flow risk"
             >
               <AlertTriangle className="h-2.5 w-2.5" />
@@ -304,7 +304,7 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
             </span>
           )}
           {node.status === "active" && (
-            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground">
+            <span className="inline-flex items-center rounded-full bg-white/10 border border-white/20 px-2 py-0.5 text-[10px] font-semibold text-white">
               Active
             </span>
           )}
@@ -312,28 +312,28 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
       </div>
 
       {/* ER Entity Body */}
-      <div className="px-3.5 py-2.5">
+      <div className="px-3.5 py-3">
         <div className="flex items-start justify-between gap-2">
-          <h4 className="truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+          <h4 className="truncate text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
             {node.label}
           </h4>
         </div>
         {node.metadata.partnerName && (
-          <p className="truncate text-xs text-muted-foreground mt-0.5">
+          <p className="truncate text-xs font-medium text-white/80 mt-1">
             {node.metadata.partnerName}
           </p>
         )}
       </div>
 
       {/* ER Attributes Row (Date / Financial Amount / Quantity) */}
-      <div className="border-t border-border/60 bg-muted/15 px-3.5 py-2 flex items-center justify-between text-xs rounded-b-xl">
+      <div className="border-t border-white/12 bg-white/[0.04] px-3.5 py-2 flex items-center justify-between text-xs rounded-b-xl">
         <div className="min-w-0">
           {node.date ? (
-            <span className="text-muted-foreground font-medium font-mono text-[11px]">
+            <span className="text-white/85 font-medium font-mono text-[11px]">
               {formatDate(node.date, "d MMM yyyy")}
             </span>
           ) : (
-            <span className="text-muted-foreground font-mono text-[11px]">
+            <span className="text-white/85 font-mono text-[11px]">
               {node.metadata.expectedDate || "Standard"}
             </span>
           )}
@@ -342,27 +342,27 @@ export const RelationshipCustomNode = memo(({ data }: NodeProps) => {
         {node.amountPaise !== undefined && node.amountPaise > 0 ? (
           <span
             className={cn(
-              "font-semibold tabular-nums font-mono text-xs",
+              "font-bold tabular-nums font-mono text-xs",
               node.metadata.cashDirection === "incoming"
-                ? "text-success"
+                ? "text-emerald-400"
                 : node.metadata.cashDirection === "outgoing"
-                  ? "text-destructive"
-                  : "text-foreground",
+                  ? "text-rose-400"
+                  : "text-white",
             )}
           >
             {node.metadata.cashDirection === "outgoing" ? "−" : ""}
             {formatMoneyCompact(node.amountPaise)}
           </span>
         ) : node.metadata.quantity !== undefined ? (
-          <span className="font-semibold text-muted-foreground tabular-nums font-mono text-xs">
+          <span className="font-semibold text-white/90 tabular-nums font-mono text-xs">
             {node.metadata.quantity} units
           </span>
         ) : node.metadata.referenceNumber ? (
-          <span className="font-mono text-[11px] text-muted-foreground">
+          <span className="font-mono text-[11px] text-white/80">
             {node.metadata.referenceNumber}
           </span>
         ) : (
-          <span className="text-[11px] text-muted-foreground">Entity</span>
+          <span className="text-[11px] text-white/80">Entity</span>
         )}
       </div>
     </div>

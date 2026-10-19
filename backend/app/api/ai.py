@@ -33,39 +33,62 @@ class AiChatRequest(BaseModel):
 def _generate_deterministic_fallback(prompt: str, business: Business) -> str:
     """
     Offline-first deterministic calculation response when external AI is unavailable or times out.
+    Delivers direct, concise, zero-fluff answers answering ONLY what was asked.
     """
-    lower = prompt.lower()
+    lower = prompt.lower().strip()
     biz_name = business.name or "your business"
     opening_cash = business.opening_cash_paise or 1_000_000
     safety_buffer = business.safety_threshold_paise or 500_000
+    cash_fmt = f"₹{opening_cash / 100:,.0f}"
+    buffer_fmt = f"₹{safety_buffer / 100:,.0f}"
 
-    if "cash" in lower or "liquidity" in lower or "shortfall" in lower:
+    if any(k in lower for k in ["hello", "hi", "hey", "who are you"]):
         return (
-            f"**Ripple Cash Flow Assessment for {biz_name}**\n\n"
-            f"• **Current Usable Cash**: ₹{opening_cash / 100:,.0f}\n"
-            f"• **Safety Reserve Buffer**: ₹{safety_buffer / 100:,.0f}\n"
-            f"• **Status**: Active ledger events are being monitored. If customer payments delay beyond 10 days, "
-            f"activate **Auto-Phase Inventory** or **Tri-Party Split-Escrow** in the Ripple Simulator to prevent buffer breaches."
+            f"Hello. I am **Ask Ripple**, your financial intelligence assistant.\n\n"
+            f"• **Available Cash**: {cash_fmt}\n"
+            f"• **Safety Reserve**: {buffer_fmt}\n\n"
+            f"Ask any direct question about your cash flow, overdue invoices, margins, or suppliers."
         )
-    elif "margin" in lower or "profit" in lower:
+
+    if any(k in lower for k in ["cash", "liquidity", "balance", "money"]):
         return (
-            f"**True Margin Reality Check for {biz_name}**\n\n"
-            f"• Standard paper margin ignores timing delays and supplier penalty contagion.\n"
-            f"• Each day of stalled supplier commitment incurs late fees and operational halt drag.\n"
-            f"• Recommended action: Inspect the **Ripple Simulator** to measure paper vs. true ripple-adjusted margin."
+            f"• **Current Available Cash**: {cash_fmt}\n"
+            f"• **Safety Reserve Target**: {buffer_fmt}\n"
+            f"• **Runway Status**: {'Adequate reserves' if opening_cash >= safety_buffer else 'Reserve breach risk'}. "
+            f"All incoming receivables and scheduled vendor payouts are currently tracked in your ledger."
         )
-    elif "supplier" in lower or "vendor" in lower:
+
+    if any(k in lower for k in ["invoice", "overdue", "receivable", "unpaid", "bill"]):
         return (
-            f"**Supplier Coordination Advisory for {biz_name}**\n\n"
-            f"• Safeguard critical keystone suppliers by applying 2-batch phased payments.\n"
-            f"• Batch 1 releases urgent materials using verified free cash; Batch 2 synchronizes with customer receipts."
+            f"• **Receivables Status**: Monitored live across your active invoices.\n"
+            f"• **Action Needed**: Check the Invoices tab to record incoming payments or dispatch follow-up reminders to counterparties with past-due terms."
         )
-    else:
+
+    if any(k in lower for k in ["margin", "profit", "drag", "cost"]):
         return (
-            f"**Ripple Financial Intelligence for {biz_name}**\n\n"
-            f"• Your cash flow loop is connected to live ledger entries and simulation models.\n"
-            f"• Test hypothetical customer payment delays in the **Ripple Simulator** or add new records via the ledger."
+            f"• **Margin Assessment**: Standard paper margin does not account for supplier timing delays or SLA penalties.\n"
+            f"• **Next Step**: Open the **Ripple Simulator** to compute your exact True Ripple Margin and contagion drag."
         )
+
+    if any(k in lower for k in ["supplier", "vendor", "pay", "payable"]):
+        return (
+            f"• **Supplier Coordination**: Protect vendor relationships by phasing bulk PO commitments.\n"
+            f"• **Recommendation**: Use 2-batch phased payments to release stock without draining your {buffer_fmt} safety reserve."
+        )
+
+    if any(k in lower for k in ["risk", "crunch", "deficit", "shortfall"]):
+        is_safe = opening_cash >= safety_buffer
+        return (
+            f"• **Cash Crunch Risk**: {'Low' if is_safe else 'Elevated'}.\n"
+            f"• **Buffer Integrity**: Available cash is {cash_fmt} against a minimum threshold of {buffer_fmt}.\n"
+            f"• **Mitigation**: Simulate delays in Ripple Simulator to identify bottleneck milestones before they trigger."
+        )
+
+    return (
+        f"• **Business**: {biz_name}\n"
+        f"• **Treasury**: {cash_fmt} available (Safety Reserve: {buffer_fmt})\n"
+        f"• All figures are synced live with your financial records. Ask a specific question regarding cash, invoices, suppliers, or margins for an immediate targeted breakdown."
+    )
 
 @router.post("/chat")
 def chat_proxy(

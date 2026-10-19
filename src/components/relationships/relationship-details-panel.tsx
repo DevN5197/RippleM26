@@ -120,49 +120,49 @@ export function RelationshipDetailsPanel({
 
       <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
         {/* Key Attributes Grid */}
-        <div className="grid grid-cols-2 gap-2.5 rounded-lg border bg-background p-3 text-xs">
+        <div className="grid grid-cols-2 gap-2.5 rounded-lg border border-white/15 bg-white/[0.04] p-3 text-xs">
           {node.metadata.referenceNumber && (
             <div>
-              <span className="text-[10px] uppercase font-semibold text-muted-foreground block">
+              <span className="text-[10px] uppercase font-bold text-white/70 block">
                 Reference
               </span>
-              <span className="font-medium text-foreground">{node.metadata.referenceNumber}</span>
+              <span className="font-semibold text-white">{node.metadata.referenceNumber}</span>
             </div>
           )}
 
           {node.date && (
             <div>
-              <span className="text-[10px] uppercase font-semibold text-muted-foreground block">
+              <span className="text-[10px] uppercase font-bold text-white/70 block">
                 Scheduled / Due
               </span>
-              <DateLabel iso={node.date} className="font-medium text-foreground" />
+              <DateLabel iso={node.date} className="font-semibold text-white" />
             </div>
           )}
 
           {node.metadata.actualDate && (
             <div>
-              <span className="text-[10px] uppercase font-semibold text-muted-foreground block">
+              <span className="text-[10px] uppercase font-bold text-white/70 block">
                 Actual Date
               </span>
-              <DateLabel iso={node.metadata.actualDate} className="font-medium text-foreground" />
+              <DateLabel iso={node.metadata.actualDate} className="font-semibold text-white" />
             </div>
           )}
 
           {node.amountPaise !== undefined && node.amountPaise > 0 && (
             <div>
-              <span className="text-[10px] uppercase font-semibold text-muted-foreground block">
+              <span className="text-[10px] uppercase font-bold text-white/70 block">
                 Amount
               </span>
-              <MoneyAmount paise={node.amountPaise} className="font-bold text-foreground" />
+              <MoneyAmount paise={node.amountPaise} className="font-bold text-emerald-300" />
             </div>
           )}
 
           {node.metadata.quantity !== undefined && (
             <div>
-              <span className="text-[10px] uppercase font-semibold text-muted-foreground block">
+              <span className="text-[10px] uppercase font-bold text-white/70 block">
                 Quantity
               </span>
-              <span className="font-medium text-foreground">
+              <span className="font-semibold text-white">
                 {node.metadata.quantity} units {node.metadata.sku ? `(${node.metadata.sku})` : ""}
               </span>
             </div>
@@ -170,21 +170,21 @@ export function RelationshipDetailsPanel({
 
           {node.metadata.expectedDate && !node.date && (
             <div>
-              <span className="text-[10px] uppercase font-semibold text-muted-foreground block">
+              <span className="text-[10px] uppercase font-bold text-white/70 block">
                 Timeline / Terms
               </span>
-              <span className="font-medium text-foreground">{node.metadata.expectedDate}</span>
+              <span className="font-semibold text-white">{node.metadata.expectedDate}</span>
             </div>
           )}
         </div>
 
         {/* Why this node matters */}
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
-          <div className="flex items-center gap-1.5 font-semibold text-primary mb-1">
-            <Info className="h-3.5 w-3.5" />
+        <div className="rounded-lg border border-white/20 bg-white/[0.05] p-3">
+          <div className="flex items-center gap-1.5 font-bold text-white mb-1.5">
+            <Info className="h-3.5 w-3.5 text-emerald-400" />
             <span>Workflow Significance</span>
           </div>
-          <p className="text-xs leading-relaxed text-muted-foreground">
+          <p className="text-xs leading-relaxed text-white/90">
             {node.metadata.workflowSignificance}
           </p>
         </div>
@@ -194,23 +194,23 @@ export function RelationshipDetailsPanel({
           <div
             className={`rounded-lg border p-3 ${
               node.metadata.riskSeverity === "critical"
-                ? "border-destructive/30 bg-destructive/5 text-destructive"
-                : "border-warning/30 bg-warning/5 text-warning-foreground"
+                ? "border-rose-500/40 bg-rose-500/15 text-rose-200"
+                : "border-amber-500/40 bg-amber-500/15 text-amber-200"
             }`}
           >
-            <div className="flex items-center gap-1.5 font-semibold mb-1">
-              <ShieldAlert className="h-3.5 w-3.5" />
+            <div className="flex items-center gap-1.5 font-bold mb-1 text-white">
+              <ShieldAlert className="h-3.5 w-3.5 text-amber-400" />
               <span>Cash-Flow Assessment</span>
             </div>
             {node.metadata.cashImpactPaise !== undefined && (
-              <p className="text-xs font-medium mb-1">
+              <p className="text-xs font-medium mb-1 text-white">
                 Net liquidity delta:{" "}
-                <span className="font-bold">{formatMoney(node.metadata.cashImpactPaise)}</span> (
+                <span className="font-bold text-emerald-300">{formatMoney(node.metadata.cashImpactPaise)}</span> (
                 {node.metadata.cashDirection === "outgoing" ? "cash outflow" : "cash inflow"})
               </p>
             )}
             {node.metadata.riskDescription && (
-              <p className="text-xs leading-relaxed text-muted-foreground">
+              <p className="text-xs leading-relaxed text-white/90">
                 {node.metadata.riskDescription}
               </p>
             )}
@@ -219,14 +219,14 @@ export function RelationshipDetailsPanel({
 
         {/* Upstream Dependencies */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+          <div className="flex items-center justify-between text-xs font-bold text-white">
             <span className="flex items-center gap-1.5">
-              <ArrowLeft className="h-3.5 w-3.5 text-primary" />
+              <ArrowLeft className="h-3.5 w-3.5 text-emerald-400" />
               Must Happen First ({upstreamNodes.length})
             </span>
           </div>
           {upstreamNodes.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic rounded-md border border-dashed p-2">
+            <p className="text-xs text-white/70 italic rounded-md border border-dashed border-white/20 p-2 bg-white/[0.02]">
               Initial initiating entity — no preceding business dependencies.
             </p>
           ) : (
@@ -235,15 +235,15 @@ export function RelationshipDetailsPanel({
                 <button
                   key={upstreamNode.id}
                   onClick={() => onSelectNode(upstreamNode.id)}
-                  className="w-full flex items-center justify-between gap-2 p-2 rounded-md border bg-background hover:bg-accent hover:border-primary/40 text-left transition-colors group"
+                  className="w-full flex items-center justify-between gap-2 p-2.5 rounded-md border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/40 text-left transition-colors group cursor-pointer"
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-foreground group-hover:text-primary transition-colors">
+                    <p className="truncate font-semibold text-white group-hover:text-emerald-300 transition-colors">
                       {upstreamNode.label}
                     </p>
-                    <p className="truncate text-[11px] text-muted-foreground">{edge.description}</p>
+                    <p className="truncate text-[11px] text-white/70">{edge.description}</p>
                   </div>
-                  <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary shrink-0" />
+                  <ArrowUpRight className="h-3.5 w-3.5 text-white/70 group-hover:text-emerald-300 shrink-0" />
                 </button>
               ))}
             </div>

@@ -791,7 +791,7 @@ Suppliers Count: ${suppliersRes?.data?.length ?? 0}
 Customers Count: ${customersRes?.data?.length ?? 0}
 `;
 
-    const systemInstruction = `${liveServerContext}\n\n${liveState.systemPromptString}\n\n[DIRECTIVE]: You are "Ask Ripple", the AI Financial Copilot. Answer directly based on the user's specific question using exact rupee amounts and dates from their live server state. If the business is newly created with 0 invoices, guide them to add their first supplier, customer, or invoice. Keep responses crisp, clear, and actionable.`;
+    const systemInstruction = `${liveServerContext}\n\n${liveState.systemPromptString}\n\n[STRICT DIRECTIVE]: You are "Ask Ripple", the AI Financial Copilot. Answer ONLY what the user asked in a direct, crisp, concise manner (2-4 bullet points max or a brief paragraph). Do NOT repeat boilerplate background lectures or explain concepts unprompted. Use exact rupee numbers from the active context and give only the specific answer requested.`;
 
     try {
       const geminiResponse = await callGeminiAPI({

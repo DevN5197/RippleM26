@@ -88,10 +88,14 @@ export const Route = createFileRoute("/_app/relationships")({
   ),
 });
 
+import { useState } from "react";
+import { RelationshipOrbitalView } from "@/components/relationships/relationship-orbital-view";
+
 function RelationshipsPage() {
   const { data } = useSuspenseQuery(relationshipsQuery);
   const search = Route.useSearch();
   const graph: RelationshipGraphData = data;
+  const [viewMode, setViewMode] = useState<"orbital" | "flow">("orbital");
 
   const totalTouchpoints = graph.summary.totalNodes;
   const totalDependencies = graph.summary.totalEdges;
@@ -99,64 +103,121 @@ function RelationshipsPage() {
   const cashAtRiskPaise = graph.summary.totalCashAtRiskPaise;
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <PageHeader
-        title="Relationships"
-        description="See how suppliers, inventory, sales, invoices, and payments are connected."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button size="sm" asChild className="gap-1.5 shadow-xs">
-              <Link to="/simulator">
-                <FlaskConical className="h-4 w-4" />
-                <span>Simulate a Delay</span>
-              </Link>
-            </Button>
+    <div className="space-y-8 bg-black text-white min-h-screen pb-12">
+      {/* ── Page Header with View Switcher ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-white/10">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Relationships</h1>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium text-emerald-400 bg-emerald-950/40 border border-emerald-500/30">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              NEXUS ACTIVE
+            </span>
           </div>
-        }
-      />
+          <p className="text-xs text-muted-foreground">
+            Radial counterparty intelligence mapping live receivables, supplier obligations, and payment terms.
+          </p>
+        </div>
 
-      {/* High-level Metric Cards */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          label="Operating Touchpoints"
-          value={String(totalTouchpoints)}
-          icon={Layers}
-          hint="Suppliers, orders, inventory & receipts"
-        />
-        <MetricCard
-          label="Active Dependencies"
-          value={String(totalDependencies)}
-          icon={Share2}
-          hint="Known causal sequence edges"
-        />
-        <MetricCard
-          label="Bottlenecks & At Risk"
-          value={String(atRiskCount)}
-          icon={AlertTriangle}
-          trend={{
-            direction: atRiskCount > 0 ? "down" : "flat",
-            label: `${atRiskCount} events need operational attention`,
-            sentiment: atRiskCount > 0 ? "bad" : "good",
-          }}
-        />
-        <MetricCard
-          label="Liquidity at Risk"
-          value={formatMoney(cashAtRiskPaise)}
-          icon={TrendingDown}
-          trend={{
-            direction: cashAtRiskPaise > 0 ? "down" : "flat",
-            label:
-              cashAtRiskPaise > 0
-                ? `${formatMoney(cashAtRiskPaise)} exposed across cycle`
-                : "No liquidity deficits detected",
-            sentiment: cashAtRiskPaise > 0 ? "bad" : "good",
-          }}
-        />
+        <div className="flex items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex items-center rounded-lg border border-white/15 bg-black/60 p-0.5 gap-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode("orbital")}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                viewMode === "orbital"
+                  ? "bg-white text-black font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-white"
+              }`}
+            >
+              Orbital Command Deck
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("flow")}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                viewMode === "flow"
+                  ? "bg-white text-black font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-white"
+              }`}
+            >
+              Full Dependency Flow
+            </button>
+          </div>
+
+          <Button size="sm" asChild className="btn-rump-solid gap-1.5 shadow-xs px-3.5 py-1.5 text-xs font-semibold">
+            <Link to="/simulator">
+              <FlaskConical className="h-3.5 w-3.5 text-black" />
+              <span>Simulate a Delay</span>
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {/* Interactive Dependency Graph Canvas + Toolbar + Details Drawer */}
-      <RelationshipGraphView data={graph} initialSelectedId={search.selectedId} />
+      {/* ── High-Signal Metric Cards in .card-rump ── */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="card-rump p-5 border border-white/15 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs uppercase font-bold font-mono tracking-wider">Touchpoints</span>
+            <Layers className="h-4 w-4 text-white/70" />
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl font-bold font-mono text-white tracking-tight">{totalTouchpoints}</div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Counterparties & cash events</p>
+          </div>
+        </div>
+
+        <div className="card-rump p-5 border border-white/15 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs uppercase font-bold font-mono tracking-wider">Active Dependencies</span>
+            <Share2 className="h-4 w-4 text-white/70" />
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl font-bold font-mono text-white tracking-tight">{totalDependencies}</div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Causal flow edges</p>
+          </div>
+        </div>
+
+        <div className="card-rump p-5 border border-white/15 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs uppercase font-bold font-mono tracking-wider">Bottlenecks</span>
+            <AlertTriangle className={`h-4 w-4 ${atRiskCount > 0 ? "text-red-400" : "text-emerald-400"}`} />
+          </div>
+          <div className="mt-3">
+            <div className={`text-2xl font-bold font-mono tracking-tight ${atRiskCount > 0 ? "text-red-400" : "text-emerald-400"}`}>
+              {atRiskCount}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {atRiskCount > 0 ? `${atRiskCount} nodes under stress` : "Zero critical bottlenecks"}
+            </p>
+          </div>
+        </div>
+
+        <div className="card-rump p-5 border border-white/15 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs uppercase font-bold font-mono tracking-wider">Liquidity Exposed</span>
+            <TrendingDown className={`h-4 w-4 ${cashAtRiskPaise > 0 ? "text-red-400" : "text-emerald-400"}`} />
+          </div>
+          <div className="mt-3">
+            <div className={`text-2xl font-bold font-mono tracking-tight ${cashAtRiskPaise > 0 ? "text-red-400" : "text-emerald-400"}`}>
+              {formatMoney(cashAtRiskPaise)}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {cashAtRiskPaise > 0 ? "Compromised in operating cycle" : "No liquidity deficit"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main View: Orbital Command Deck (Default) or Detailed Flow ── */}
+      {viewMode === "orbital" ? (
+        <RelationshipOrbitalView data={graph} initialSelectedId={search.selectedId} />
+      ) : (
+        <div className="card-rump p-4 border border-white/15">
+          <RelationshipGraphView data={graph} initialSelectedId={search.selectedId} />
+        </div>
+      )}
     </div>
   );
 }

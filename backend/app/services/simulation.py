@@ -244,12 +244,14 @@ def run_simulation(
     applies active rescues (Auto-Phase & Split-Escrow), and builds chronological timeline nodes.
     """
     rescues = rescues or []
-    horizon = controls.get("horizonDays", 30)
-    sup_delay = controls.get("supplierDeliveryDelayDays", 0)
-    cust_delay = controls.get("customerPaymentDelayDays", 0)
+    horizon = int(controls.get("horizonDays", 30))
+    sup_delay = controls.get("supplierDeliveryDelayDays") if "supplierDeliveryDelayDays" in controls else controls.get("supplierDelayDays", 0)
+    cust_delay = controls.get("customerPaymentDelayDays") if "customerPaymentDelayDays" in controls else controls.get("customerDelayDays", 0)
     cust_amt = controls.get("customerPaymentAmountPaise")
     sup_amt = controls.get("supplierPaymentAmountPaise")
-    order_mult = controls.get("orderQuantityMultiplier", 1.0)
+    order_mult = controls.get("orderQuantityMultiplier") if "orderQuantityMultiplier" in controls else controls.get("supplierAdvanceMultiplier", 1.0)
+    if order_mult is None:
+        order_mult = 1.0
 
     biz_id = getattr(business, "id", None)
     biz_name = getattr(business, "name", None) or "Rupi Clothing"

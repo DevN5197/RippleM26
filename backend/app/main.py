@@ -83,6 +83,25 @@ app.include_router(ai.router)
 def on_startup():
     # Ensure tables exist
     Base.metadata.create_all(bind=engine)
+    # Ensure newly added columns exist in users table for existing databases
+    with engine.connect() as conn:
+        for col, col_type in [
+            ("phone_number", "VARCHAR(32)"),
+            ("is_email_verified", "BOOLEAN DEFAULT 0"),
+            ("is_phone_verified", "BOOLEAN DEFAULT 0"),
+            ("otp_hash", "VARCHAR(255)"),
+            ("otp_expires_at", "DATETIME"),
+            ("otp_attempts", "INTEGER DEFAULT 0"),
+            ("otp_last_sent_at", "DATETIME"),
+            ("otp_used", "BOOLEAN DEFAULT 0"),
+        ]:
+            try:
+                from sqlalchemy import text
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {col_type}"))
+                conn.commit()
+            except Exception:
+                pass
+
     # Automatically seed default demo business if not present
     db = SessionLocal()
     try:
