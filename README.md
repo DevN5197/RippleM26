@@ -36,17 +36,17 @@
 </div>
 
 > [!IMPORTANT]
-> ### 🏆 3rd Place Winner — Our Very First Hackathon!
-> This is **Dev's personal repository** preserving our team's codebase for **Ripple**, which won **3rd Place at M# 2026** held at **MIT Manipal**.
+> ### 🏆 3rd Place (2nd Runner Up) — M# 2026 @ MIT Manipal (Our Very First Hackathon!)
+> This is **my personal repository** preserving our team's codebase for **Ripple**, which won **3rd Place at M# 2026** held at **MIT Manipal**.
 >
 > Our first hackathon was an opportunity to turn an ambitious idea into a working product: a platform that helps small and medium-sized businesses anticipate supply-chain disruptions, simulate financial stress, and protect their working capital before problems cascade.
 >
 > **The Team:**
-> - 👨‍💻 **[Dev](https://github.com/DevN5197)**
-> - 👨‍💻 **[Vedant](https://github.com/Vedant7867)**
-> - 👨‍💻 **[Veer](https://github.com/veershah90210-alt)**
+> - 👨‍💻 **[Dev Nandan(me)](https://github.com/DevN5197)**
+> - 👨‍💻 **[Vedant Chopade](https://github.com/Vedant7867)**
+> - 👨‍💻 **[Veer Shah](https://github.com/veershah90210-alt)**
 >
-> *This repository is maintained as Dev's repository of our team's project. The project and its achievement belong to the team's shared effort.*
+> *This repository is maintained as my repository of our team's project. The project and its achievement belong to the team's shared effort.*
 
 ---
 
@@ -283,17 +283,17 @@ npm run build
 
 <br/>
 
-| Member | GitHub Profile | Role |
-| :---: | :---: | :---: |
-| **Dev** | [![Dev](https://img.shields.io/badge/GitHub-DevN5197-181717?style=flat-square&logo=github)](https://github.com/DevN5197) | Architecture, Full-Stack, Repository Maintainer |
-| **Vedant** | [![Vedant](https://img.shields.io/badge/GitHub-Vedant7867-181717?style=flat-square&logo=github)](https://github.com/Vedant7867) | Frontend Engineering & UX Flow |
-| **Veer** | [![Veer](https://img.shields.io/badge/GitHub-veershah90210--alt-181717?style=flat-square&logo=github)](https://github.com/veershah90210-alt) | Financial Simulation & Backend Services |
+| Member | GitHub Profile |
+| :---: | :---: |
+| **Dev Nandan** | [![Dev](https://img.shields.io/badge/GitHub-DevN5197-181717?style=flat-square&logo=github)](https://github.com/DevN5197) |
+| **Vedant Chopade** | [![Vedant](https://img.shields.io/badge/GitHub-Vedant7867-181717?style=flat-square&logo=github)](https://github.com/Vedant7867) |
+| **Veer Shah** | [![Veer](https://img.shields.io/badge/GitHub-veershah90210--alt-181717?style=flat-square&logo=github)](https://github.com/veershah90210-alt) |
 
 <br/>
 
-**🏆 3rd Place Winner** • **M# 2026 at MIT Manipal** • **Our Very First Hackathon**
+**🏆 3rd Place** • **M# 2026 at MIT Manipal** 
 
-*Built by [Dev](https://github.com/DevN5197), [Vedant](https://github.com/Vedant7867), and [Veer](https://github.com/veershah90210-alt).*
+*Built by [Dev Nandan](https://github.com/DevN5197), [Vedant Chopade](https://github.com/Vedant7867), and [Veer Shah](https://github.com/veershah90210-alt).*
 
 <br/>
 
