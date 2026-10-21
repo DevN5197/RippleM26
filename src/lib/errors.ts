@@ -22,12 +22,25 @@ function pick(value: unknown, key: string): unknown {
 export function toApiError(err: unknown): NormalizedApiError {
   const code = pick(err, "code");
   const status = pick(err, "status");
-  const message = pick(err, "message");
+  const rawMessage = pick(err, "message");
+
+  let message: string | undefined;
+  if (typeof rawMessage === "string") {
+    message = rawMessage;
+  } else if (Array.isArray(rawMessage)) {
+    message = rawMessage
+      .map((m) => (typeof m === "string" ? m : (m as { msg?: string })?.msg || JSON.stringify(m)))
+      .filter(Boolean)
+      .join("; ");
+  } else if (rawMessage && typeof rawMessage === "object") {
+    const obj = rawMessage as { msg?: string; message?: string };
+    message = obj.msg || obj.message || JSON.stringify(rawMessage);
+  }
 
   return {
     code: typeof code === "string" ? code : undefined,
     status: typeof status === "number" ? status : undefined,
-    message: typeof message === "string" ? message : undefined,
+    message,
   };
 }
 
