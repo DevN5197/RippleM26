@@ -43,10 +43,11 @@ if not origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins if "*" not in origins else ["*"],
-    allow_origin_regex=r"^https?://((localhost|127\.0\.0\.1)(:\d+)?|.*\.lovable\.(app|dev)|.*\.lovableproject\.com)$",
+    allow_origin_regex=r"^https?://.*$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Global Exception Handler (Prevents unhandled crashes and white screens)

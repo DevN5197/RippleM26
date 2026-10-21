@@ -25,6 +25,8 @@ class SecurityHardeningMiddleware(BaseHTTPMiddleware):
         self.request_history: dict[tuple[str, str], list[float]] = defaultdict(list)
 
     async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            return await call_next(request)
         # 1. Enforce payload size limit on incoming requests
         content_length = request.headers.get("content-length")
         if content_length:

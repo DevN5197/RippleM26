@@ -111,7 +111,7 @@ function RegisterPage() {
       );
 
       toast.success("Account created successfully! Welcome to Ripple.");
-      void navigate({ to: "/dashboard" });
+      void navigate({ to: "/onboarding" });
     } catch (err) {
       const { message } = toApiError(err);
       toast.error(message || "Registration failed. Please check your details and try again.");
