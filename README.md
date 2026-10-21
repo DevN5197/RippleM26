@@ -42,9 +42,9 @@
 > Our first hackathon was an opportunity to turn an ambitious idea into a working product: a platform that helps small and medium-sized businesses anticipate supply-chain disruptions, simulate financial stress, and protect their working capital before problems cascade.
 >
 > **The Team:**
-> - 👨‍💻 **[Dev Nandan(me)](https://github.com/DevN5197)**
+> - 👨‍💻 **[Dev Nandan](https://github.com/DevN5197)**
 > - 👨‍💻 **[Vedant Chopade](https://github.com/Vedant7867)**
-> - 👨‍💻 **[Veer Shah](https://github.com/veershah90210-alt)**
+> - 👨‍💻 **[Veer Shah(me)](https://github.com/veershah90210-alt)**
 >
 > *This repository is maintained as my repository of our team's project. The project and its achievement belong to the team's shared effort.*
 
