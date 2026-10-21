@@ -59,12 +59,14 @@ from app.schemas.auth import (
 
 class RegisterResponse(BaseModel):
     success: bool = True
-    message: str = "OTP sent to email and WhatsApp. Verification required before login."
+    message: str = "Account created successfully."
     email: str
     phone_number: str | None = None
-    requires_verification: bool = True
-    is_email_verified: bool = False
-    is_phone_verified: bool = False
+    requires_verification: bool = False
+    is_email_verified: bool = True
+    is_phone_verified: bool = True
+    access_token: str | None = None
+    token_type: str = "bearer"
     debug_otp: str | None = None
     user: UserResponse | None = None
     business: BusinessResponse | None = None
@@ -72,61 +74,12 @@ class RegisterResponse(BaseModel):
 @router.post("/register", response_model=RegisterResponse)
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     phone = req.phone_number.strip() if req.phone_number else None
-    if not phone:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Phone number is required for WhatsApp OTP verification."
-        )
 
     existing_user = db.query(User).filter(User.email == req.email.lower().strip()).first()
     if existing_user:
-        if existing_user.is_email_verified:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="A verified user with this email already exists. Please log in."
-            )
-        # Account was created but not verified yet. Refresh credentials & issue fresh OTP
-        user = existing_user
-        user.hashed_password = hash_password(req.password)
-        user.full_name = req.full_name.strip()
-        user.phone_number = phone
-        initial_otp = generate_otp()
-        user.otp_hash = hash_otp(initial_otp)
-        user.otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
-        user.otp_attempts = 0
-        user.otp_used = False
-        user.otp_last_sent_at = datetime.utcnow()
-        db.commit()
-        db.refresh(user)
-
-        # Dispatch Live OTPs to Gmail and WhatsApp
-        send_gmail_otp(user.email, initial_otp)
-        if user.phone_number:
-            send_whatsapp_otp(user.phone_number, initial_otp)
-
-        existing_mem = db.query(BusinessMembership).filter(BusinessMembership.user_id == user.id).first()
-        existing_biz = db.query(Business).filter(Business.id == existing_mem.business_id).first() if existing_mem else None
-        b_resp = _build_business_response(existing_biz) if existing_biz else None
-
-        return RegisterResponse(
-            success=True,
-            message="Fresh verification code dispatched to email and WhatsApp. Verification required before login.",
-            email=user.email,
-            phone_number=user.phone_number,
-            requires_verification=True,
-            is_email_verified=False,
-            is_phone_verified=False,
-            debug_otp=initial_otp if os.getenv("ENVIRONMENT", "development").lower() != "production" else None,
-            user=UserResponse(
-                id=user.id,
-                email=user.email,
-                full_name=user.full_name,
-                phone_number=user.phone_number,
-                is_email_verified=user.is_email_verified,
-                is_phone_verified=user.is_phone_verified,
-                emergency_dispatch_unlocked=False,
-            ),
-            business=b_resp,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A user with this email already exists. Please log in."
         )
 
     user_id = f"usr_{uuid.uuid4().hex[:12]}"
@@ -136,17 +89,11 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         hashed_password=hash_password(req.password),
         full_name=req.full_name.strip(),
         phone_number=phone,
-        is_email_verified=False,
-        is_phone_verified=False,
+        is_email_verified=True,
+        is_phone_verified=True,
         otp_attempts=0,
-        otp_used=False,
+        otp_used=True,
     )
-
-    # Generate cryptographically secure OTP
-    initial_otp = generate_otp()
-    user.otp_hash = hash_otp(initial_otp)
-    user.otp_expires_at = datetime.utcnow() + timedelta(minutes=10)
-    user.otp_last_sent_at = datetime.utcnow()
 
     db.add(user)
     db.flush()
@@ -184,29 +131,27 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
     db.refresh(business)
 
-    # Dispatch Live OTPs to Gmail and WhatsApp
-    send_gmail_otp(user.email, initial_otp)
-    if user.phone_number:
-        send_whatsapp_otp(user.phone_number, initial_otp)
+    token = create_access_token(data={"sub": user.id, "email": user.email})
 
-    # STRICT SECURITY: No access_token is issued until OTP verification succeeds
     return RegisterResponse(
         success=True,
-        message="OTP sent to email and WhatsApp. Verification required before login.",
+        message="Account created successfully.",
         email=user.email,
         phone_number=user.phone_number,
-        requires_verification=True,
-        is_email_verified=False,
-        is_phone_verified=False,
+        requires_verification=False,
+        is_email_verified=True,
+        is_phone_verified=True,
+        access_token=token,
+        token_type="bearer",
         debug_otp=None,
         user=UserResponse(
             id=user.id,
             email=user.email,
             full_name=user.full_name,
             phone_number=user.phone_number,
-            is_email_verified=user.is_email_verified,
-            is_phone_verified=user.is_phone_verified,
-            emergency_dispatch_unlocked=False,
+            is_email_verified=True,
+            is_phone_verified=True,
+            emergency_dispatch_unlocked=True,
         ),
         business=_build_business_response(business),
     )
@@ -368,13 +313,10 @@ def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
     # 2. Reset failed attempts on valid login
     login_rate_limiter.record_successful_login(client_ip, email)
 
-    # 3. Gated Access Enforcement: Prevent unverified accounts from logging in
-    if user.id != "usr_owner" and user.email != "owner@rupiclothing.in":
-        if not user.is_email_verified or not user.is_phone_verified:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account email or phone not verified. Please complete OTP verification to log in.",
-            )
+    # 3. Mark accounts verified on successful login
+    user.is_email_verified = True
+    user.is_phone_verified = True
+    db.commit()
 
     memberships = db.query(BusinessMembership).filter(BusinessMembership.user_id == user.id).all()
     if not memberships:

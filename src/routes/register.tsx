@@ -84,8 +84,8 @@ function RegisterPage() {
     }
 
     const cleanPhone = phoneNumber.replace(/[\s\-\(\)]/g, "");
-    if (!cleanPhone || !/^\+?[1-9]\d{6,14}$/.test(cleanPhone)) {
-      toast.error("Please enter a valid phone number with country code (e.g. +91 98765 43210) for WhatsApp OTP.");
+    if (cleanPhone && !/^\+?[1-9]\d{6,14}$/.test(cleanPhone)) {
+      toast.error("Please enter a valid phone number with country code (e.g. +91 98765 43210).");
       return;
     }
 
@@ -102,31 +102,16 @@ function RegisterPage() {
 
     setLoading(true);
     try {
-      const reg = await authApi.register(
+      await authApi.register(
         email.trim(),
         password,
         fullName.trim(),
         businessName.trim(),
-        phoneNumber.trim(),
+        cleanPhone || undefined,
       );
 
-      // Security hardening: ensure NO premature token in localStorage before OTP verification
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("ripple_auth_token");
-        localStorage.removeItem("ripple_auth_user");
-        localStorage.removeItem("ripple_auth_biz");
-      }
-
-      toast.success("Security OTP dispatched to your Gmail and WhatsApp! Please enter your 6-digit code.");
-      void navigate({
-        to: "/verify-otp",
-        search: {
-          email: email.trim(),
-          phone: phoneNumber.trim(),
-          channel: "email",
-        },
-      });
+      toast.success("Account created successfully! Welcome to Ripple.");
+      void navigate({ to: "/dashboard" });
     } catch (err) {
       const { message } = toApiError(err);
       toast.error(message || "Registration failed. Please check your details and try again.");
@@ -179,11 +164,11 @@ function RegisterPage() {
               Create Business Account
             </h1>
             <Badge variant="outline" className="border-emerald-500/30 bg-emerald-950/40 text-emerald-400 text-[10px] font-mono">
-              2FA PROTECTED
+              INSTANT ACCESS
             </Badge>
           </div>
           <p className="mt-2 text-sm text-[#9a9a9a] max-w-sm">
-            Enter your business details to receive your 6-digit security OTP. Verification is required before access.
+            Enter your business details to create your account and access live working-capital intelligence.
           </p>
         </div>
 
@@ -223,7 +208,7 @@ function RegisterPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="email" className="text-sm font-semibold text-white/90">
-              Email Address (for Gmail OTP) <span className="text-rose-400">*</span>
+              Email Address <span className="text-rose-400">*</span>
             </Label>
             <Input
               id="email"
@@ -241,14 +226,13 @@ function RegisterPage() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="phoneNumber" className="text-sm font-semibold text-white/90">
-                Phone Number (for WhatsApp OTP) <span className="text-rose-400">*</span>
+                Phone Number <span className="text-xs text-[#888888] font-normal">(optional)</span>
               </Label>
               <span className="text-xs text-[#888888]">E.164 with country code</span>
             </div>
             <Input
               id="phoneNumber"
               type="tel"
-              required
               placeholder="+91 98765 43210"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
@@ -317,11 +301,11 @@ function RegisterPage() {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Creating Account & Dispatching OTP...
+                Creating Account...
               </span>
             ) : (
               <>
-                <span>Create Account & Verify with OTP</span>
+                <span>Create Account</span>
                 <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}
@@ -329,7 +313,7 @@ function RegisterPage() {
 
           <div className="flex items-center justify-center gap-2 text-xs text-[#888888] pt-2">
             <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
-            <span>A 6-digit verification code will be dispatched to your Gmail and WhatsApp.</span>
+            <span>Instant access to the Ripple Simulator and Treasury Command Center.</span>
           </div>
         </form>
 

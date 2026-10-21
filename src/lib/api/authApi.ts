@@ -209,15 +209,22 @@ export const authApi = {
         openingCashPaise: db.business.openingCashPaise,
         safetyThresholdPaise: db.business.safetyThresholdPaise ?? 500_000,
       };
+      const session: AuthSession = {
+        token: "demo_mock_registered_jwt_token",
+        user,
+        business,
+        businesses: [business],
+      };
+      setStoredSession(session);
       return {
         success: true,
-        message: "OTP sent to email and WhatsApp",
+        message: "Account created successfully.",
         email,
         phoneNumber,
-        requiresVerification: true,
-        isEmailVerified: false,
-        isPhoneVerified: false,
-        debugOtp: "123456",
+        requiresVerification: false,
+        isEmailVerified: true,
+        isPhoneVerified: true,
+        token: session.token,
         user,
         business,
       };
@@ -231,7 +238,8 @@ export const authApi = {
       requires_verification?: boolean;
       is_email_verified?: boolean;
       is_phone_verified?: boolean;
-      debug_otp?: string;
+      access_token?: string;
+      token_type?: string;
       user?: { id: string; email: string; full_name: string };
       business?: BusinessSummary;
     }>("/api/auth/register", {
@@ -258,15 +266,25 @@ export const authApi = {
       safetyThresholdPaise: 500_000,
     };
 
+    const token = res.access_token || "";
+    if (token) {
+      setStoredSession({
+        token,
+        user,
+        business,
+        businesses: [business],
+      });
+    }
+
     return {
       success: res.success ?? true,
-      message: res.message || "OTP sent to email and WhatsApp. Verification required before login.",
+      message: res.message || "Account created successfully.",
       email: res.email || email,
       phoneNumber: res.phone_number || phoneNumber,
-      requiresVerification: res.requires_verification ?? true,
-      isEmailVerified: res.is_email_verified ?? false,
-      isPhoneVerified: res.is_phone_verified ?? false,
-      debugOtp: res.debug_otp,
+      requiresVerification: false,
+      isEmailVerified: true,
+      isPhoneVerified: true,
+      token,
       user,
       business,
     };
