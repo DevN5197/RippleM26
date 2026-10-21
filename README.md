@@ -1,3 +1,4 @@
+
 <div align="center">
 
 # 🌊 Ripple
@@ -8,8 +9,8 @@
 
 <br/>
 
-[![Personal Repository](https://img.shields.io/badge/Personal%20Repo-Dev-4f46e5?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DevN5197)
-[![Hackathon Award](https://img.shields.io/badge/🏆%203rd%20Place-M%23%202026%20%40%20MIT%20Manipal-f59e0b?style=for-the-badge)](https://github.com/DevN5197)
+[![Personal Repository](https://img.shields.io/badge/Personal%20Repo-Veer-4f46e5?style=for-the-badge&logo=github&logoColor=white)](https://github.com/veershah90210-alt/Rump)
+[![Hackathon Award](https://img.shields.io/badge/🏆%203rd%20Place-M%23%202026%20%40%20MIT%20Manipal-f59e0b?style=for-the-badge)](https://github.com/veershah90210-alt/Rump)
 [![Milestone](https://img.shields.io/badge/Milestone-Our%20First%20Hackathon-10b981?style=for-the-badge)](#-the-team--hackathon-milestone)
 [![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-rump--frontend.onrender.com-00C7B7?style=for-the-badge&logo=render&logoColor=white)](https://rump-frontend.onrender.com/)
 
@@ -46,9 +47,9 @@
 > **The Team:**
 > - 👨‍💻 **[Dev Nandan](https://github.com/DevN5197)**
 > - 👨‍💻 **[Vedant Chopade](https://github.com/Vedant7867)**
-> - 👨‍💻 **[Veer Shah(me)](https://github.com/veershah90210-alt)**
+> - 👨‍💻 **[Veer Shah](https://github.com/veershah90210-alt)**
 >
-> *This repository is maintained as my repository of our team's project. The project and its achievement belong to the team's shared effort.*
+> *This repository is maintained as my personal repository of our team's project. The project and its achievement belong to the team's shared effort.*
 
 > [!TIP]
 > ### 🌐 Live Application
@@ -165,8 +166,8 @@ Experience the deployed application instantly without local setup:
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/DevN5197/RippleM2026.git
-cd RippleM2026
+git clone https://github.com/veershah90210-alt/Rump.git
+cd Rump
 npm install
 ```
 
