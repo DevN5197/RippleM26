@@ -14,17 +14,33 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     except Exception:
         return False
 
-def create_access_token(user_id: str, business_id: str | None = None, expires_delta: timedelta | None = None) -> str:
+def create_access_token(
+    user_id: str | None = None,
+    business_id: str | None = None,
+    expires_delta: timedelta | None = None,
+    data: dict | None = None,
+    **kwargs,
+) -> str:
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    payload = {
-        "sub": user_id,
-        "business_id": business_id,
-        "exp": expire,
-    }
+    payload: dict = {}
+    if data and isinstance(data, dict):
+        payload.update(data)
+    
+    if user_id:
+        payload["sub"] = user_id
+    elif "sub" not in payload and kwargs.get("sub"):
+        payload["sub"] = kwargs["sub"]
+        
+    if business_id:
+        payload["business_id"] = business_id
+    elif "business_id" not in payload and kwargs.get("business_id"):
+        payload["business_id"] = kwargs["business_id"]
+        
+    payload["exp"] = expire
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 def decode_access_token(token: str) -> dict | None:

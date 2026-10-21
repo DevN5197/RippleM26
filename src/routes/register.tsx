@@ -113,6 +113,16 @@ function RegisterPage() {
       toast.success("Account created successfully! Welcome to Ripple.");
       void navigate({ to: "/onboarding" });
     } catch (err) {
+      // Resilient fallback: If the backend created the account but network/fetch had a blip,
+      // or if account already exists, attempt immediate sign-in with these credentials
+      try {
+        await authApi.login(email.trim(), password);
+        toast.success("Welcome back! Account signed in successfully.");
+        void navigate({ to: "/onboarding" });
+        return;
+      } catch {
+        // If login also fails, show the clear error message
+      }
       const { message } = toApiError(err);
       toast.error(message || "Registration failed. Please check your details and try again.");
     } finally {

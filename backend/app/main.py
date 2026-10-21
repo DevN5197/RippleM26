@@ -57,12 +57,20 @@ async def global_exception_handler(request: Request, exc: Exception):
     if isinstance(exc, (StarletteHTTPException, RequestValidationError)):
         raise exc
     logger.error(f"Unhandled server error on {request.method} {request.url.path}: {exc}", exc_info=True)
+    origin = request.headers.get("origin") or "*"
     return JSONResponse(
         status_code=500,
         content={
             "error": True,
-            "message": "An internal server error occurred. Deterministic fallback data is active.",
+            "message": "An internal server error occurred.",
+            "detail": str(exc),
             "fallbackAvailable": True,
+        },
+        headers={
+            "Access-Control-Allow-Origin": origin if origin != "null" else "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Methods": "*",
         },
     )
 

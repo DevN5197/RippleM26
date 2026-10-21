@@ -113,7 +113,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(business)
 
-        token = create_access_token(data={"sub": user.id, "email": user.email})
+        token = create_access_token(user_id=user.id, business_id=business.id)
         return RegisterResponse(
             success=True,
             message="Account signed in successfully.",
@@ -186,7 +186,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
     db.refresh(business)
 
-    token = create_access_token(data={"sub": user.id, "email": user.email})
+    token = create_access_token(user_id=user.id, business_id=business.id)
 
     return RegisterResponse(
         success=True,
