@@ -153,8 +153,8 @@ graph TD
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/DevN5197/RippleManipal2026.git
-cd RippleManipal2026
+git clone https://github.com/DevN5197/RippleM2026.git
+cd RippleM2026
 npm install
 ```
 
