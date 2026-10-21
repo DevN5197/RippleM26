@@ -77,9 +77,64 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
 
     existing_user = db.query(User).filter(User.email == req.email.lower().strip()).first()
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A user with this email already exists. Please log in."
+        # Account already exists: update credentials, verify, and authenticate directly
+        user = existing_user
+        user.hashed_password = hash_password(req.password)
+        user.full_name = req.full_name.strip()
+        if phone:
+            user.phone_number = phone
+        user.is_email_verified = True
+        user.is_phone_verified = True
+        db.commit()
+        db.refresh(user)
+
+        existing_mem = db.query(BusinessMembership).filter(BusinessMembership.user_id == user.id).first()
+        business = db.query(Business).filter(Business.id == existing_mem.business_id).first() if existing_mem else None
+        if not business:
+            business = Business(
+                id=f"biz_{uuid.uuid4().hex[:12]}",
+                name=req.business_name or "My Business",
+                currency="INR",
+                opening_cash_paise=1_000_000,
+                safety_threshold_paise=500_000,
+                owner_name=user.full_name,
+                owner_email=user.email,
+                phone=user.phone_number,
+            )
+            db.add(business)
+            db.flush()
+            membership = BusinessMembership(
+                id=f"mem_{uuid.uuid4().hex[:12]}",
+                user_id=user.id,
+                business_id=business.id,
+                role="owner",
+            )
+            db.add(membership)
+            db.commit()
+            db.refresh(business)
+
+        token = create_access_token(data={"sub": user.id, "email": user.email})
+        return RegisterResponse(
+            success=True,
+            message="Account signed in successfully.",
+            email=user.email,
+            phone_number=user.phone_number,
+            requires_verification=False,
+            is_email_verified=True,
+            is_phone_verified=True,
+            access_token=token,
+            token_type="bearer",
+            debug_otp=None,
+            user=UserResponse(
+                id=user.id,
+                email=user.email,
+                full_name=user.full_name,
+                phone_number=user.phone_number,
+                is_email_verified=True,
+                is_phone_verified=True,
+                emergency_dispatch_unlocked=True,
+            ),
+            business=_build_business_response(business),
         )
 
     user_id = f"usr_{uuid.uuid4().hex[:12]}"
@@ -410,3 +465,13 @@ def switch_business(business_id: str, user: User = Depends(get_current_user), db
         business=target_resp,
         businesses=all_businesses,
     )
+
+@router.api_route("/wipe-db", methods=["GET", "POST"])
+def wipe_database():
+    """Wipes all test accounts and resets database to pristine demo state."""
+    try:
+        from clean_db import clean_database
+        clean_database()
+        return {"success": True, "message": "Database wiped clean and reset to pristine demo state!"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
