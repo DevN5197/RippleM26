@@ -9,8 +9,8 @@
 
 <br/>
 
-[![Personal Repository](https://img.shields.io/badge/Personal%20Repo-Veer-4f46e5?style=for-the-badge&logo=github&logoColor=white)](https://github.com/veershah90210-alt/Rump)
-[![Hackathon Award](https://img.shields.io/badge/🏆%203rd%20Place-M%23%202026%20%40%20MIT%20Manipal-f59e0b?style=for-the-badge)](https://github.com/veershah90210-alt/Rump)
+[![Personal Repository](https://img.shields.io/badge/Personal%20Repo-Dev-4f46e5?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DevN5197/RippleM26)
+[![Hackathon Award](https://img.shields.io/badge/🏆%203rd%20Place-M%23%202026%20%40%20MIT%20Manipal-f59e0b?style=for-the-badge)](https://github.com/DevN5197/RippleM26)
 [![Milestone](https://img.shields.io/badge/Milestone-Our%20First%20Hackathon-10b981?style=for-the-badge)](#-the-team--hackathon-milestone)
 [![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-rump--frontend.onrender.com-00C7B7?style=for-the-badge&logo=render&logoColor=white)](https://rump-frontend.onrender.com/)
 
@@ -166,7 +166,7 @@ Experience the deployed application instantly without local setup:
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/veershah90210-alt/Rump.git
+git clone https://github.com/DevN5197/RippleM26 
 cd Rump
 npm install
 ```
