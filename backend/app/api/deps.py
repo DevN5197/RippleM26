@@ -37,12 +37,7 @@ def get_current_user(
                 detail="Could not validate credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        if user.id != "usr_owner" and user.email != "owner@rupiclothing.in":
-            if not user.is_email_verified or not user.is_phone_verified:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Account security verification required. Please complete OTP verification.",
-                )
+        # OTP verification removed as per user requirement - all registered users have full access
         return user
     except HTTPException:
         raise

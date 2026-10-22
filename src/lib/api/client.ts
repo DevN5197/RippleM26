@@ -157,19 +157,37 @@ export async function httpRequest<T>(path: string, options: RequestOptions = {})
     }
 
     if (!retried) {
+      // For remote servers (e.g. Render free tier cold starts), retry once after a short delay
+      if (url.hostname !== "localhost" && url.hostname !== "127.0.0.1" && !signal?.aborted) {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+          response = await fetch(url.toString(), {
+            method,
+            headers: reqHeaders,
+            ...(signal ? { signal } : {}),
+            ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+          });
+          retried = true;
+        } catch {
+          // Fall through
+        }
+      }
+    }
+
+    if (!retried) {
       const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
       const targetIsHttp = url.protocol === "http:";
       if (isHttps && targetIsHttp) {
         throw new ApiError(
           0,
           "network_error",
-          `Mixed Content blocked: Insecure HTTP backend (${url.origin}) cannot be called from an HTTPS page. Switch to Demo Mode or use an HTTPS backend proxy.`,
+          `Mixed Content blocked: Insecure HTTP backend (${url.origin}) cannot be called from an HTTPS page. Update VITE_API_BASE_URL to https://.`,
         );
       }
       throw new ApiError(
         0,
         "network_error",
-        `Could not reach the server at ${url.origin}. Please ensure the backend is running.`,
+        `Could not reach the server at ${url.origin}. Render free instances spin down after inactivity and take ~30–50s to wake up. Please wait a few seconds and try again.`,
       );
     }
   }
@@ -199,7 +217,20 @@ export async function httpRequest<T>(path: string, options: RequestOptions = {})
       }
     }
 
-    const detailMsg = errorBody?.detail || errorBody?.error?.message;
+    let detailMsg: string | undefined;
+    if (typeof errorBody?.detail === "string") {
+      detailMsg = errorBody.detail;
+    } else if (Array.isArray(errorBody?.detail)) {
+      detailMsg = (errorBody.detail as Array<{ msg?: string } | string>)
+        .map((d) => (typeof d === "string" ? d : d?.msg || JSON.stringify(d)))
+        .filter(Boolean)
+        .join("; ");
+    } else if (typeof errorBody?.error?.message === "string") {
+      detailMsg = errorBody.error.message;
+    } else if (typeof errorBody?.message === "string") {
+      detailMsg = errorBody.message;
+    }
+
     throw new ApiError(
       response.status,
       errorBody?.error?.code ?? (response.status === 401 ? "unauthorized" : "http_error"),

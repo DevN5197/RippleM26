@@ -53,19 +53,10 @@ function VerifyOtpPage() {
   const [error, setError] = useState<string | null>(null);
   const [verifiedSuccess, setVerifiedSuccess] = useState(false);
 
-  // 60-second cooldown timer
+  // OTP verification disabled; redirect directly to dashboard
   useEffect(() => {
-    if (countdown <= 0) return;
-    const interval = setInterval(() => {
-      setCountdown((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [countdown]);
-
-  // Focus first input box on mount
-  useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
+    void navigate({ to: "/dashboard" });
+  }, [navigate]);
 
   // Handle individual digit change & auto-advance
   const handleDigitChange = (index: number, value: string) => {

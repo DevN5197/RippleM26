@@ -1,3 +1,4 @@
+
 <div align="center">
 
 # 🌊 Ripple
@@ -8,9 +9,10 @@
 
 <br/>
 
-[![Personal Repository](https://img.shields.io/badge/Personal%20Repo-Dev-4f46e5?style=for-the-badge&logo=github&logoColor=white)](https://github.com/DevN5197)
-[![Hackathon Award](https://img.shields.io/badge/🏆%203rd%20Place-M%23%202026%20%40%20MIT%20Manipal-f59e0b?style=for-the-badge)](https://github.com/DevN5197)
+[![Personal Repository](https://img.shields.io/badge/Personal%20Repo-Veer-4f46e5?style=for-the-badge&logo=github&logoColor=white)](https://github.com/veershah90210-alt/Rump)
+[![Hackathon Award](https://img.shields.io/badge/🏆%203rd%20Place-M%23%202026%20%40%20MIT%20Manipal-f59e0b?style=for-the-badge)](https://github.com/veershah90210-alt/Rump)
 [![Milestone](https://img.shields.io/badge/Milestone-Our%20First%20Hackathon-10b981?style=for-the-badge)](#-the-team--hackathon-milestone)
+[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-rump--frontend.onrender.com-00C7B7?style=for-the-badge&logo=render&logoColor=white)](https://rump-frontend.onrender.com/)
 
 <br/>
 
@@ -23,6 +25,7 @@
 
 <br/>
 
+[🌐 Live Demo](https://rump-frontend.onrender.com/) •
 [Overview](#-overview) •
 [Key Features](#-key-features) •
 [Architecture](#-architecture--tech-stack) •
@@ -42,11 +45,16 @@
 > Our first hackathon was an opportunity to turn an ambitious idea into a working product: a platform that helps small and medium-sized businesses anticipate supply-chain disruptions, simulate financial stress, and protect their working capital before problems cascade.
 >
 > **The Team:**
-> - 👨‍💻 **[Dev Nandan(me)](https://github.com/DevN5197)**
+> - 👨‍💻 **[Dev Nandan](https://github.com/DevN5197)**
 > - 👨‍💻 **[Vedant Chopade](https://github.com/Vedant7867)**
 > - 👨‍💻 **[Veer Shah](https://github.com/veershah90210-alt)**
 >
-> *This repository is maintained as my repository of our team's project. The project and its achievement belong to the team's shared effort.*
+> *This repository is maintained as my personal repository of our team's project. The project and its achievement belong to the team's shared effort.*
+
+> [!TIP]
+> ### 🌐 Live Application
+> Ripple is deployed and live on Render:  
+> **🔗 [https://rump-frontend.onrender.com/](https://rump-frontend.onrender.com/)**
 
 ---
 
@@ -146,6 +154,11 @@ graph TD
 
 ## ⚡ Quick Start
 
+### 🌐 Live Deployment
+Experience the deployed application instantly without local setup:
+- **Production URL**: [https://rump-frontend.onrender.com/](https://rump-frontend.onrender.com/)
+- Production environment running on Render with TanStack Start (Node server) and FastAPI backend integration.
+
 ### Prerequisites
 - **Node.js** (v18+) and **npm**
 - **Python** (3.10+) *(Optional — only needed for live backend Mode B)*
@@ -153,8 +166,8 @@ graph TD
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/DevN5197/RippleM2026.git
-cd RippleM2026
+git clone https://github.com/veershah90210-alt/Rump.git
+cd Rump
 npm install
 ```
 

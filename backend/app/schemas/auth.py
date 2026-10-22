@@ -10,7 +10,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=72, description="Password must be between 8 and 72 characters")
     full_name: str = Field(..., min_length=1, max_length=100)
     business_name: str = Field(..., min_length=2, max_length=100, description="Registered business or trading name")
-    phone_number: str = Field(..., min_length=7, max_length=20, description="E.164 phone number for WhatsApp verification, e.g. +919876543210")
+    phone_number: str | None = Field(default=None, description="Optional contact phone number")
 
     @field_validator("email")
     @classmethod
@@ -47,9 +47,9 @@ class RegisterRequest(BaseModel):
 
     @field_validator("phone_number")
     @classmethod
-    def validate_phone_number(cls, v: str) -> str:
+    def validate_phone_number(cls, v: str | None) -> str | None:
         if not v or not v.strip():
-            raise ValueError("Phone number is required for WhatsApp OTP verification.")
+            return None
         cleaned = re.sub(r"[\s\-\(\)]", "", v.strip())
         if not re.match(r"^\+?[1-9]\d{6,14}$", cleaned):
             raise ValueError("Invalid phone number format. Must follow standard E.164 format (e.g. +919876543210).")
